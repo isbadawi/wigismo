@@ -1,0 +1,31 @@
+Ismail Badawi
+Carla Morawicz
+
+Our WIG service implements the well known game of Hangman. Having come up
+with the idea, we identified the following parts as being very difficult
+or tedious (or impossible) to write using standard WIG:
+
+- We want a big list of words, ideally read from a file.
+- Given a string and a letter, determine whether that letter is in the
+  string, and if so, give its index.
+
+To circumvent this issue, we took a cue from 2007's group-4 and wrote a 
+script to generate some code; it reads /usr/share/dict/words (available
+on most flavors of unix), and for each valid word (where valid is: all
+ascii, all lowercase, distinct letters, and fixed length 7), generates a 
+tuple of the schema:
+
+schema Word {
+    int indexA;
+    int indexB;
+    ...
+    int indexZ;
+}
+
+where indexI is the index of letter I in the word, or -1 if not present.
+The script provides a function which returns such a word given an int, 
+generated randomly by the service for each game.
+
+(We restrict the length of the words for simplicity; having variable length
+words would not be so straightforward without arrays (how many gaps do we
+have to plug, how do we check if the game is over, etc.)).
