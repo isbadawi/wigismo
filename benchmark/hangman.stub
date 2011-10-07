@@ -10,7 +10,7 @@ service {
 
     const html Guess = <html><body>
         <h1>Hangman</h1>
-        <p><[l0]><[l1]><[l2]><[l3]><[l4]><[l5]><[l6]></p>
+        <p><[l0]>&nbsp;<[l1]>&nbsp;<[l2]>&nbsp;<[l3]>&nbsp;<[l4]>&nbsp;<[l5]>&nbsp;<[l6]></p>
         <p>Tried so far: <[tried]></p>
         <div>
             <input name="guess" type="radio" value="Q">Q
@@ -47,7 +47,11 @@ service {
         </div>
     </body></html>;
 
-    const html Win = <html><body>You win!</body></html>;
+    const html Win = <html><body>
+        <h1>YOU ARE THE BEST WINNER</h1>
+        <p>The word was indeed <[l0]><[l1]><[l2]><[l3]><[l4]><[l5]><[l6]>.
+        </p>You win, and it only took you <[guesses]> guesses!
+    </body></html>;
 
     schema Word {
         int indexA; int indexB; int indexC; int indexD; int indexE;
@@ -141,19 +145,20 @@ service {
 
     bool found(string l0, string l1, string l2, string l3, string l4,
                string l5, string l6) {
-        return l0 != "_" && l1 != "_" && l2 != "_" && l3 != "_" && 
-               l4 != "_" && l5 != "_" && l6 != "_";
+        return !(l0 == "_" || l1 == "_" || l2 == "_" || l3 == "_" || 
+               l4 == "_" || l5 == "_" || l6 == "_");
     }
 
     session Play() {
         string l0, l1, l2, l3, l4, l5, l6;
         tuple Word word;
         string guess;
+        int guesses;
         string tried;
         tried = "";
         word = getWord(random(0, 500));
         l0 = l1 = l2 = l3 = l4 = l5 = l6 = "_";
-        while (!found(l0, l1, l2, l3, l4, l5, l6)) {
+        while (!found(l0, l1, l2, l3, l4, l5, l6)) { 
             int index;
             show plug Guess[l0=l0, l1=l1, l2=l2, l3=l3, l4=l4, l5=l5, 
                 l6=l6, tried=tried] receive [guess=guess];
@@ -173,8 +178,10 @@ service {
             else if (index == 6)
                 l6 = guess;
             tried = tried + guess;
+            guesses = guesses + 1;
         }
-        exit Win;
+        exit plug Win[l0=l0,l1=l1,l2=l2,l3=l3,l4=l4,l5=l5,l6=l6,
+            guesses=guesses];
     }
 
     session Init() {

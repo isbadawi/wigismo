@@ -29,3 +29,19 @@ generated randomly by the service for each game.
 (We restrict the length of the words for simplicity; having variable length
 words would not be so straightforward without arrays (how many gaps do we
 have to plug, how do we check if the game is over, etc.)).
+
+NOTE: bug in lkwig? We would check for a win using:
+
+bool found(l0, l1, l2, l3, l4, l5, l6) {
+    return l0 != "_" && ... && l6 != "_";
+}
+
+But this would return true even when some of the letter were "_". In fact,
+it would return true whenever l0 was not "_". We replaced it with the
+(seemingly) equivalent:
+
+bool found(l0, l1, l2, l3, l4, l5, l6) {
+    return !(l0 == "_" || ... || l6 == "_");
+}
+
+And got correct behavior. Odd!
