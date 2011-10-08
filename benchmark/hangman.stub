@@ -5,12 +5,14 @@ service {
     </body></html>;
 
     const html OK = <html><body>
-        <p>Alright; RNG seeded. Now go play. </p>
+        <p>Alright; Random Number Generator seeded. Now go <a href="hangman.pl?Play">play</a>. </p>
     </body></html>;
 
-    const html Guess = <html><body>
-        <h1>Hangman</h1>
-        <p><[l0]>&nbsp;<[l1]>&nbsp;<[l2]>&nbsp;<[l3]>&nbsp;<[l4]>&nbsp;<[l5]>&nbsp;<[l6]></p>
+    const html Guess = <html><head><link href="../style.css" rel="stylesheet" type="text/css"></head>
+    <body>
+        <center><h1>Hangman</h1>
+        <p><[img]></p>
+        <span class="word"><p><[l0]>&nbsp;<[l1]>&nbsp;<[l2]>&nbsp;<[l3]>&nbsp;<[l4]>&nbsp;<[l5]>&nbsp;<[l6]></p></span>
         <p>Tried so far: <[tried]></p>
         <div>
             <input name="guess" type="radio" value="Q">Q
@@ -24,7 +26,6 @@ service {
             <input name="guess" type="radio" value="O">O
             <input name="guess" type="radio" value="P">P
         </div>
-            &nbsp; &nbsp;
             <input name="guess" type="radio" value="A">A
             <input name="guess" type="radio" value="S">S
             <input name="guess" type="radio" value="D">D
@@ -36,7 +37,6 @@ service {
             <input name="guess" type="radio" value="L">L
         </div>
         <div>
-            &nbsp; &nbsp; &nbsp; &nbsp;
             <input name="guess" type="radio" value="Z">Z
             <input name="guess" type="radio" value="X">X
             <input name="guess" type="radio" value="C">C
@@ -44,16 +44,25 @@ service {
             <input name="guess" type="radio" value="B">B
             <input name="guess" type="radio" value="N">N
             <input name="guess" type="radio" value="M">M
-        </div>
+        </div></center>
     </body></html>;
 
     const html Win = <html><body>
-        <h1>YOU ARE THE BEST WINNER</h1>
+        <center><h1>YOU ARE THE BEST WINNER</h1>
         <p>The word was indeed <[l0]><[l1]><[l2]><[l3]><[l4]><[l5]><[l6]>.
         </p>You win, and it only took you <[guesses]> guesses!
+        <p><a href="hangman.pl?Play">Play again!</a></p></center>
+    </body></html>;
+
+    const html Lose = <html><body>
+        <center><h1>FAIL!!!</h1>
+        <p><[img]></p>
+        <p>The word was <[word]>.</p>
+        <p><a href="hangman.pl?Play">Play again!</a></p></center>
     </body></html>;
 
     schema Word {
+        string word;
         int indexA; int indexB; int indexC; int indexD; int indexE;
         int indexF; int indexG; int indexH; int indexI; int indexJ;
         int indexK; int indexL; int indexM; int indexN; int indexO;
@@ -62,7 +71,22 @@ service {
         int indexZ;
     }
 
+    /* Global variables */
     int seed;
+    string hangmanImg00;
+    string hangmanImg0;
+    string hangmanImg1;
+    string hangmanImg2;
+    string hangmanImg3;
+    string hangmanImg4;
+    string hangmanImg5;
+    string hangmanImg6;
+    string hangmanImg7;
+    string hangmanImg8;
+    string hangmanImg9;
+    string hangmanImg10;
+    string hangmanImg11;
+    string hangmanImg12;
 
     int random(int low, int high) {
         seed = (1664525 * seed + 1013904223) % 4294967296;
@@ -71,6 +95,7 @@ service {
 
     tuple Word initWord() {
         tuple Word result;
+        result.word = "";
         result.indexA = -1; result.indexB = -1; result.indexC = -1;
         result.indexD = -1; result.indexE = -1; result.indexF = -1;
         result.indexG = -1; result.indexH = -1; result.indexI = -1;
@@ -143,6 +168,38 @@ service {
 
     <<W>>
 
+    string getHangmanImage(int n) {
+        if (n == 0)
+            return "<img src=\"../img/hangmanImg00.png\"";
+        if (n == 1)
+            return "<img src=\"../img/hangmanImg0.png\"";
+        if (n == 2)
+            return "<img src=\"../img/hangmanImg1.png\"";
+        if (n == 3)
+            return "<img src=\"../img/hangmanImg2.png\"";
+        if (n == 4)
+            return "<img src=\"../img/hangmanImg3.png\"";
+        if (n == 5)
+            return "<img src=\"../img/hangmanImg4.png\"";
+        if (n == 6)
+            return "<img src=\"../img/hangmanImg5.png\"";
+        if (n == 7)
+            return "<img src=\"../img/hangmanImg6.png\"";
+        if (n == 8)
+            return "<img src=\"../img/hangmanImg7.png\"";
+        if (n == 9)
+            return "<img src=\"../img/hangmanImg8.png\"";
+        if (n == 10)
+            return "<img src=\"../img/hangmanImg9.png\"";
+        if (n == 11)
+            return "<img src=\"../img/hangmanImg10.png\"";
+        if (n == 12)
+            return "<img src=\"../img/hangmanImg11.png\"";
+        if (n == 13)
+            return "<img src=\"../img/hangmanImg12.png\"";
+        return "";
+    }
+
     bool found(string l0, string l1, string l2, string l3, string l4,
                string l5, string l6) {
         return !(l0 == "_" || l1 == "_" || l2 == "_" || l3 == "_" || 
@@ -155,12 +212,15 @@ service {
         string guess;
         int guesses;
         string tried;
+        string image;
         tried = "";
         word = getWord(random(0, 500));
         l0 = l1 = l2 = l3 = l4 = l5 = l6 = "_";
+        guesses = 0;
         while (!found(l0, l1, l2, l3, l4, l5, l6)) { 
             int index;
-            show plug Guess[l0=l0, l1=l1, l2=l2, l3=l3, l4=l4, l5=l5, 
+            image = getHangmanImage(guesses);
+            show plug Guess[img=image, l0=l0, l1=l1, l2=l2, l3=l3, l4=l4, l5=l5, 
                 l6=l6, tried=tried] receive [guess=guess];
             index = indexOf(word, guess);
             if (index == 0)
@@ -177,11 +237,14 @@ service {
                 l5 = guess;
             else if (index == 6)
                 l6 = guess;
+            else 
+                guesses = guesses + 1;
             tried = tried + guess;
-            guesses = guesses + 1;
+            if (guesses == 13)
+                exit plug Lose[img=getHangmanImage(13), word=word.word];
         }
         exit plug Win[l0=l0,l1=l1,l2=l2,l3=l3,l4=l4,l5=l5,l6=l6,
-            guesses=guesses];
+            guesses=guesses + 7];
     }
 
     session Init() {

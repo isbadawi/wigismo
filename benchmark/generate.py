@@ -10,6 +10,7 @@ def generate_word_func(words):
     func += '        result = initWord();\n'
     for index, word in enumerate(words):
         s = '        if (n == %d) {\n' % index
+        s += '            result.word = "%s";\n' % word
         for i, l in enumerate(word):
             s += '            result.index%s = %d;\n' % (l, i)
         s += '        }\n'

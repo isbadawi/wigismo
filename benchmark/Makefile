@@ -1,5 +1,7 @@
-hangman.pl: hangman.stub generate.py
-	python generate.py 7 500
+hangman.pl: hangman.stub generate.py style.css
+	python2.7 generate.py 7 500
 	lkwig hangman.wig
-	chmod 755 hangman.pl
-	cp hangman.pl $HOME/public_html/cgi-bin
+	cp hangman.pl $(HOME)/public_html/cgi-bin
+	cp style.css $(HOME)/public_html
+	cp -r img $(HOME)/public_html
+	chmod -R 755 $(HOME)/public_html/

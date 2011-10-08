@@ -1,0 +1,11 @@
+input[type="submit"] {
+    float: none;
+    display: block;
+    margin: 10px auto;
+}
+
+span.word {
+    font-size: 18pt;
+    font-weight: bold;
+    font-family: Trebuchet MS;
+}
