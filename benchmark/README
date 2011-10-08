@@ -16,6 +16,7 @@ ascii, all lowercase, distinct letters, and fixed length 7), generates a
 tuple of the schema:
 
 schema Word {
+    string word;
     int indexA;
     int indexB;
     ...
