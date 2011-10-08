@@ -86,7 +86,10 @@ def Play_1(sessionid):
     Play_locals['playAgain'] = 0
     Play_locals['points'] = 0
     Play_locals['possiblePoints'] = 0
-    Play_While_1(sessionid)
+    if Play_locals['playAgain'] == 0:
+        Play_While_1(sessionid)
+    else:
+        Play_2(sessionid)
 
 def Play_While_1(sessionid):
     Play_locals['serverChoice'] = nextRandom() % 3
