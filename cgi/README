@@ -2,26 +2,32 @@ Ismail Badawi
 Carla Morawicz
 
 This is a python CGI implementation of 08rps.wig, a rock-paper-scissors wig
-service we found in public_html/wig/examples/lkwig. We looked to wig4 and the example from
-the slides for inspiration, but tried to make use of nicer features of python whenever 
-possible.
+service we found in public_html/wig/examples/lkwig. We looked to wig4 and the 
+example from the slides for inspiration, but tried to make use of nicer 
+features of python whenever possible.
 
-* Python has an extensive standard library, making certain tasks easier; for instance,
-  the cgi module takes care of parsing the query string, and we use pickle to save/load
-  state to/from a file. Note that our implementation of Store is not synchronized right
-  now, so global variables are not safe for concurrent threads.
+* Python has an extensive standard library, making certain tasks easier; for 
+  instance, the cgi module takes care of parsing the query string, and we use 
+  pickle to save/load state to/from a file. Note that our implementation of 
+  Store is not synchronized right now, so global variables are not safe for 
+  concurrent threads.
 * We follow wig4's approach for a few parts:
     - Sessions are identified by a 20-byte random string in the URL
-    - Globals and locals are stored in a file. However, pickle makes this a bit more
-      convenient; we just keep one dictionary of local variables per session, and pickle
-      the whole thing when we need to save state and exit. Then we can load the whole
-      thing again, and things like casting to correct types are not an issue.
+    - Globals are stored in a file, but only when they are actually assigned
+      to; we provide a default value (corresponding to the type: 0 for ints, 
+      '' for strings, False for bools).
+    - Locals are stored in a file. However, pickle makes this a bit more
+      convenient; we just keep one dictionary of local variables per session, 
+      and pickle the whole thing when we need to save state and exit. Then we
+      can load the whole thing again, and things like casting to correct types
+      are not an issue.
     - HTML constants correspond to functions printing HTML.
-* Rather than using gotos, each Session becomes a series of functions, where each function
-  represents an entry point from the CGI script's point of view -- in our case, the start 
-  of a while loop, the statement after a while loop and following each show statement. We may
-  also need them for if statements. This can be a bit complicated and we're still not sure we've
-  got it exactly right, but for example:
+* Rather than using gotos, each Session becomes a series of functions, where
+  each function represents an entry point from the CGI script's point of view 
+  -- in our case, the start of a while loop, the statement after a while loop 
+  and following each show statement. We may also need them for if statements. 
+  This can be a bit complicated and we're still not sure we've got it exactly 
+  right, but for example:
 
 session Hello() {
     i = 45;
@@ -59,8 +65,8 @@ Hello_2() {
     // exit
 }
 
-When the session starts, Hello_1() is called, which then calls Hello_While_1() --
-Hello_While_1() exits, writing 'Hello_While_2' to file. When the script starts again for
-the same session, it reads 'Hello_While_2' and calls the corresponding function (using
-reflection, but this is not strictly necessary), which executes the rest of the loop
-and decides whether to go back to the start.
+When the session starts, Hello_1() is called, which then calls Hello_While_1()
+-- Hello_While_1() exits, writing 'Hello_While_2' to file. When the script
+starts again for the same session, it reads 'Hello_While_2' and calls the 
+corresponding function (using reflection, but this is not strictly necessary),
+which executes the rest of the loop and decides whether to go back to the start.
