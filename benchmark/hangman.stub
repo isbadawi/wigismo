@@ -51,14 +51,14 @@ service {
         <center><h1>YOU ARE THE BEST WINNER</h1>
         <p>The word was indeed <[l0]><[l1]><[l2]><[l3]><[l4]><[l5]><[l6]>.
         </p>You win, and it only took you <[guesses]> guesses!
-        <p><a href="hangman.pl?Play">Play again!</a></p></center>
+        <p><a href="?Play">Play again!</a></p></center>
     </body></html>;
 
     const html Lose = <html><body>
         <center><h1>FAIL!!!</h1>
         <p><[img]></p>
         <p>The word was <[word]>.</p>
-        <p><a href="hangman.pl?Play">Play again!</a></p></center>
+        <p><a href="?Play">Play again!</a></p></center>
     </body></html>;
 
     schema Word {
