@@ -191,4 +191,9 @@ print 'Content-type: text/html'
 print
 print '<title>Illegal request</title>'
 print '<h1>Illegal request: %s</h1>' % runtime.sessionid
+print '<p>Try one of these</p>'
+print '<ul>'
+print '<li><a href="?Play">Play</a></li>'
+print '<li><a href="?Top3">Top3</a></li>'
+print '</ul>'
 sys.exit(0)
