@@ -70,3 +70,19 @@ When the session starts, Hello_1() is called, which then calls Hello_While_1()
 starts again for the same session, it reads 'Hello_While_2' and calls the 
 corresponding function (using reflection, but this is not strictly necessary),
 which executes the rest of the loop and decides whether to go back to the start.
+
+The main reason we chose not to implement our WIG benchmark was that we
+generated a lot of code, so it would be a bit of a bother and not terribly
+instructive to reproduce! However, since the service we implemented didn't use
+tuples/schemas, we include here some discussion of how we might implement those
+in python. A schema declaration is a mapping of names to types -- we might
+represent that straightforwardly as a python dict mapping names to type objects.
+Tuples would be dicts mapping names to values. 
+
+Checking whether a tuple t adheres to a schema s would be straightforward:
+
+    s.keys() == t.keys() and 
+        all(isinstance(v, s[k]) for k, v in t)
+
+Dicts in python are pretty flexible, so implenting the tuple operations would
+also be relatively easy.
