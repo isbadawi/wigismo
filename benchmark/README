@@ -1,6 +1,9 @@
 Ismail Badawi
 Carla Morawicz
 
+The service is up and running at:
+http://www.cs.mcgill.ca/~cmoraw/cgi-bin/hangman.pl?Play
+
 Our WIG service implements the well known game of Hangman. Having come up
 with the idea, we identified the following parts as being very difficult
 or tedious (or impossible) to write using standard WIG:

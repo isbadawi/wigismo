@@ -1,6 +1,9 @@
 Ismail Badawi
 Carla Morawicz
 
+The service is up and running at:
+http://www.cs.mcgill.ca/~cmoraw/cgi-bin/08rps.py?Play
+
 This is a python CGI implementation of 08rps.wig, a rock-paper-scissors wig
 service we found in public_html/wig/examples/lkwig. We looked to wig4 and the 
 example from the slides for inspiration, but tried to make use of nicer 
