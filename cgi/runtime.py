@@ -9,12 +9,18 @@ fields = cgi.FieldStorage()
 sessionid = os.environ.get('QUERY_STRING', 'default')
 
 def random_string(length):
+    'Generates a random string of length lowercase characters.'
     return ''.join([random.choice(string.lowercase) for i in range(length)])
 
 def get_field(name):
+    'Returns the form input with the given name, or the the empty string.'
     return fields.getvalue(name, '')
 
 def output(session, out, exit=False):
+    """
+    Outputs a Content-type declaration and wraps the given out function 
+    (which outputs an HTML literal) with an HTML form if necessary.
+    """
     print 'Content-type: text/html'
     print
     if not exit: 
@@ -25,6 +31,7 @@ def output(session, out, exit=False):
         print '</form>'
 
 class Store(object):
+    'A simplistic key-value store which reads/writes items from/to a file.'
     def __init__(self, service):
         self.service = service
         if not os.path.exists(self.service):

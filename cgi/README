@@ -6,6 +6,11 @@ service we found in public_html/wig/examples/lkwig. We looked to wig4 and the
 example from the slides for inspiration, but tried to make use of nicer 
 features of python whenever possible.
 
+NOTE: It turns out (as we determined after a couple of hours of debugging)
+      python CGI scripts on the SOCS machines use python 2.3. Our original
+      implementation of the runtime used with statements in a few places,
+      and try/except/finally, so... ya.
+
 * Python has an extensive standard library, making certain tasks easier; for 
   instance, the cgi module takes care of parsing the query string, and we use 
   pickle to save/load state to/from a file. Note that our implementation of 
@@ -77,6 +82,8 @@ instructive to reproduce! However, since the service we implemented didn't use
 tuples/schemas, we include here some discussion of how we might implement those
 in python. A schema declaration is a mapping of names to types -- we might
 represent that straightforwardly as a python dict mapping names to type objects.
+For instance, schema Word {int i; bool b;} would correspond to
+    schema_Word = {'i': int, 'b', bool}
 Tuples would be dicts mapping names to values. 
 
 Checking whether a tuple t adheres to a schema s would be straightforward:
