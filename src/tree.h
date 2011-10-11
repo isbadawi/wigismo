@@ -32,6 +32,20 @@ typedef struct HOLE
     struct HOLE *next;
 } HOLE;
 
+typedef struct PLUG
+{
+    char *name;
+    struct EXP *exp;
+    struct PLUG *next;
+}
+
+typedef struct RECEIVE
+{
+    char *var;
+    char *plug;
+    struct RECEIVE *next;
+}
+
 typedef struct INPUT
 {
     char *name;
@@ -112,7 +126,8 @@ typedef struct STATEMENT
                 struct STATEMENT *body;
                 int startlabel, stoplabel; } whileS;
         struct {struct HTML* html;
-                struct PLUG* plugs; } showS;
+                struct PLUG* plugs; 
+                struct RECEIVE* receives;} showS;
         struct {struct HTML* html;
                 struct PLUG* plugs; } exitS;
     } val;
@@ -127,7 +142,35 @@ typedef struct EXP
           discardK, callK, intconstK, boolconstK, stringconstK, tupleK} kind;
     union
     {
+        struct {char *name;
+                SYMBOL *idsym; } idE;
+        struct {char *left;
+                SYMBOL *leftsym; 
+                struct EXP *right; } assignE;
+        struct {struct EXP *left;
+                struct EXP *right; } binaryE;
+        struct EXP *unaryE:
+        struct {char *name;
+                struct FUNCTION *function;
+                struct ARGUMENT *args; } callE;
+        int intconstE;
+        int boolconstE;
+        char *stringconstE;
+        struct TUPLE *tupleE;
     } val;
 } EXP;
+
+typedef struct ARGUMENT
+{
+    struct EXP *exp;
+    struct ARGUMENT *next;
+} ARGUMENT;
+
+typedef struct TUPLE
+{
+    char *name;
+    struct SCHEMA *schema;
+    /* ... ? */
+} TUPLE;
 
 #endif
