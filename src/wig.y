@@ -98,7 +98,7 @@ htmlbody : "<" tIDENTIFIER attributes ">"
          | tMETA
             { $$ = makeHTMLBODYmeta($1); }
          | "<" tINPUT inputattrs ">"
-            { $$ = makeHTMLBODYinput($2, $3); }
+            { $$ = makeHTMLBODYinput($3); }
          | "<" tSELECT inputattrs ">" nehtmlbodies "</" tSELECT ">" /* NEW */
             { $$ = makeHTMLBODYselect($3, $5); }
          | "<" tSELECT inputattrs ">" "</" tSELECT ">"              /* NEW */
