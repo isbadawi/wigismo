@@ -152,11 +152,23 @@ stm : ";"
     | tRETURN ";"
     | tRETURN exp ";"
     | tIF "(" exp ")" stm
-    | tIF "(" exp ")" stm tELSE stm
+    | tIF "(" exp ")" stmnoshortif tELSE stm
     | tWHILE "(" exp ")" stm
     | compoundstm
     | exp ";"
 ;
+
+stmnoshortif : ";"
+    | tSHOW document receive ";"
+    | tEXIT document ";"
+    | tRETURN ";"
+    | tRETURN exp ";"
+    | tIF "(" exp ")" stmnoshortif tELSE stmnoshortif
+    | tWHILE "(" exp ")" stmnoshortif
+    | compoundstm
+    | exp ";"
+;
+
 document : tIDENTIFIER 
          | tPLUG tIDENTIFIER "[" plugs "]"
 ;

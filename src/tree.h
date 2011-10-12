@@ -101,7 +101,7 @@ typedef struct LOCAL
 typedef struct STATEMENT
 {
     int lineno;
-    enum {showK, exitK, returnK, ifK, ifelseK, whileK, expK, whileK} kind;
+    enum {skipK, showK, exitK, returnK, ifK, ifelseK, whileK, expK, whileK} kind;
     union
     {
         struct EXP *expS;
