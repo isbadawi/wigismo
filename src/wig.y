@@ -223,97 +223,187 @@ function : type tIDENTIFIER "(" arguments ")" compoundstm
              { $$ = makeFUNCTION($1, $2, $4, $6); }
 ;
 
-arguments : /* empty */ | nearguments
+arguments : /* empty */ 
+            { $$ = NULL; }
+          | nearguments
+            { $$ = $1; }
 ;
-nearguments : argument | nearguments "," argument
+nearguments : argument 
+               { $$ = $1; }
+            | nearguments "," argument
+               { $$ = $3; $$->next = $1; }
 ;
+
 argument : type tIDENTIFIER
+            { $$ = makeARGUMENT($1, $2); }
 ;
 
-sessions : session | sessions session
+sessions : session 
+           { $$ = $1; }
+         | sessions session
+           { $$ = $2; $$->next = $1; }
 ;
+
 session : tSESSION tIDENTIFIER "(" ")" compoundstm
+           { $$ = makeSESSION($2, $5); }
 ;
 
-stms : /* empty */ | nestms
+stms : /* empty */ 
+       { $$ = NULL; }
+     | nestms
+       { $$ = $1; }
 ;
-nestms : stm | nestms stm
+nestms : stm 
+         { $$ = $1; }
+       | nestms stm
+         { $$ = $2; $$->next = $1; }
 ;
 stm : ";"
+      { $$ = makeSTATEMENTskip(); }
     | tSHOW document receive ";"
+      { $$ = makeSTATEMENTshow($2, $3); }
     | tEXIT document ";"
+      { $$ = makeSTATEMENTexit($2); }
     | tRETURN ";"
+      { $$ = makeSTATEMENTreturn(NULL); }
     | tRETURN exp ";"
+      { $$ = makeSTATEMENTreturn($2); }
     | tIF "(" exp ")" stm
+      { $$ = makeSTATEMENTif($3, $5); }
     | tIF "(" exp ")" stmnoshortif tELSE stm
+      { $$ = makeSTATEMENTifelse($3, $5, $7); }
     | tWHILE "(" exp ")" stm
+      { $$ = makeSTATEMENTwhile($3, $5); }
     | compoundstm
+      { $$ = $1; }
     | exp ";"
+      { $$ = makeSTATEMENTexp($1); }
 ;
 
 stmnoshortif : ";"
     | tSHOW document receive ";"
+      { $$ = makeSTATEMENTshow($2, $3); }
     | tEXIT document ";"
+      { $$ = makeSTATEMENTexit($2); }
     | tRETURN ";"
+      { $$ = makeSTATEMENTreturn(NULL); }
     | tRETURN exp ";"
+      { $$ = makeSTATEMENTreturn($2); }
     | tIF "(" exp ")" stmnoshortif tELSE stmnoshortif
+      { $$ = makeSTATEMENTifelse($3, $5, $7); }
     | tWHILE "(" exp ")" stmnoshortif
+      { $$ = makeSTATEMENTwhile($3, $5); }
     | compoundstm
+      { $$ = $1; }
     | exp ";"
+      { $$ = makeSTATEMENTexp($1); }
 ;
 
 document : tIDENTIFIER 
          | tPLUG tIDENTIFIER "[" plugs "]"
 ;
 receive : /* empty */
+          { $$ = NULL; }
         | tRECEIVE "[" inputs "]"
+          { $$ = makeRECEIVE($3); }
 ;
+
 compoundstm : "{" nevariables stms "}" /* NEW */
             | "{" stms "}"             /* NEW */
 ;
-plugs : plug | plugs "," plug
+
+plugs : plug 
+        { $$ = $1; }
+      | plugs "," plug
+        { $$ = $2; $$->next = $1; }
 ;
+
 plug : tIDENTIFIER "=" exp
+        { $$ = makePLUG($1, $3); }
 ;
-inputs : /* empty */ | neinputs
+
+inputs : /* empty */ 
+         { $$ = NULL; }
+       | neinputs
+         { $$ = $1; }
 ;
-neinputs : input | neinputs "," input
+
+neinputs : input 
+           { $$ = $1; }
+         | neinputs "," input
+           { $$ = $3; $$->next = $1; }
 ;
+
 input : lvalue "=" tIDENTIFIER
+    
 ;
 
 exp : lvalue
+     { $$ = makeEXPlvalue($1); }
     | lvalue '=' exp
+     { $$ = makeEXPassign($1, $3); }
     | exp tEQ exp
+     { $$ = makeEXPeq($1, $3); }
     | exp tNEQ exp
+     { $$ = makeEXPneq($1, $3); }
     | exp '<' exp
+     { $$ = makeEXPle($1, $3); }
     | exp '>' exp
+     { $$ = makeEXPge($1, $3); }
     | exp tLEQ exp
+     { $$ = makeEXPleq($1, $3); }
     | exp tGEQ exp
+     { $$ = makeEXPgeq($1, $3); }
     | '!' exp
+     { $$ = makeEXPnot($2); }
     | '-' exp %prec tUMINUS
+     { $$ = makeEXPuminus($2); }
     | exp '+' exp
+     { $$ = makeEXPplus($1, $3); }
     | exp '-' exp
+     { $$ = makeEXPminus($1, $3); }
     | exp '*' exp
+     { $$ = makeEXPtimes($1, $3); }
     | exp '/' exp
+     { $$ = makeEXPdiv($1, $3); }
     | exp '%' exp
+     { $$ = makeEXPmod($1, $3); }
     | exp tAND exp
+     { $$ = makeEXPand($1, $3); } 
     | exp tOR exp
+     { $$ = makeEXPor($1, $3); }
     | exp tCOMBINE exp
+     { $$ = makeEXPcombine($1, $3); }
     | exp tKEEP tIDENTIFIER
+     { $$ = makeEXPkeep($1, $3); }
     | exp tKEEP "(" identifiers ")" /* NEW */
+     { $$ = makeEXPkeep($1, $4); }
     | exp tDISCARD tIDENTIFIER         /* NEW */
+     { $$ = makeEXPdiscard($1, $3); }
     | exp tDISCARD "(" identifiers ")" /* NEW */
+     { $$ = makeEXPdiscard($1, $4); }
     | tIDENTIFIER "(" exps ")"
+     { $$ = makeEXPcall($1, $3); }
     | tINTCONST
+     { $$ = makeEXPintconst($1); }
     | tBOOLCONST
+     { $$ = makeEXPboolconst($1); }
     | tSTRINGCONST
+     { $$ = makeEXPstringconst($1); }
     | tTUPLE "{" fieldvalues "}"
+     { $$ = makeEXPtuple($3); }
     | "(" exp ")"                  /* NEW */
+     { $$ = $2; }
 ;
-exps : /* empty */ | neexps
+exps : /* empty */ 
+       { $$ = NULL; }
+     | neexps
+       { $$ = $1; }
 ;
-neexps : exp | neexps "," exp
+neexps : exp 
+         { $$ = $1; }
+       | neexps "," exp
+         { $$ = $3; $$->next = $1; }
 ;
 lvalue : tIDENTIFIER | tIDENTIFIER "." tIDENTIFIER
 ;
