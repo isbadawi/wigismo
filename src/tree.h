@@ -173,4 +173,8 @@ typedef struct TUPLE
     /* ... ? */
 } TUPLE;
 
+PROGRAM *makePROGRAM(char *name, SERVICE *service);
+SERVICE *makeSERVICE(char *name, HTML *htmls, SCHEMA *schemas, VARIABLE *variables, FUNCTION *functions, SESSION *sessions);
+
+
 #endif
