@@ -64,6 +64,12 @@ typedef struct SCHEMA
     struct SCHEMA *next;
 } SCHEMA;
 
+typedef struct ID
+{
+    char *name;
+    struct ID *next;
+} ID;
+
 typedef struct VARIABLE
 {
     int lineno;

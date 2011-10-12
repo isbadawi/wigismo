@@ -143,38 +143,86 @@ attribute : attr
 attr : tIDENTIFIER | tSTRINGCONST
 ;
 
-schemas: /* empty */ | neschemas
+schemas : /* empty */ 
+          { $$ = NULL; }
+        | neschemas
+          { $$ = $1; }
 ;
-neschemas: schema | neschemas schema
+
+neschemas : schema 
+              { $$ = $1; }
+          | neschemas schema
+              { $$ = $2; $$->next; $1; }
 ;
+
 schema : tSCHEMA tIDENTIFIER "{" fields "}"
+          { $$ = makeSCHEMA($2, $4); }
 ;
-fields : /* empty */ | nefields
+
+fields : /* empty */ 
+          { $$ = NULL; }
+       | nefields
+          { $$ = $1; }
 ;
-nefields : field | nefields field
+
+nefields : field 
+            { $$ = $1; }
+         | nefields field
+            { $$ = $2; $$->next = $1; }
 ;
+
 field : simpletype tIDENTIFIER ";"
+        { $$ = makeVARIABLE($1, $2); }
 ;
 
 /* NEW: variables production deleted */
-nevariables : variable | nevariables variable 
+nevariables : variable 
+               { $$ = $1; }
+            | nevariables variable 
+               { $$ = $2; $$->next = $1; }
 ;
+
 variable : type identifiers ";"
-;
-identifiers : tIDENTIFIER | identifiers "," tIDENTIFIER
-;
-
-simpletype : tINT | tBOOL | tSTRING | tVOID
-;
-type : simpletype | tTUPLE tIDENTIFIER
+            { $$ = makeVARIABLES($1, $2); }
 ;
 
-functions : /* empty */ | nefunctions
+identifiers : tIDENTIFIER 
+              { $$ = makeID($1); }
+            | identifiers "," tIDENTIFIER
+              { $$ = $1; $$->next = makeID($3); }
 ;
-nefunctions : function | nefunctions function
+
+simpletype : tINT 
+              { $$ = makeTYPEint(); }
+            | tBOOL 
+              { $$ = makeTYPEbool(); }
+            | tSTRING 
+              { $$ = makeTYPEstring(); }
+            | tVOID
+              { $$ = makeTYPEvoid(); }
 ;
+type : simpletype 
+        { $$ = $1; }
+     | tTUPLE tIDENTIFIER
+        { $$ = makeTYPEtuple($2); }
+;
+
+functions : /* empty */ 
+            { $$ = NULL; }
+          | nefunctions
+            { $$ = $1; }
+;
+
+nefunctions : function 
+               { $$ = $1; }
+            | nefunctions function
+               { $$ = $2; $$->next = $1; }
+;
+
 function : type tIDENTIFIER "(" arguments ")" compoundstm
+             { $$ = makeFUNCTION($1, $2, $4, $6); }
 ;
+
 arguments : /* empty */ | nearguments
 ;
 nearguments : argument | nearguments "," argument
