@@ -13,18 +13,34 @@ typedef struct SERVICE
 
 typedef struct HTML
 {
-    char *body;
-    struct HOLE *holes;
-    struct INPUT *inputs;
+    char *name;
+    struct HTMLBODY *htmlbodies;
     struct HTML *next;
 } HTML;
 
-typedef struct HOLE
+typedef struct HTMLBODY
+{
+    enum {opentagK, closetagK, gapK, whateverK, metaK, inputK, selectK} kind;
+    union
+    {
+        struct {char *name;
+                struct ATTRIBUTE *attributes; } tagH;
+        struct {char *name;
+                struct ATTRIBUTE *attributes; } inputH;
+        struct {struct ATTRIBUTE *attributes;
+                struct HTMLBODY *htmlbodies; } selectH;
+        char *gapH;
+        char *whateverH;
+        char *metaH;
+    } val;
+} HTMLBODY;
+
+typedef struct ATTRIBUTE
 {
     char *name;
-    int position;
-    struct HOLE *next;
-} HOLE;
+    char *value;
+    struct ATTRIBUTE *next;
+} ATTRIBUTE;
 
 typedef struct PLUG
 {
@@ -39,12 +55,6 @@ typedef struct RECEIVE
     char *plug;
     struct RECEIVE *next;
 }
-
-typedef struct INPUT
-{
-    char *name;
-    struct INPUT *next;
-} INPUT;
 
 typedef struct SCHEMA
 {

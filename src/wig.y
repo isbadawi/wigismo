@@ -1,5 +1,6 @@
 %{
 
+#include<stdlib.h>
 #include"tree.h"
 
 extern SERVICE *theservice;
@@ -11,6 +12,7 @@ extern SERVICE *theservice;
 %union {
     struct SERVICE *service;
     struct HTML *html;
+    struct HTMLBODY *htmlbody;
     struct SCHEMA *schema;
     struct VARIABLE *variable;
     struct FUNCTION *function;
@@ -18,7 +20,6 @@ extern SERVICE *theservice;
     struct FORMAL *formal;
     struct TYPE *type;
     struct INPUT *input;
-    struct HOLE *hole;
     struct PLUG *plug;
     struct RECEIVE *receive;
     struct ARGUMENT *argument;
@@ -39,13 +40,14 @@ extern SERVICE *theservice;
 
 %type <service> service
 %type <html> htmls html
+%type <htmlbody> nehtmlbodies htmlbody
 %type <schema> schemas neschemas schema
 %type <variable> variable nevariables
 %type <type> type simpletype
 %type <function> function functions nefunctions
 %type <argument> argument nearguments arguments
 %type <session> session sessions;
-%type <statement> stm stms nestms compoundstm 
+%type <statement> stm stms nestms compoundstm stm stmnoshortif
 %type <exp> exp
 %type <plug> plug plugs
 %type <input> input neinputs inputs
@@ -59,42 +61,85 @@ extern SERVICE *theservice;
 %right '!' tUMINUS
 %nonassoc tEQ tLEQ tGEQ tNEQ '<' '>'
 
-%%
+%% /* productions */
 
-service : tSERVICE "{" htmls schemas nevariables functions sessions "}" /* NEW */
-        | tSERVICE "{" htmls schemas functions sessions "}"             /* NEW */
+service : tSERVICE '{' htmls schemas nevariables functions sessions '}' /* NEW */
+          { $$ = makeSERVICE($3, $4, $5, $6, $7); }
+        | tSERVICE '{' htmls schemas functions sessions '}'             /* NEW */
+          { $$ = makeSERVICE($3, $4, NULL, $5, $6); }
 ;
 
-htmls : html | htmls html
+htmls : html 
+          { $$ = $1; }
+        | htmls html
+          { $$ = $2; $$->next = $1; }
 ;
+
 html : tCONST tHTML tIDENTIFIER "=" "<html>" nehtmlbodies "</html>" ";" /* NEW */
+          { $$ = makeHTML($3, $6); }
      | tCONST tHTML tIDENTIFIER "=" "<html>" "</html>" ";"              /* NEW */
+          { $$ = makeHTML($3, NULL); }
 ;
-nehtmlbodies : htmlbody | nehtmlbodies htmlbody
+
+nehtmlbodies : htmlbody 
+                { $$ = $1; }
+             | nehtmlbodies htmlbody
+                { $$ = $2; $$->next = $1; }
 ;
+
 htmlbody : "<" tIDENTIFIER attributes ">"
+            { $$ = makeHTMLBODYopen($2, $3); }
          | "</" tIDENTIFIER ">"
+            { $$ = makeHTMLBODYclose($2); }
          | "<[" tIDENTIFIER "]>"
+            { $$ = makeHTMLBODYgap($2); }
          | tWHATEVER
+            { $$ = makeHTMLBODYwhatever($1); }
          | tMETA
+            { $$ = makeHTMLBODYmeta($1); }
          | "<" tINPUT inputattrs ">"
+            { $$ = makeHTMLBODYinput($2, $3); }
          | "<" tSELECT inputattrs ">" nehtmlbodies "</" tSELECT ">" /* NEW */
+            { $$ = makeHTMLBODYselect($3, $5); }
          | "<" tSELECT inputattrs ">" "</" tSELECT ">"              /* NEW */
+            { $$ = makeHTMLBODYselect($3, NULL); }
 ;
-inputattrs : inputattr | inputattrs inputattr
+
+inputattrs : inputattr 
+             { $$ = $1; }
+           | inputattrs inputattr
+             { $$ = $2; $$->next = $1; }
 ;
+
 inputattr : "name" "=" attr
+             { makeATTRIBUTE($1, $3); }
           | "type" "=" inputtype
+             { makeATTRIBUTE($1, $3); }
           | attribute
+             { $$ = $1; }
 ;
+
 inputtype : tTEXT | tRADIO
 ;
-attributes : /* empty */ | neattributes
+
+attributes : /* empty */ 
+             { $$ = NULL; }
+           | neattributes
+             { $$ = $1; }
 ;
-neattributes : attribute | neattributes attribute
+
+neattributes : attribute 
+                { $$ = $1; }
+             | neattributes attribute
+                { $$ = $2; $$->next = $1; }
 ;
-attribute : attr | attr "=" attr
+
+attribute : attr 
+             { $$ = makeATTRIBUTE($1, NULL); }
+          | attr "=" attr
+             { $$ = makeATTRIBUTE($1, $3); }
 ;
+
 attr : tIDENTIFIER | tSTRINGCONST
 ;
 
