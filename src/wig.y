@@ -13,26 +13,30 @@ extern SERVICE *theservice;
     struct SERVICE *service;
     struct HTML *html;
     struct HTMLBODY *htmlbody;
+    struct ATTRIBUTE *attribute;
     struct SCHEMA *schema;
+    struct ID *id;
     struct VARIABLE *variable;
     struct FUNCTION *function;
     struct SESSION *session;
-    struct FORMAL *formal;
     struct TYPE *type;
     struct INPUT *input;
+    struct DOCUMENT *document;
     struct PLUG *plug;
     struct RECEIVE *receive;
     struct ARGUMENT *argument;
     struct STATEMENT *statement;
     struct EXP *exp;
+    struct FIELDVALUE *fieldvalue;
     int intconst;
     int boolconst;
     char *stringconst;
 };
 
-%token tSERVICE tCONST tHTML tSESSION tSHOW tEXIT tINT tBOOL tSTRING tVOID tSCHEMA
-       tTUPLE tIF tELSE tWHILE tRETURN tINPUT tSELECT tTEXT tRADIO tPLUG tRECEIVE
-       tEQ tLEQ tGEQ tNEQ tAND tOR tKEEP tDISCARD tCOMBINE tUMINUS
+%token tSERVICE tCONST tHTML tSESSION tSHOW tEXIT tINT tBOOL tSTRING tVOID 
+       tSCHEMA tTUPLE tIF tELSE tWHILE tRETURN tINPUT tSELECT tTEXT tRADIO 
+       tPLUG tRECEIVE tEQ tLEQ tGEQ tNEQ tAND tOR tKEEP tDISCARD tCOMBINE 
+       tUMINUS tNAME tTYPE
 
 %token <intconst> tINTCONST
 %token <boolconst> tBOOLCONST
@@ -41,16 +45,22 @@ extern SERVICE *theservice;
 %type <service> service
 %type <html> htmls html
 %type <htmlbody> nehtmlbodies htmlbody
+%type <attribute> inputattr inputattrs attribute neattributes attributes
 %type <schema> schemas neschemas schema
-%type <variable> variable nevariables
+%type <id> identifiers
+%type <variable> variable nevariables field fields nefields
 %type <type> type simpletype
 %type <function> function functions nefunctions
 %type <argument> argument nearguments arguments
 %type <session> session sessions;
-%type <statement> stm stms nestms compoundstm stm stmnoshortif
-%type <exp> exp
+%type <statement> stm stms nestms compoundstm stmnoshortif
+%type <receive> receive
+%type <document> document
+%type <exp> exp exps neexps
+%type <fieldvalue> fieldvalue fieldvalues nefieldvalues
 %type <plug> plug plugs
 %type <input> input neinputs inputs
+%type <stringconst> inputtype lvalue attr
 
 %right '='
 %left '+' '-'
@@ -111,15 +121,19 @@ inputattrs : inputattr
              { $$ = $2; $$->next = $1; }
 ;
 
-inputattr : "name" "=" attr
-             { makeATTRIBUTE($1, $3); }
-          | "type" "=" inputtype
-             { makeATTRIBUTE($1, $3); }
+inputattr : tNAME "=" attr
+             { makeATTRIBUTE("name", $3); }
+          | tTYPE "=" inputtype
+             { makeATTRIBUTE("type", $3); }
           | attribute
              { $$ = $1; }
 ;
 
-inputtype : tTEXT | tRADIO
+inputtype : tTEXT 
+            { $$ = "text"; }
+          | tRADIO
+            { $$ = "radio"; }
+        
 ;
 
 attributes : /* empty */ 
@@ -281,6 +295,7 @@ stm : ";"
 ;
 
 stmnoshortif : ";"
+      { $$ = makeSTATEMENTskip(); }
     | tSHOW document receive ";"
       { $$ = makeSTATEMENTshow($2, $3); }
     | tEXIT document ";"
@@ -300,7 +315,9 @@ stmnoshortif : ";"
 ;
 
 document : tIDENTIFIER 
+           { $$ = makeDOCUMENT($1, NULL); }
          | tPLUG tIDENTIFIER "[" plugs "]"
+           { $$ = makeDOCUMENT($2, $4); }
 ;
 receive : /* empty */
           { $$ = NULL; }
@@ -309,13 +326,15 @@ receive : /* empty */
 ;
 
 compoundstm : "{" nevariables stms "}" /* NEW */
+               { $$ = makeSTATEMENTBLOCK($3, $2); }
             | "{" stms "}"             /* NEW */
+               { $$ = makeSTATEMENTblock($2, NULL); }
 ;
 
 plugs : plug 
         { $$ = $1; }
       | plugs "," plug
-        { $$ = $2; $$->next = $1; }
+        { $$ = $3; $$->next = $1; }
 ;
 
 plug : tIDENTIFIER "=" exp
@@ -335,7 +354,7 @@ neinputs : input
 ;
 
 input : lvalue "=" tIDENTIFIER
-    
+     { $$ = makeINPUT($1, $3); } 
 ;
 
 exp : lvalue
@@ -405,11 +424,24 @@ neexps : exp
        | neexps "," exp
          { $$ = $3; $$->next = $1; }
 ;
-lvalue : tIDENTIFIER | tIDENTIFIER "." tIDENTIFIER
+lvalue : tIDENTIFIER 
+       | tIDENTIFIER "." tIDENTIFIER
+         { $$ = (char*)malloc(strlen($1) * 2 + 2);
+           strcpy($$, $1);
+           strcat($$, ".");
+           strcat($$, $3);
+         }  
 ;
-fieldvalues : /* empty */ | nefieldvalues
+fieldvalues : /* empty */ 
+              { $$ = NULL; }
+            | nefieldvalues
+              { $$ = $1; }
 ;
-nefieldvalues : fieldvalue | fieldvalues "," fieldvalue
+nefieldvalues : fieldvalue 
+                { $$ = $1; }
+              | fieldvalues "," fieldvalue
+                { $$ = $3; $$->next = $1; }
 ;
 fieldvalue : tIDENTIFIER "=" exp
+              { $$ = makeFIELDVALUE($1, $3); }
 ;

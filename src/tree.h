@@ -20,19 +20,20 @@ typedef struct HTML
 
 typedef struct HTMLBODY
 {
+    int lineno;
     enum {opentagK, closetagK, gapK, whateverK, metaK, inputK, selectK} kind;
     union
     {
         struct {char *name;
                 struct ATTRIBUTE *attributes; } tagH;
-        struct {char *name;
-                struct ATTRIBUTE *attributes; } inputH;
+        struct {struct ATTRIBUTE *attributes; } inputH;
         struct {struct ATTRIBUTE *attributes;
                 struct HTMLBODY *htmlbodies; } selectH;
         char *gapH;
         char *whateverH;
         char *metaH;
     } val;
+    HTMLBODY *next;
 } HTMLBODY;
 
 typedef struct ATTRIBUTE
@@ -83,7 +84,7 @@ typedef struct FUNCTION
     int lineno;
     char *name;
     struct TYPE* returntype;
-    struct FORMAL *formals;
+    struct ARGUMENT *arguments;
     struct STATEMENT *statements;
     struct FUNCTION *next;
 } FUNCTION;
@@ -93,17 +94,7 @@ typedef struct TYPE
     int lineno;
     enum {intK, boolK, stringK, voidK, tupleK} kind;
     char *name;
-    struct TUPLE* tuple;
 } TYPE;
-
-typedef struct FORMAL
-{
-    int lineno;
-    char *name;
-    struct TYPE *type;
-    int offset;
-    struct FORMAL *next;
-} FORMAL;
 
 typedef struct LOCAL
 {
@@ -117,7 +108,8 @@ typedef struct LOCAL
 typedef struct STATEMENT
 {
     int lineno;
-    enum {skipK, showK, exitK, returnK, ifK, ifelseK, whileK, expK, whileK} kind;
+    enum {skipK, showK, exitK, returnK, blockK, ifK, ifelseK, whileK, expK,
+          whileK} kind;
     union
     {
         struct EXP *expS;
@@ -127,21 +119,27 @@ typedef struct STATEMENT
                 struct STATEMENT *second;} sequenceS;
         struct {struct EXP *condition;
                 struct STATEMENT *body;
-                int stoplabel; } ifS;
+                int stoplabel;} ifS;
         struct {struct EXP *condition;
                 struct STATEMENT *thenpart;
                 struct STATEMENT *elsepart;
-                int elselabel, stoplabel; } ifelseS;
+                int elselabel, stoplabel;} ifelseS;
+        struct {struct STATEMENT *body;
+                struct VARIABLE *variables; } blockS;
         struct {struct EXP *condition;
                 struct STATEMENT *body;
-                int startlabel, stoplabel; } whileS;
-        struct {struct HTML* html;
-                struct PLUG* plugs; 
-                struct RECEIVE* receives;} showS;
-        struct {struct HTML* html;
-                struct PLUG* plugs; } exitS;
+                int startlabel, stoplabel;} whileS;
+        struct {struct DOCUMENT *document;
+                struct RECEIVE *receives;} showS;
+        struct {struct DOCUMENT *document;} exitS;
     } val;
 } STATEMENT;
+
+typedef struct DOCUMENT
+{
+    char *name;
+    PLUG *plugs;
+} DOCUMENT;
 
 typedef struct EXP 
 {
@@ -168,6 +166,7 @@ typedef struct EXP
         char *stringconstE;
         struct TUPLE *tupleE;
     } val;
+    EXP *next;
 } EXP;
 
 typedef struct ARGUMENT
@@ -180,8 +179,15 @@ typedef struct TUPLE
 {
     char *name;
     struct SCHEMA *schema;
-    /* ... ? */
+    struct FIELDVALUE *fieldvalues;
 } TUPLE;
+
+typedef struct FIELDVALUE
+{
+    char *name;
+    EXP *exp;
+    struct FIELDVALUE *next;
+} FIELDVALUE;
 
 SERVICE *makeSERVICE(char *name, HTML *htmls, SCHEMA *schemas, VARIABLE *variables, FUNCTION *functions, SESSION *sessions);
 HTML *makeHTML(char *name, HTMLBODY *htmlbodies); 
@@ -205,11 +211,12 @@ TYPE *makeTYPEtuple(char *name);
 FUNCTION *makeFUNCTION(TYPE *returntype, char *name, ARGUMENT *arguments, STATEMENT *body);
 ARGUMENT *makeARGUMENT(TYPE *type, char *name);
 SESSION *makeSESSION(char *name, STATEMENT *body);
+DOCUMENT *makeDOCUMENT(char *name, PLUG *plugs);
 STATEMENT *makeSTATEMENTskip(void);
-// FIXME:  ADD DOCUMENT?
-STATEMENT *makeSTATEMENTshow(int document, RECEIVE *receives);
-STATEMENT *makeSTATEMENTexit(int document);
+STATEMENT *makeSTATEMENTshow(DOCUMENT *document, RECEIVE *receives);
+STATEMENT *makeSTATEMENTexit(DOCUMENT *document);
 STATEMENT *makeSTATEMENTreturn(EXP *exp);
+STATEMENT *makeSTATEMENTblock(STATEMENT *body, VARIABLE *variables);
 STATEMENT *makeSTATEMENTif(EXP *exp, STATEMENT *body);
 STATEMENT *makeSTATEMENTifelse(EXP *exp, STATEMENT *then, STATEMENT *elsepart);
 STATEMENT *makeSTATEMENTwhile(EXP *exp, STATEMENT *body);
@@ -241,5 +248,6 @@ EXP *makeEXPintconst(int i);
 EXP *makeEXPboolconst(int b);
 EXP *makeEXPstringconst(char *string);
 EXP *makeEXPtuple(FIELDVALUE *fieldvalues);
+FIELDVALUE *makeFIELDVALUE(char *name, EXP *exp);
 
 #endif
