@@ -198,97 +198,337 @@ TYPE *makeTYPEtuple(char *name)
 
 FUNCTION *makeFUNCTION(TYPE *returntype, char *name, ARGUMENT *arguments, STATEMENT *body)
 {
+    FUNCTION *f = NEW(FUNCTION);
+    f->lineno = lineno;
+    f->name = name;
+    f->returntype = returntype;
+    f->arguments = arguments;
+    f->statements = body;
+    f->next = NULL;
+    return f;
 }
+
 ARGUMENT *makeARGUMENT(TYPE *type, char *name)
 {
+    ARGUMENT *a = NEW(ARGUMENT);
+    a->lineno = lineno;
+    a->type = type;
+    a->name = name;
+    a->next = NULL;
+    return a;
 }
+
 SESSION *makeSESSION(char *name, STATEMENT *body)
 {
+    SESSION *s = NEW(SESSION);
+    s->lineno = lineno;
+    s->name = name;
+    s->statements = body;
+    s->next = NULL;
+    return s;
 }
+
 DOCUMENT *makeDOCUMENT(char *name, PLUG *plugs)
 {
+    DOCUMENT *d = NEW(DOCUMENT);
+    d->name = name;
+    d->plugs = plugs;
+    return d;
 }
+
 STATEMENT *makeSTATEMENTskip(void)
 {
+    STATEMENT *s = NEW(STATEMENT);
+    s->lineno = lineno;
+    s->kind = skipK;
+    return s;
 }
+
 STATEMENT *makeSTATEMENTshow(DOCUMENT *document, RECEIVE *receives)
 {
+    STATEMENT *s = NEW(STATEMENT);
+    s->lineno = lineno;
+    s->kind = showK;
+    s->val.showS.document = document;
+    s->val.showS.receives = receives;
+    return s;
 }
+
 STATEMENT *makeSTATEMENTexit(DOCUMENT *document)
 {
+    STATEMENT *s = NEW(STATEMENT);
+    s->lineno = lineno;
+    s->kind = exitK;
+    s->val.exitS.document = document;
+    return s;
 }
+
 STATEMENT *makeSTATEMENTreturn(EXP *exp)
 {
+    STATEMENT *s = NEW(STATEMENT);
+    s->lineno = lineno;
+    s->kind = returnK;
+    s->val.returnS = exp;
+    return s;
 }
+
 STATEMENT *makeSTATEMENTblock(STATEMENT *body, VARIABLE *variables)
 {
+    STATEMENT *s = NEW(STATEMENT);
+    s->lineno = lineno;
+    s->kind = blockK;
+    s->val.blockS.body = body;
+    s->val.blockS.variables = variables;
+    return s;
 }
+
 STATEMENT *makeSTATEMENTif(EXP *exp, STATEMENT *body)
 {
+    STATEMENT *s = NEW(STATEMENT);
+    s->lineno = lineno;
+    s->kind = ifK;
+    s->val.ifS.body = body;
+    s->val.ifS.condition = exp;
+    return s;
 }
+
 STATEMENT *makeSTATEMENTifelse(EXP *exp, STATEMENT *then, STATEMENT *elsepart)
 {
+    STATEMENT *s = NEW(STATEMENT);
+    s->lineno = lineno;
+    s->kind = ifelseK;
+    s->val.ifelseS.condition = exp;
+    s->val.ifelseS.thenpart = then;
+    s->val.ifelseS.elsepart = elsepart;
+    return s;
 }
+
 STATEMENT *makeSTATEMENTwhile(EXP *exp, STATEMENT *body)
 {
+    STATEMENT *s = NEW(STATEMENT);
+    s->lineno = lineno;
+    s->kind = whileK;
+    s->val.whileS.condition = exp;
+    s->val.whileS.body = body;
+    return s;
 }
+
 STATEMENT *makeSTATEMENTexp(EXP *exp)
 {
+    STATEMENT *s = NEW(STATEMENT);
+    s->lineno = lineno;
+    s->kind = expK;
+    s->val.expS = exp;
+    return s;
 }
+
 RECEIVE *makeRECEIVE(INPUT *inputs)
 {
+    RECEIVE *r = NEW(RECEIVE);
+    r->inputs = inputs;
+    r->next = NULL;
+    return r;
 }
+
 PLUG *makePLUG(char *name, EXP *exp)
 {
+    PLUG *p = NEW(PLUG);
+    p->name = name;
+    p->exp = exp;
+    p->next = NULL;
+    return p;
 }
+
 EXP *makeEXPlvalue(char *lvalue)
 {
+    EXP *e = NEW(EXP);
+    e->lineno = lineno;
+    e->kind = idK;
+    e->val.idE.name = lvalue;
+    // TODO: what is SYMBOL
+    e->next = NULL;
+    return e;
 }
+
 EXP *makeEXPassign(char *lvalue, EXP *exp)
 {
+    EXP *e = NEW(EXP);
+    e->lineno = lineno;
+    e->kind = assignK;
+    e->val.assignE.left = lvalue;
+    // TODO: what is SYMBOL
+    e->val.assignE.right = exp;
+    e->next = NULL;
+    return e;
 }
+
+EXP *makeEXPbinary(int kind, EXP *left, EXP *right)
+{
+    EXP *e = NEW(EXP);
+    e->lineno = lineno;
+    e->kind = kind;
+    e->val.binaryE.left = left;
+    e->val.binaryE.right = right;
+    e->next = NULL;
+    return e;
+}
+
+EXP *makeEXPunary(int kind, EXP *exp)
+{
+    EXP *e = NEW(EXP);
+    e->lineno = lineno;
+    e->kind = kind;
+    e->val.unaryE = exp;
+    e->next = NULL;
+    return e;
+}
+
 EXP *makeEXPeq(EXP *left, EXP *right)
 {
+    return makeEXPbinary(eqK, left, right);
 }
+
 EXP *makeEXPneq(EXP *left, EXP *right)
 {
+    return makeEXPbinary(neqK, left, right);
 }
-EXP *makeEXPle(EXP *left, EXP *right)
+
+EXP *makeEXPlt(EXP *left, EXP *right)
 {
+    return makeEXPbinary(ltK, left, right);
 }
-EXP *makeEXPge(EXP *left, EXP *right)
+
+EXP *makeEXPgt(EXP *left, EXP *right)
 {
+    return makeEXPbinary(gtK, left, right);
 }
+
 EXP *makeEXPleq(EXP *left, EXP *right)
 {
+    return makeEXPbinary(leqK, left, right);
 }
+
 EXP *makeEXPgeq(EXP *left, EXP *right)
 {
+    return makeEXPbinary(geqK, left, right);
 }
+
 EXP *makeEXPnot(EXP *exp)
 {
+    return makeEXPunary(notK, exp);
 }
+
 EXP *makeEXPuminus(EXP *exp)
 {
+    return makeEXPunary(uminusK, exp);
 }
+
 EXP *makeEXPplus(EXP *left, EXP *right)
 {
+    return makeEXPbinary(plusK, left, right);
 }
+
 EXP *makeEXPminus(EXP *left, EXP *right)
 {
+    return makeEXPbinary(minusK, left, right);
 }
+
 EXP *makeEXPtimes(EXP *left, EXP *right)
 {
+    return makeEXPbinary(timesK, left, right);
 }
+
 EXP *makeEXPdiv(EXP *left, EXP *right)
 {
+    return makeEXPbinary(divK, left, right);
 }
+
 EXP *makeEXPmod(EXP *left, EXP *right)
 {
+    return makeEXPbinary(modK, left, right);
 }
+
 EXP *makeEXPand(EXP *left, EXP *right)
 {
+    return makeEXPbinary(andK, left, right);
 }
-EXP *makeEXPor(EXP *left, EXP *right);
-EXP *makeEXPcombine(EXP *left, EXP *right);
 
+EXP *makeEXPor(EXP *left, EXP *right);
+{
+    return makeEXPbinary(orK, left, right);
+}
+
+EXP *makeEXPcombine(EXP *left, EXP *right);
+{
+    return makeEXPbinary(combineK, left, right);
+}
+
+EXP *makeEXPkeep(EXP *left, EXP *right)
+{
+    return makeEXPbinary(keepK, left, right);
+}
+
+EXP *makeEXPdiscard(EXP *left, EXP *right)
+{
+    return makeEXPbinary(discardK, left, right);
+}
+
+EXP *makeEXPcall(char *name, EXP *exps)
+{
+    EXP *e = NEW(EXP);
+    e->lineno = lineno;
+    e->kind = callK;
+    e->val.callE.name = name;
+    e->val.callE.args = exps;
+    e->next = NULL;
+    return e;
+}
+
+EXP *makeEXPintconst(int i)
+{
+    EXP *e = NEW(EXP);
+    e->lineno = lineno;
+    e->kind = intconstK;
+    e->val.intconstE = i;
+    e->next = NULL;
+    return e;
+}
+
+EXP *makeEXPboolconst(int b)
+{
+    EXP *e = NEW(EXP);
+    e->lineno = lineno;
+    e->kind = boolconstK;
+    e->val.boolconstE = b;
+    e->next = NULL;
+    return e;
+}
+
+EXP *makeEXPstringconst(char *string)
+{
+    EXP *e = NEW(EXP);
+    e->lineno = lineno;
+    e->kind = stringconstK;
+    e->val.stringconstE = string;
+    e->next = NULL;
+    return e;
+}
+
+EXP *makeEXPtuple(FIELDVALUE *fieldvalues)
+{
+    EXP *e = NEW(EXP);
+    e->lineno = lineno;
+    e->kind = tupleK;
+    e->val.tupleE.fieldvalues = fieldvalues;
+    e->next = NULL;
+    return e;
+}
+
+FIELDVALUE *makeFIELDVALUE(char *name, EXP *exp)
+{
+    FIELDVALUE *fv = NEW(FIELDVALUE);
+    fv->name = name;
+    fv->exp = exp;
+    fv->next = NULL;
+    return fv;
+}

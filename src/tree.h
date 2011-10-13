@@ -11,6 +11,14 @@ typedef struct SERVICE
     struct SESSION *sessions;
 } SERVICE;
 
+typedef struct SESSION
+{
+    int lineno;
+    char *name;
+    struct STATEMENT *statements;
+    struct SESSION *next;
+} SESSION;
+
 typedef struct HTML
 {
     char *name;
@@ -48,14 +56,20 @@ typedef struct PLUG
     char *name;
     struct EXP *exp;
     struct PLUG *next;
-}
+} PLUG;
 
 typedef struct RECEIVE
 {
-    char *var;
-    char *plug;
+    struct INPUT *inputs;
     struct RECEIVE *next;
-}
+} RECEIVE;
+
+typedef struct INPUT
+{
+    char *lhs;
+    char *rhs;
+    struct INPUT *next;
+} INPUT;
 
 typedef struct SCHEMA
 {
@@ -118,17 +132,14 @@ typedef struct STATEMENT
         struct {struct STATEMENT *first;
                 struct STATEMENT *second;} sequenceS;
         struct {struct EXP *condition;
-                struct STATEMENT *body;
-                int stoplabel;} ifS;
+                struct STATEMENT *body; } ifS;
         struct {struct EXP *condition;
                 struct STATEMENT *thenpart;
-                struct STATEMENT *elsepart;
-                int elselabel, stoplabel;} ifelseS;
+                struct STATEMENT *elsepart; } ifelseS;
         struct {struct STATEMENT *body;
                 struct VARIABLE *variables; } blockS;
         struct {struct EXP *condition;
-                struct STATEMENT *body;
-                int startlabel, stoplabel;} whileS;
+                struct STATEMENT *body;} whileS;
         struct {struct DOCUMENT *document;
                 struct RECEIVE *receives;} showS;
         struct {struct DOCUMENT *document;} exitS;
@@ -159,19 +170,20 @@ typedef struct EXP
                 struct EXP *right; } binaryE;
         struct EXP *unaryE:
         struct {char *name;
-                struct FUNCTION *function;
-                struct ARGUMENT *args; } callE;
+                struct EXP *args; } callE;
         int intconstE;
         int boolconstE;
         char *stringconstE;
-        struct TUPLE *tupleE;
+        struct {struct FIELDVALUE* fieldvalues;} *tupleE;
     } val;
     EXP *next;
 } EXP;
 
 typedef struct ARGUMENT
 {
-    struct EXP *exp;
+    int lineno;
+    struct TYPE *type;
+    char *name;
     struct ARGUMENT *next;
 } ARGUMENT;
 
@@ -223,6 +235,7 @@ STATEMENT *makeSTATEMENTwhile(EXP *exp, STATEMENT *body);
 STATEMENT *makeSTATEMENTexp(EXP *exp);
 RECEIVE *makeRECEIVE(INPUT *inputs);
 PLUG *makePLUG(char *name, EXP *exp);
+INPUT *makeINPUT(char *lhs, char *rhs);
 EXP *makeEXPlvalue(char *lvalue);
 EXP *makeEXPassign(char *lvalue, EXP *exp);
 EXP *makeEXPeq(EXP *left, EXP *right);
