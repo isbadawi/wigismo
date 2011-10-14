@@ -480,14 +480,26 @@ EXP *makeEXPcombine(EXP *left, EXP *right)
     return makeEXPbinary(combineK, left, right);
 }
 
-EXP *makeEXPkeep(EXP *left, EXP *right)
+EXP *makeEXPkeep(EXP *left, ID *ids)
 {
-    return makeEXPbinary(keepK, left, right);
+    EXP *e = NEW(EXP);
+    e->lineno = lineno;
+    e->kind = keepK;
+    e->val.keepE.left = left;
+    e->val.keepE.ids = ids;
+    e->next = NULL;
+    return e;              
 }
 
-EXP *makeEXPdiscard(EXP *left, EXP *right)
+EXP *makeEXPdiscard(EXP *left, ID *ids)
 {
-    return makeEXPbinary(discardK, left, right);
+    EXP *e = NEW(EXP);
+    e->lineno = lineno;
+    e->kind = discardK;
+    e->val.discardE.left = left;
+    e->val.discardE.ids = ids;
+    e->next = NULL;
+    return e;
 }
 
 EXP *makeEXPcall(char *name, EXP *exps)

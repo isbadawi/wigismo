@@ -1,6 +1,7 @@
 %{
 
 #include<stdlib.h>
+#include<string.h>
 #include"tree.h"
 
 extern SERVICE *theservice;
@@ -86,9 +87,9 @@ htmls : html
           { $$ = $2; $$->next = $1; }
 ;
 
-html : tCONST tHTML tIDENTIFIER "=" tHTMLOPEN nehtmlbodies tHTMLCLOSE ";" /* NEW */
+html : tCONST tHTML tIDENTIFIER '=' tHTMLOPEN nehtmlbodies tHTMLCLOSE ";" /* NEW */
           { $$ = makeHTML($3, $6); }
-     | tCONST tHTML tIDENTIFIER "=" tHTMLOPEN tHTMLCLOSE ";"              /* NEW */
+     | tCONST tHTML tIDENTIFIER '=' tHTMLOPEN tHTMLCLOSE ";"              /* NEW */
           { $$ = makeHTML($3, NULL); }
 ;
 
@@ -395,11 +396,11 @@ exp : lvalue
     | exp tCOMBINE exp
      { $$ = makeEXPcombine($1, $3); }
     | exp tKEEP tIDENTIFIER
-     { $$ = makeEXPkeep($1, $3); }
+     { $$ = makeEXPkeep($1, makeID($3)); }
     | exp tKEEP "(" identifiers ")" /* NEW */
      { $$ = makeEXPkeep($1, $4); }
     | exp tDISCARD tIDENTIFIER         /* NEW */
-     { $$ = makeEXPdiscard($1, $3); }
+     { $$ = makeEXPdiscard($1, makeID($3)); }
     | exp tDISCARD "(" identifiers ")" /* NEW */
      { $$ = makeEXPdiscard($1, $4); }
     | tIDENTIFIER "(" exps ")"

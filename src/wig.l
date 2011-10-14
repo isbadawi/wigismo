@@ -4,13 +4,15 @@
 #include <stdio.h>
 #include <string.h>
 #include "tree.h"
+#include "error.h"
 
 extern int lineno;
 %}
 
-%Start WIG HTML HTMLTAG GAP
+%s WIG HTML HTMLTAG GAP
 
 %%
+	BEGIN WIG;
 [ \t]+                   /* ignore */;
 \n                       lineno++;
 \/\/[^\n]*\n             lineno++;
