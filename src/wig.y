@@ -36,7 +36,8 @@ extern SERVICE *theservice;
 %token tSERVICE tCONST tHTML tSESSION tSHOW tEXIT tINT tBOOL tSTRING tVOID 
        tSCHEMA tTUPLE tIF tELSE tWHILE tRETURN tINPUT tSELECT tTEXT tRADIO 
        tPLUG tRECEIVE tEQ tLEQ tGEQ tNEQ tAND tOR tKEEP tDISCARD tCOMBINE 
-       tUMINUS tNAME tTYPE
+       tUMINUS tNAME tTYPE tHTMLOPEN tHTMLCLOSE tOPENINGTAG tCLOSINGTAG
+       tOPENINGGAP tCLOSINGGAP tERROR
 
 %token <intconst> tINTCONST
 %token <boolconst> tBOOLCONST
@@ -74,9 +75,9 @@ extern SERVICE *theservice;
 %% /* productions */
 
 service : tSERVICE '{' htmls schemas nevariables functions sessions '}' /* NEW */
-          { $$ = makeSERVICE($3, $4, $5, $6, $7); }
+          { theservice = makeSERVICE($3, $4, $5, $6, $7); }
         | tSERVICE '{' htmls schemas functions sessions '}'             /* NEW */
-          { $$ = makeSERVICE($3, $4, NULL, $5, $6); }
+          { theservice = makeSERVICE($3, $4, NULL, $5, $6); }
 ;
 
 htmls : html 
@@ -85,9 +86,9 @@ htmls : html
           { $$ = $2; $$->next = $1; }
 ;
 
-html : tCONST tHTML tIDENTIFIER "=" "<html>" nehtmlbodies "</html>" ";" /* NEW */
+html : tCONST tHTML tIDENTIFIER "=" tHTMLOPEN nehtmlbodies tHTMLCLOSE ";" /* NEW */
           { $$ = makeHTML($3, $6); }
-     | tCONST tHTML tIDENTIFIER "=" "<html>" "</html>" ";"              /* NEW */
+     | tCONST tHTML tIDENTIFIER "=" tHTMLOPEN tHTMLCLOSE ";"              /* NEW */
           { $$ = makeHTML($3, NULL); }
 ;
 
@@ -99,9 +100,9 @@ nehtmlbodies : htmlbody
 
 htmlbody : "<" tIDENTIFIER attributes ">"
             { $$ = makeHTMLBODYopen($2, $3); }
-         | "</" tIDENTIFIER ">"
+         | tOPENINGTAG tIDENTIFIER ">"
             { $$ = makeHTMLBODYclose($2); }
-         | "<[" tIDENTIFIER "]>"
+         | tOPENINGGAP tIDENTIFIER tCLOSINGGAP
             { $$ = makeHTMLBODYgap($2); }
          | tWHATEVER
             { $$ = makeHTMLBODYwhatever($1); }
@@ -109,9 +110,9 @@ htmlbody : "<" tIDENTIFIER attributes ">"
             { $$ = makeHTMLBODYmeta($1); }
          | "<" tINPUT inputattrs ">"
             { $$ = makeHTMLBODYinput($3); }
-         | "<" tSELECT inputattrs ">" nehtmlbodies "</" tSELECT ">" /* NEW */
+         | "<" tSELECT inputattrs ">" nehtmlbodies tOPENINGTAG tSELECT ">" /* NEW */
             { $$ = makeHTMLBODYselect($3, $5); }
-         | "<" tSELECT inputattrs ">" "</" tSELECT ">"              /* NEW */
+         | "<" tSELECT inputattrs ">" tOPENINGTAG tSELECT ">"              /* NEW */
             { $$ = makeHTMLBODYselect($3, NULL); }
 ;
 
@@ -166,7 +167,7 @@ schemas : /* empty */
 neschemas : schema 
               { $$ = $1; }
           | neschemas schema
-              { $$ = $2; $$->next; $1; }
+              { $$ = $2; $$->next = $1; }
 ;
 
 schema : tSCHEMA tIDENTIFIER "{" fields "}"
@@ -270,7 +271,7 @@ stms : /* empty */
 nestms : stm 
          { $$ = $1; }
        | nestms stm
-         { $$ = $2; $$->next = $1; }
+         { $$ = makeSTATEMENTsequence($1, $2); }
 ;
 stm : ";"
       { $$ = makeSTATEMENTskip(); }
@@ -326,7 +327,7 @@ receive : /* empty */
 ;
 
 compoundstm : "{" nevariables stms "}" /* NEW */
-               { $$ = makeSTATEMENTBLOCK($3, $2); }
+               { $$ = makeSTATEMENTblock($3, $2); }
             | "{" stms "}"             /* NEW */
                { $$ = makeSTATEMENTblock($2, NULL); }
 ;
@@ -366,9 +367,9 @@ exp : lvalue
     | exp tNEQ exp
      { $$ = makeEXPneq($1, $3); }
     | exp '<' exp
-     { $$ = makeEXPle($1, $3); }
+     { $$ = makeEXPlt($1, $3); }
     | exp '>' exp
-     { $$ = makeEXPge($1, $3); }
+     { $$ = makeEXPgt($1, $3); }
     | exp tLEQ exp
      { $$ = makeEXPleq($1, $3); }
     | exp tGEQ exp

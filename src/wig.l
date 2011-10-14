@@ -1,11 +1,15 @@
 
 %{
 #include "y.tab.h"
+#include <stdio.h>
 #include <string.h>
 #include "tree.h"
 
 extern int lineno;
 %}
+
+%Start WIG HTML HTMLTAG GAP
+
 %%
 [ \t]+                   /* ignore */;
 \n                       lineno++;
@@ -25,29 +29,44 @@ extern int lineno;
 		}
 	    if ( c == EOF )
 		{
-		    yyerror("EOF in comment"); 
+		    yyerror("EOF in comment\n"); 
 			break;
 		}
 	}
 }
-service					 return tSERVICE;
-session					 return tSESSION;
-receive					 return tRECEIVE;
-plug					 return tPLUG;
-string					 return tSTRING;
-html			         return tHTML;
-show					 return tSHOW;
-exit					 return tEXIT;
-schema					 return tSCHEMA;
-tuple				     return tTUPLE;
-bool                     return tBOOL;
-const                    return tCONST;
-else                     return tELSE;
-if                       return tIF;
-int                      return tINT;
-return                   return tRETURN;
-void                     return tVOID;
-while                    return tWHILE;
+
+<WIG>service		     return tSERVICE;
+<WIG>session			 return tSESSION;
+<WIG>receive			 return tRECEIVE;
+<WIG>plug				 return tPLUG;
+<WIG>string				 return tSTRING;
+<WIG>html			     return tHTML;
+<WIG>show				 return tSHOW;
+<WIG>exit				 return tEXIT;
+<WIG>schema				 return tSCHEMA;
+<WIG>tuple				 return tTUPLE;
+<WIG>bool                return tBOOL;
+<WIG>const               return tCONST;
+<WIG>else                return tELSE;
+<WIG>if                  return tIF;
+<WIG>int                 return tINT;
+<WIG>return              return tRETURN;
+<WIG>void                return tVOID;
+<WIG>while               return tWHILE;
+<WIG>"<html>"			 { BEGIN HTML; return tHTMLOPEN; }
+<HTML>"</html>"			 { BEGIN WIG; return tHTMLCLOSE; }
+<HTML>"<"				 { BEGIN HTMLTAG; return '<'; }
+<HTML>"</"				 { BEGIN HTMLTAG; return tOPENINGTAG; }
+<HTMLTAG>">"			 { BEGIN HTML; return '>'; }
+<HTMLTAG>"/>"		     { BEGIN HTML; return tCLOSINGTAG; }
+<HTMLTAG>input			 { return tINPUT; }
+<HTMLTAG>select			 { return tSELECT; }
+<HTMLTAG>name	  		 { return tNAME; }
+<HTMLTAG>type	         { return tTYPE; }
+<HTMLTAG>text			 { return tTEXT; }
+<HTMLTAG>radio		     { return tRADIO; }
+<HTMLTAG>"<["			 { BEGIN GAP; return tOPENINGGAP; }
+<GAP>"]>"				 { BEGIN HTMLTAG; return tCLOSINGGAP; }
 "="                      return '=';
 ">"                      return '>';
 "<"                      return '<';
@@ -58,8 +77,8 @@ while                    return tWHILE;
 "!="                     return tNEQ;
 "&&"                     return tAND;
 "||"                     return tOR;
-"\+"					 return tKEEP;
-"\-"					 return tDISCARD;
+"\\+"					 return tKEEP;
+"\\-"					 return tDISCARD;
 "<<"					 return tCOMBINE;
 "+"                      return '+';
 "-"                      return '-';

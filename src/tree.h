@@ -41,7 +41,7 @@ typedef struct HTMLBODY
         char *whateverH;
         char *metaH;
     } val;
-    HTMLBODY *next;
+    struct HTMLBODY *next;
 } HTMLBODY;
 
 typedef struct ATTRIBUTE
@@ -90,7 +90,7 @@ typedef struct VARIABLE
     int lineno;
     char *name;
     struct TYPE *type;
-    VARIABLE *next;
+    struct VARIABLE *next;
 } VARIABLE;
 
 typedef struct FUNCTION
@@ -122,8 +122,8 @@ typedef struct LOCAL
 typedef struct STATEMENT
 {
     int lineno;
-    enum {skipK, showK, exitK, returnK, blockK, ifK, ifelseK, whileK, expK,
-          whileK} kind;
+    enum {skipK, sequenceK, showK, exitK, returnK, blockK, ifK, ifelseK, 
+          whileK, expK} kind;
     union
     {
         struct EXP *expS;
@@ -158,25 +158,25 @@ typedef struct EXP
     TYPE *type;
     enum {idK, assignK, orK, andK, eqK, ltK, gtK, leqK, geqK, neqK, plusK,
           minusK, timesK, divK, modK, notK, uminusK, combineK, keepK,
-          discardK, callK, intconstK, boolconstK, stringconstK, tupleK} kind;
+          discardK, callK, intconstK, boolconstK, stringconstK, tupleconstK} kind;
     union
     {
-        struct {char *name;
-                SYMBOL *idsym; } idE;
+        struct {char *name; } idE;
+/*                SYMBOL *idsym; } idE; */
         struct {char *left;
-                SYMBOL *leftsym; 
+/*                SYMBOL *leftsym; */
                 struct EXP *right; } assignE;
         struct {struct EXP *left;
                 struct EXP *right; } binaryE;
-        struct EXP *unaryE:
+        struct EXP *unaryE;
         struct {char *name;
                 struct EXP *args; } callE;
         int intconstE;
         int boolconstE;
         char *stringconstE;
-        struct {struct FIELDVALUE* fieldvalues;} *tupleE;
+        struct {struct FIELDVALUE* fieldvalues;} tupleE;
     } val;
-    EXP *next;
+    struct EXP *next;
 } EXP;
 
 typedef struct ARGUMENT
@@ -201,7 +201,7 @@ typedef struct FIELDVALUE
     struct FIELDVALUE *next;
 } FIELDVALUE;
 
-SERVICE *makeSERVICE(char *name, HTML *htmls, SCHEMA *schemas, VARIABLE *variables, FUNCTION *functions, SESSION *sessions);
+SERVICE *makeSERVICE(HTML *htmls, SCHEMA *schemas, VARIABLE *variables, FUNCTION *functions, SESSION *sessions);
 HTML *makeHTML(char *name, HTMLBODY *htmlbodies); 
 HTMLBODY *makeHTMLBODYopen(char *name, ATTRIBUTE *attributes);
 HTMLBODY *makeHTMLBODYclose(char *name);
@@ -225,6 +225,7 @@ ARGUMENT *makeARGUMENT(TYPE *type, char *name);
 SESSION *makeSESSION(char *name, STATEMENT *body);
 DOCUMENT *makeDOCUMENT(char *name, PLUG *plugs);
 STATEMENT *makeSTATEMENTskip(void);
+STATEMENT *makeSTATEMENTsequence(STATEMENT *first, STATEMENT *second);
 STATEMENT *makeSTATEMENTshow(DOCUMENT *document, RECEIVE *receives);
 STATEMENT *makeSTATEMENTexit(DOCUMENT *document);
 STATEMENT *makeSTATEMENTreturn(EXP *exp);
@@ -240,8 +241,8 @@ EXP *makeEXPlvalue(char *lvalue);
 EXP *makeEXPassign(char *lvalue, EXP *exp);
 EXP *makeEXPeq(EXP *left, EXP *right);
 EXP *makeEXPneq(EXP *left, EXP *right);
-EXP *makeEXPle(EXP *left, EXP *right);
-EXP *makeEXPge(EXP *left, EXP *right);
+EXP *makeEXPlt(EXP *left, EXP *right);
+EXP *makeEXPgt(EXP *left, EXP *right);
 EXP *makeEXPleq(EXP *left, EXP *right);
 EXP *makeEXPgeq(EXP *left, EXP *right);
 EXP *makeEXPnot(EXP *exp);

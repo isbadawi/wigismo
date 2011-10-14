@@ -4,17 +4,16 @@
 
 extern int lineno;
 
-SERVICE *makeSERVICE(char *name, HTML *htmls, SCHEMA *schemas, 
+SERVICE *makeSERVICE(HTML *htmls, SCHEMA *schemas, 
                      VARIABLE *variables, FUNCTION *functions,
                      SESSION *sessions)
 {
     SERVICE *s = NEW(SERVICE);
-    p->name = name;
-    p->htmls = htmls;
-    p->schemas = schemas;
-    p->variables = variables;
-    p->functions = functions;
-    p->sessions = sessions;
+    s->htmls = htmls;
+    s->schemas = schemas;
+    s->variables = variables;
+    s->functions = functions;
+    s->sessions = sessions;
     return s;
 }
 
@@ -244,6 +243,16 @@ STATEMENT *makeSTATEMENTskip(void)
     return s;
 }
 
+STATEMENT *makeSTATEMENTsequence(STATEMENT *first, STATEMENT *second)
+{
+    STATEMENT *s = NEW(STATEMENT);
+    s->lineno = lineno;
+    s->kind = sequenceK;
+    s->val.sequenceS.first = first;
+    s->val.sequenceS.second = second;
+    return s;
+}
+
 STATEMENT *makeSTATEMENTshow(DOCUMENT *document, RECEIVE *receives)
 {
     STATEMENT *s = NEW(STATEMENT);
@@ -339,13 +348,22 @@ PLUG *makePLUG(char *name, EXP *exp)
     return p;
 }
 
+INPUT *makeINPUT(char *lhs, char *rhs)
+{
+    INPUT *i = NEW(INPUT);
+    i->lhs = rhs;
+    i->rhs = rhs;
+    i->next = NULL;
+    return i;
+}
+
+/* TODO for these two: SYMBOL? */
 EXP *makeEXPlvalue(char *lvalue)
 {
     EXP *e = NEW(EXP);
     e->lineno = lineno;
     e->kind = idK;
     e->val.idE.name = lvalue;
-    // TODO: what is SYMBOL
     e->next = NULL;
     return e;
 }
@@ -356,7 +374,6 @@ EXP *makeEXPassign(char *lvalue, EXP *exp)
     e->lineno = lineno;
     e->kind = assignK;
     e->val.assignE.left = lvalue;
-    // TODO: what is SYMBOL
     e->val.assignE.right = exp;
     e->next = NULL;
     return e;
@@ -453,12 +470,12 @@ EXP *makeEXPand(EXP *left, EXP *right)
     return makeEXPbinary(andK, left, right);
 }
 
-EXP *makeEXPor(EXP *left, EXP *right);
+EXP *makeEXPor(EXP *left, EXP *right)
 {
     return makeEXPbinary(orK, left, right);
 }
 
-EXP *makeEXPcombine(EXP *left, EXP *right);
+EXP *makeEXPcombine(EXP *left, EXP *right)
 {
     return makeEXPbinary(combineK, left, right);
 }
@@ -518,7 +535,7 @@ EXP *makeEXPtuple(FIELDVALUE *fieldvalues)
 {
     EXP *e = NEW(EXP);
     e->lineno = lineno;
-    e->kind = tupleK;
+    e->kind = tupleconstK;
     e->val.tupleE.fieldvalues = fieldvalues;
     e->next = NULL;
     return e;
