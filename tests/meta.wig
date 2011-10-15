@@ -1,0 +1,9 @@
+service {
+    const html Meta = <html><body>
+    <!-- this is an HTML meta section -->
+    </body></html>;
+
+    session Main() {
+        exit Meta;
+    }
+}
