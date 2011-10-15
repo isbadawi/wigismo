@@ -1,0 +1,9 @@
+service {
+    const html Message = <html><body>
+        Hello, world!
+    </body></html>;
+
+    session Hello() {
+        exit Message;
+    }
+}
