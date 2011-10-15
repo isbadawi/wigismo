@@ -87,9 +87,9 @@ htmls : html
           { $$ = $2; $$->next = $1; }
 ;
 
-html : tCONST tHTML tIDENTIFIER '=' tHTMLOPEN nehtmlbodies tHTMLCLOSE ";" /* NEW */
+html : tCONST tHTML tIDENTIFIER '=' tHTMLOPEN nehtmlbodies tHTMLCLOSE ';' /* NEW */
           { $$ = makeHTML($3, $6); }
-     | tCONST tHTML tIDENTIFIER '=' tHTMLOPEN tHTMLCLOSE ";"              /* NEW */
+     | tCONST tHTML tIDENTIFIER '=' tHTMLOPEN tHTMLCLOSE ';'              /* NEW */
           { $$ = makeHTML($3, NULL); }
 ;
 
@@ -99,7 +99,7 @@ nehtmlbodies : htmlbody
                 { $$ = $2; $$->next = $1; }
 ;
 
-htmlbody : "<" tIDENTIFIER attributes ">"
+htmlbody : '<' tIDENTIFIER attributes '>'
             { $$ = makeHTMLBODYopen($2, $3); }
          | tOPENINGTAG tIDENTIFIER ">"
             { $$ = makeHTMLBODYclose($2); }
@@ -109,11 +109,11 @@ htmlbody : "<" tIDENTIFIER attributes ">"
             { $$ = makeHTMLBODYwhatever($1); }
          | tMETA
             { $$ = makeHTMLBODYmeta($1); }
-         | "<" tINPUT inputattrs ">"
+         | '<' tINPUT inputattrs '>'
             { $$ = makeHTMLBODYinput($3); }
-         | "<" tSELECT inputattrs ">" nehtmlbodies tOPENINGTAG tSELECT ">" /* NEW */
+         | '<' tSELECT inputattrs '>' nehtmlbodies tOPENINGTAG tSELECT '>' /* NEW */
             { $$ = makeHTMLBODYselect($3, $5); }
-         | "<" tSELECT inputattrs ">" tOPENINGTAG tSELECT ">"              /* NEW */
+         | '<' tSELECT inputattrs '>' tOPENINGTAG tSELECT '>'              /* NEW */
             { $$ = makeHTMLBODYselect($3, NULL); }
 ;
 
@@ -123,9 +123,9 @@ inputattrs : inputattr
              { $$ = $2; $$->next = $1; }
 ;
 
-inputattr : tNAME "=" attr
+inputattr : tNAME '=' attr
              { makeATTRIBUTE("name", $3); }
-          | tTYPE "=" inputtype
+          | tTYPE '=' inputtype
              { makeATTRIBUTE("type", $3); }
           | attribute
              { $$ = $1; }
@@ -152,7 +152,7 @@ neattributes : attribute
 
 attribute : attr 
              { $$ = makeATTRIBUTE($1, NULL); }
-          | attr "=" attr
+          | attr '=' attr
              { $$ = makeATTRIBUTE($1, $3); }
 ;
 
@@ -171,7 +171,7 @@ neschemas : schema
               { $$ = $2; $$->next = $1; }
 ;
 
-schema : tSCHEMA tIDENTIFIER "{" fields "}"
+schema : tSCHEMA tIDENTIFIER '{' fields '}'
           { $$ = makeSCHEMA($2, $4); }
 ;
 
@@ -187,7 +187,7 @@ nefields : field
             { $$ = $2; $$->next = $1; }
 ;
 
-field : simpletype tIDENTIFIER ";"
+field : simpletype tIDENTIFIER ';'
         { $$ = makeVARIABLE($1, $2); }
 ;
 
@@ -198,13 +198,13 @@ nevariables : variable
                { $$ = $2; $$->next = $1; }
 ;
 
-variable : type identifiers ";"
+variable : type identifiers ';'
             { $$ = makeVARIABLES($1, $2); }
 ;
 
 identifiers : tIDENTIFIER 
               { $$ = makeID($1); }
-            | identifiers "," tIDENTIFIER
+            | identifiers ',' tIDENTIFIER
               { $$ = $1; $$->next = makeID($3); }
 ;
 
@@ -235,7 +235,7 @@ nefunctions : function
                { $$ = $2; $$->next = $1; }
 ;
 
-function : type tIDENTIFIER "(" arguments ")" compoundstm
+function : type tIDENTIFIER '(' arguments ')' compoundstm
              { $$ = makeFUNCTION($1, $2, $4, $6); }
 ;
 
@@ -246,7 +246,7 @@ arguments : /* empty */
 ;
 nearguments : argument 
                { $$ = $1; }
-            | nearguments "," argument
+            | nearguments ',' argument
                { $$ = $3; $$->next = $1; }
 ;
 
@@ -260,7 +260,7 @@ sessions : session
            { $$ = $2; $$->next = $1; }
 ;
 
-session : tSESSION tIDENTIFIER "(" ")" compoundstm
+session : tSESSION tIDENTIFIER '(' ')' compoundstm
            { $$ = makeSESSION($2, $5); }
 ;
 
@@ -274,72 +274,72 @@ nestms : stm
        | nestms stm
          { $$ = makeSTATEMENTsequence($1, $2); }
 ;
-stm : ";"
+stm : ';'
       { $$ = makeSTATEMENTskip(); }
-    | tSHOW document receive ";"
+    | tSHOW document receive ';'
       { $$ = makeSTATEMENTshow($2, $3); }
-    | tEXIT document ";"
+    | tEXIT document ';'
       { $$ = makeSTATEMENTexit($2); }
-    | tRETURN ";"
+    | tRETURN ';'
       { $$ = makeSTATEMENTreturn(NULL); }
-    | tRETURN exp ";"
+    | tRETURN exp ';'
       { $$ = makeSTATEMENTreturn($2); }
-    | tIF "(" exp ")" stm
+    | tIF '(' exp ')' stm
       { $$ = makeSTATEMENTif($3, $5); }
-    | tIF "(" exp ")" stmnoshortif tELSE stm
+    | tIF '(' exp ')' stmnoshortif tELSE stm
       { $$ = makeSTATEMENTifelse($3, $5, $7); }
-    | tWHILE "(" exp ")" stm
+    | tWHILE '(' exp ')' stm
       { $$ = makeSTATEMENTwhile($3, $5); }
     | compoundstm
       { $$ = $1; }
-    | exp ";"
+    | exp ';'
       { $$ = makeSTATEMENTexp($1); }
 ;
 
-stmnoshortif : ";"
+stmnoshortif : ';'
       { $$ = makeSTATEMENTskip(); }
-    | tSHOW document receive ";"
+    | tSHOW document receive ';'
       { $$ = makeSTATEMENTshow($2, $3); }
-    | tEXIT document ";"
+    | tEXIT document ';'
       { $$ = makeSTATEMENTexit($2); }
-    | tRETURN ";"
+    | tRETURN ';'
       { $$ = makeSTATEMENTreturn(NULL); }
-    | tRETURN exp ";"
+    | tRETURN exp ';'
       { $$ = makeSTATEMENTreturn($2); }
-    | tIF "(" exp ")" stmnoshortif tELSE stmnoshortif
+    | tIF '(' exp ')' stmnoshortif tELSE stmnoshortif
       { $$ = makeSTATEMENTifelse($3, $5, $7); }
-    | tWHILE "(" exp ")" stmnoshortif
+    | tWHILE '(' exp ')' stmnoshortif
       { $$ = makeSTATEMENTwhile($3, $5); }
     | compoundstm
       { $$ = $1; }
-    | exp ";"
+    | exp ';'
       { $$ = makeSTATEMENTexp($1); }
 ;
 
 document : tIDENTIFIER 
            { $$ = makeDOCUMENT($1, NULL); }
-         | tPLUG tIDENTIFIER "[" plugs "]"
+         | tPLUG tIDENTIFIER '[' plugs ']'
            { $$ = makeDOCUMENT($2, $4); }
 ;
 receive : /* empty */
           { $$ = NULL; }
-        | tRECEIVE "[" inputs "]"
+        | tRECEIVE '[' inputs ']'
           { $$ = makeRECEIVE($3); }
 ;
 
-compoundstm : "{" nevariables stms "}" /* NEW */
+compoundstm : '{' nevariables stms '}' /* NEW */
                { $$ = makeSTATEMENTblock($3, $2); }
-            | "{" stms "}"             /* NEW */
+            | '{' stms '}'             /* NEW */
                { $$ = makeSTATEMENTblock($2, NULL); }
 ;
 
 plugs : plug 
         { $$ = $1; }
-      | plugs "," plug
+      | plugs ',' plug
         { $$ = $3; $$->next = $1; }
 ;
 
-plug : tIDENTIFIER "=" exp
+plug : tIDENTIFIER '=' exp
         { $$ = makePLUG($1, $3); }
 ;
 
@@ -351,11 +351,11 @@ inputs : /* empty */
 
 neinputs : input 
            { $$ = $1; }
-         | neinputs "," input
+         | neinputs ',' input
            { $$ = $3; $$->next = $1; }
 ;
 
-input : lvalue "=" tIDENTIFIER
+input : lvalue '=' tIDENTIFIER
      { $$ = makeINPUT($1, $3); } 
 ;
 
@@ -397,13 +397,13 @@ exp : lvalue
      { $$ = makeEXPcombine($1, $3); }
     | exp tKEEP tIDENTIFIER
      { $$ = makeEXPkeep($1, makeID($3)); }
-    | exp tKEEP "(" identifiers ")" /* NEW */
+    | exp tKEEP '(' identifiers ')' /* NEW */
      { $$ = makeEXPkeep($1, $4); }
     | exp tDISCARD tIDENTIFIER         /* NEW */
      { $$ = makeEXPdiscard($1, makeID($3)); }
-    | exp tDISCARD "(" identifiers ")" /* NEW */
+    | exp tDISCARD '(' identifiers ')' /* NEW */
      { $$ = makeEXPdiscard($1, $4); }
-    | tIDENTIFIER "(" exps ")"
+    | tIDENTIFIER '(' exps ')'
      { $$ = makeEXPcall($1, $3); }
     | tINTCONST
      { $$ = makeEXPintconst($1); }
@@ -411,9 +411,9 @@ exp : lvalue
      { $$ = makeEXPboolconst($1); }
     | tSTRINGCONST
      { $$ = makeEXPstringconst($1); }
-    | tTUPLE "{" fieldvalues "}"
+    | tTUPLE '{' fieldvalues '}'
      { $$ = makeEXPtuple($3); }
-    | "(" exp ")"                  /* NEW */
+    | '(' exp ')'                  /* NEW */
      { $$ = $2; }
 ;
 exps : /* empty */ 
@@ -423,11 +423,11 @@ exps : /* empty */
 ;
 neexps : exp 
          { $$ = $1; }
-       | neexps "," exp
+       | neexps ',' exp
          { $$ = $3; $$->next = $1; }
 ;
 lvalue : tIDENTIFIER 
-       | tIDENTIFIER "." tIDENTIFIER
+       | tIDENTIFIER '.' tIDENTIFIER
          { $$ = (char*)malloc(strlen($1) * 2 + 2);
            strcpy($$, $1);
            strcat($$, ".");
@@ -441,9 +441,9 @@ fieldvalues : /* empty */
 ;
 nefieldvalues : fieldvalue 
                 { $$ = $1; }
-              | fieldvalues "," fieldvalue
+              | fieldvalues ',' fieldvalue
                 { $$ = $3; $$->next = $1; }
 ;
-fieldvalue : tIDENTIFIER "=" exp
+fieldvalue : tIDENTIFIER '=' exp
               { $$ = makeFIELDVALUE($1, $3); }
 ;
