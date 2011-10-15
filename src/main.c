@@ -47,15 +47,4 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Unable to open file: %s\n", infile);
         return 1;
     }
-    if (theservice == NULL)
-        return 1;
-    printf("Testing: these are the HTML names in the given service:\n");
-    HTML *h;
-    for (h = theservice->htmls; h != NULL; h = h->next)
-        printf("%s\n", h->name);
-    printf("Testing: these are the session names in the given service:\n");
-    SESSION *s;
-    for (s = theservice->sessions; s != NULL; s = s->next)
-        printf("%s\n", s->name);
-    return 0;
 }
