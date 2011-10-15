@@ -113,9 +113,15 @@ false                  { yylval.boolconst = 0;
 <HTML>\<!--[^-]*--\>	{yylval.stringconst = (char*)malloc(yyleng-6);
 						 yytext[yyleng-3] = '\0';
                          sprintf(yylval.stringconst, "%s", yytext + 4);
+						 int i;
+						 for (i = 4; i < yyleng - 3; i++)
+							 if (yytext[i] == '\n') lineno++;
 						 return tMETA; }
 <HTML>[^\<\>]*	       { yylval.stringconst = (char*)malloc(yyleng+1);
                          sprintf(yylval.stringconst, "%s", yytext);
+						 int i;
+						 for (i = 0; i < yyleng; i++)
+							 if (yytext[i] == '\n') lineno++;
 						 return tWHATEVER; }
 [a-zA-Z_][a-zA-Z0-9_]* { yylval.stringconst = (char*)malloc(yyleng+1);
                          sprintf(yylval.stringconst,"%s",yytext); 

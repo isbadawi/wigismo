@@ -62,7 +62,7 @@ extern SERVICE *theservice;
 %type <fieldvalue> fieldvalue fieldvalues nefieldvalues
 %type <plug> plug plugs
 %type <input> input neinputs inputs
-%type <stringconst> inputtype lvalue attr
+%type <stringconst> lvalue attr
 
 %right '='
 %left '+' '-'
@@ -125,17 +125,12 @@ inputattrs : inputattr
 
 inputattr : tNAME '=' attr
              { makeATTRIBUTE("name", $3); }
-          | tTYPE '=' inputtype
-             { makeATTRIBUTE("type", $3); }
+          | tTYPE '=' tTEXT
+             { makeATTRIBUTE("type", "text"); }
+          | tTYPE '=' tRADIO
+             { makeATTRIBUTE("type", "radio"); }
           | attribute
              { $$ = $1; }
-;
-
-inputtype : tTEXT 
-            { $$ = "text"; }
-          | tRADIO
-            { $$ = "radio"; }
-        
 ;
 
 attributes : /* empty */ 
