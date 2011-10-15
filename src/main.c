@@ -47,6 +47,8 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Unable to open file: %s\n", infile);
         return 1;
     }
+    if (theservice == NULL)
+        return 1;
     printf("Testing: these are the session names in the given service:\n");
     SESSION *s;
     for (s = theservice->sessions; s != NULL; s = s->next)

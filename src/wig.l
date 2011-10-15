@@ -7,12 +7,16 @@
 #include "error.h"
 
 extern int lineno;
+int init = 0;
 %}
 
 %s WIG HTML HTMLTAG GAP
 
 %%
-	BEGIN WIG;
+	if (!init) {
+		init = 1;
+		BEGIN WIG;
+	}
 [ \t]+                   /* ignore */;
 \n                       lineno++;
 \/\/[^\n]*\n             lineno++;
@@ -55,20 +59,20 @@ extern int lineno;
 <WIG>return              return tRETURN;
 <WIG>void                return tVOID;
 <WIG>while               return tWHILE;
-<WIG>"<html>"			 { BEGIN HTML; return tHTMLOPEN; }
-<HTML>"</html>"			 { BEGIN WIG; return tHTMLCLOSE; }
-<HTML>"<"				 { BEGIN HTMLTAG; return '<'; }
-<HTML>"</"				 { BEGIN HTMLTAG; return tOPENINGTAG; }
-<HTMLTAG>">"			 { BEGIN HTML; return '>'; }
-<HTMLTAG>"/>"		     { BEGIN HTML; return tCLOSINGTAG; }
-<HTMLTAG>input			 { return tINPUT; }
-<HTMLTAG>select			 { return tSELECT; }
-<HTMLTAG>name	  		 { return tNAME; }
-<HTMLTAG>type	         { return tTYPE; }
-<HTMLTAG>text			 { return tTEXT; }
-<HTMLTAG>radio		     { return tRADIO; }
-<HTMLTAG>"<["			 { BEGIN GAP; return tOPENINGGAP; }
-<GAP>"]>"				 { BEGIN HTMLTAG; return tCLOSINGGAP; }
+<WIG>\<html\>			 BEGIN HTML; return tHTMLOPEN;
+<HTML>\<\/html\> 		 BEGIN WIG;  return tHTMLCLOSE;
+<HTML>\<				 BEGIN HTMLTAG; return '<';
+<HTML>\<\/				 BEGIN HTMLTAG; return tOPENINGTAG;
+<HTMLTAG>\>		   	     BEGIN HTML; return '>';
+<HTMLTAG>\/\>		     BEGIN HTML; return tCLOSINGTAG;
+<HTMLTAG>input			 return tINPUT;
+<HTMLTAG>select			 return tSELECT;
+<HTMLTAG>name	  		 return tNAME; 
+<HTMLTAG>type	         return tTYPE; 
+<HTMLTAG>text			 return tTEXT; 
+<HTMLTAG>radio		     return tRADIO; 
+<HTMLTAG>"\<["			 BEGIN GAP; printf("Enter GAP\n"); return tOPENINGGAP; 
+<GAP>\]\>				 BEGIN HTMLTAG; printf("Enter HTMLTAG\n"); return tCLOSINGGAP;
 "="                      return '=';
 ">"                      return '>';
 "<"                      return '<';
@@ -102,11 +106,18 @@ true                   { yylval.boolconst = 1;
                          return tBOOLCONST; }
 false                  { yylval.boolconst = 0;
                          return tBOOLCONST; }
-\"([^\"])*\"           { yylval.stringconst = (char*)malloc(strlen(yytext)-1);
-                         yytext[strlen(yytext)-1] = '\0';
+\"([^\"])*\"           { yylval.stringconst = (char*)malloc(yyleng-1);
+                         yytext[yyleng-1] = '\0';
                          sprintf(yylval.stringconst,"%s",yytext+1);
                          return tSTRINGCONST; }
-[a-zA-Z_][a-zA-Z0-9_]* { yylval.stringconst = (char *)malloc(strlen(yytext)+1);
+<HTML>\<!--[^-]*--\>	{yylval.stringconst = (char*)malloc(yyleng-6);
+						 yytext[yyleng-3] = '\0';
+                         sprintf(yylval.stringconst, "%s", yytext + 4);
+						 return tMETA; }
+<HTML>[^\<\>]*	       { yylval.stringconst = (char*)malloc(yyleng+1);
+                         sprintf(yylval.stringconst, "%s", yytext);
+						 return tWHATEVER; }
+[a-zA-Z_][a-zA-Z0-9_]* { yylval.stringconst = (char*)malloc(yyleng+1);
                          sprintf(yylval.stringconst,"%s",yytext); 
                          return tIDENTIFIER; }
 .                        return tERROR;
