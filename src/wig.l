@@ -10,7 +10,7 @@ extern int lineno;
 int init = 0;
 %}
 
-%s WIG HTML HTMLRHS HTMLTAG GAP
+%s WIG HTML HTMLINPUT HTMLRHS HTMLTAG GAP TYPERHS
 
 %%
 	if (!init) {
@@ -66,17 +66,20 @@ int init = 0;
 <HTML>"\<["			     BEGIN GAP; return tOPENINGGAP; 
 <HTMLTAG>\>		   	     BEGIN HTML; return '>';
 <HTMLTAG>\/\>		     BEGIN HTML; return tCLOSINGTAG;
-<HTMLTAG>input			 return tINPUT;
+<HTMLTAG>input			 BEGIN HTMLINPUT; return tINPUT;
 <HTMLTAG>select			 return tSELECT;
-<HTMLTAG>name   	 	 return tNAME; 
-<HTMLTAG>type	         return tTYPE; 
+<HTMLINPUT>name   	 	 BEGIN HTMLTAG; return tNAME; 
+<HTMLINPUT>type/=	     BEGIN TYPERHS; return tTYPE; 
+<TYPERHS>"="			 ;
+<TYPERHS>text		     BEGIN HTMLINPUT; return tTEXT; 
+<TYPERHS>radio	         BEGIN HTMLINPUT; return tRADIO; 
+<TYPERHS>"\"text\""		 BEGIN HTMLINPUT; return tTEXT; 
+<TYPERHS>"\"radio\""	 BEGIN HTMLINPUT; return tRADIO; 
 <HTMLTAG>"="             BEGIN HTMLRHS; return '=';
 <HTMLRHS>[a-zA-Z0-9_]+	         { BEGIN HTMLTAG; 
 						 yylval.stringconst = (char*)malloc(yyleng+1);
                          sprintf(yylval.stringconst,"%s",yytext); 
                          return tIDENTIFIER; }   
-<HTMLRHS>"\"text\""		 return tTEXT; 
-<HTMLRHS>"\"radio\""	 return tRADIO; 
 <HTMLRHS>\"([^\"])*\"    { BEGIN HTMLTAG; 
                          yylval.stringconst = (char*)malloc(yyleng-1);
                          yytext[yyleng-1] = '\0';
