@@ -10,7 +10,8 @@ extern int lineno;
 int init = 0;
 %}
 
-%s WIG HTML HTMLINPUT HTMLRHS HTMLTAG GAP TYPERHS
+%s WIG HTML HTMLINPUT HTMLRHS HTMLTAG GAP
+%x TYPERHS HTMLRHS
 
 %%
 	if (!init) {
