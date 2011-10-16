@@ -28,7 +28,8 @@ typedef struct HTML
 typedef struct HTMLBODY
 {
     int lineno;
-    enum {opentagK, closetagK, gapK, whateverK, metaK, inputK, selectK} kind;
+    enum {opentagK, closetagK, selfclosingK, gapK, whateverK, metaK, inputK, 
+          selectK} kind;
     union
     {
         struct {char *name;
@@ -208,6 +209,7 @@ SERVICE *makeSERVICE(HTML *htmls, SCHEMA *schemas, VARIABLE *variables, FUNCTION
 HTML *makeHTML(char *name, HTMLBODY *htmlbodies); 
 HTMLBODY *makeHTMLBODYopen(char *name, ATTRIBUTE *attributes);
 HTMLBODY *makeHTMLBODYclose(char *name);
+HTMLBODY *makeHTMLBODYselfclosing(char *name, ATTRIBUTE *attributes);
 HTMLBODY *makeHTMLBODYgap(char *name);
 HTMLBODY *makeHTMLBODYwhatever(char *whatever);
 HTMLBODY *makeHTMLBODYmeta(char *meta);

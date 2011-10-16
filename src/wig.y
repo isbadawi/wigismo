@@ -101,6 +101,8 @@ nehtmlbodies : htmlbody
 
 htmlbody : '<' tIDENTIFIER attributes '>'
             { $$ = makeHTMLBODYopen($2, $3); }
+         | '<' tIDENTIFIER attributes tCLOSINGTAG
+            { $$ = makeHTMLBODYselfclosing($2, $3); }
          | tOPENINGTAG tIDENTIFIER '>'
             { $$ = makeHTMLBODYclose($2); }
          | tOPENINGGAP tIDENTIFIER tCLOSINGGAP

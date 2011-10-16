@@ -48,6 +48,17 @@ HTMLBODY *makeHTMLBODYclose(char *name)
     return h;
 }
 
+HTMLBODY *makeHTMLBODYselfclosing(char *name, ATTRIBUTE *attributes)
+{
+    HTMLBODY *h = NEW(HTMLBODY);
+    h->lineno = lineno;
+    h->kind = selfclosingK;
+    h->val.tagH.name = name;
+    h->val.tagH.attributes = attributes;
+    h->next = NULL;
+    return h;
+}
+
 HTMLBODY *makeHTMLBODYgap(char *name)
 {
     HTMLBODY *h = NEW(HTMLBODY);
