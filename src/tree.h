@@ -118,7 +118,6 @@ typedef struct STATEMENT
     union
     {
         struct EXP *expS;
-        struct LOCAL *localS;
         struct EXP *returnS;
         struct {struct STATEMENT *first;
                 struct STATEMENT *second;} sequenceS;
