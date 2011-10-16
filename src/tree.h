@@ -110,15 +110,6 @@ typedef struct TYPE
     char *name;
 } TYPE;
 
-typedef struct LOCAL
-{
-    int lineno;
-    char *name;
-    struct TYPE *type;
-    int offset;
-    struct LOCAL *next;
-} LOCAL;
-
 typedef struct STATEMENT
 {
     int lineno;
