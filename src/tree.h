@@ -182,13 +182,6 @@ typedef struct ARGUMENT
     struct ARGUMENT *next;
 } ARGUMENT;
 
-typedef struct TUPLE
-{
-    char *name;
-    struct SCHEMA *schema;
-    struct FIELDVALUE *fieldvalues;
-} TUPLE;
-
 typedef struct FIELDVALUE
 {
     char *name;
