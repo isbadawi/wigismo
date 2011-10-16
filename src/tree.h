@@ -3,7 +3,6 @@
 
 typedef struct SERVICE 
 {
-    char *name;
     struct HTML *htmls;
     struct SCHEMA *schemas;
     struct VARIABLE *variables;
