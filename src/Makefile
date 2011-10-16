@@ -11,7 +11,7 @@ y.tab.c y.tab.h: wig.y
 	$(BISON) wig.y
 
 lex.yy.c: wig.l y.tab.h
-	flex -d wig.l
+	flex wig.l
 
 clean:
 	rm -f *.o lex.* y.tab.*

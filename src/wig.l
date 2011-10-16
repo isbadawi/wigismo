@@ -8,9 +8,10 @@
 
 extern int lineno;
 int init = 0;
+int i;
 %}
 
-%s WIG HTML HTMLINPUT HTMLRHS HTMLTAG GAP
+%s WIG HTML HTMLINPUT HTMLTAG GAP
 %x TYPERHS HTMLRHS
 
 %%
@@ -127,13 +128,11 @@ false                  { yylval.boolconst = 0;
 <HTML>\<!--[^-]*--\>	{yylval.stringconst = (char*)malloc(yyleng-6);
 						 yytext[yyleng-3] = '\0';
                          sprintf(yylval.stringconst, "%s", yytext + 4);
-						 int i;
 						 for (i = 4; i < yyleng - 3; i++)
 							 if (yytext[i] == '\n') lineno++;
 						 return tMETA; }
 <HTML>[^\<\>]*	       { yylval.stringconst = (char*)malloc(yyleng+1);
                          sprintf(yylval.stringconst, "%s", yytext);
-						 int i;
 						 for (i = 0; i < yyleng; i++)
 							 if (yytext[i] == '\n') lineno++;
 						 return tWHATEVER; }
