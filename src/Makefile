@@ -6,7 +6,7 @@ CFLAGS = -Wall -pedantic -g
 
 all:
 	make code
-	make check
+	make -s check
 
 code: y.tab.o lex.yy.o main.o tree.h tree.o memory.h memory.o error.h error.o pretty.o pretty.h
 	$(CC) lex.yy.o y.tab.o tree.o memory.o error.o pretty.o main.o -o wigismo -lfl
@@ -18,9 +18,9 @@ lex.yy.c: wig.l y.tab.h
 	flex wig.l
 
 check: 
-	make weed
-	make pretty
-	make unit
+	make -s pretty
+	make -s weed
+	make -s unit
 
 weed: 
 	./test_weeder.sh

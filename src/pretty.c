@@ -475,7 +475,7 @@ void prettyRECEIVE(RECEIVE *r)
     if (r == NULL)
         return;
 
-    printf("receive [");
+    printf(" receive [");
     prettyINPUT(r->inputs);
     printf("]");
 }
