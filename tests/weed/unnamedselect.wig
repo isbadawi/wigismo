@@ -1,6 +1,6 @@
 service {
     const html SelectTest = <html>
-        <select name="test"></select>
+        <select notaname="test"></select>
     </html>;
 
     session Hello() {

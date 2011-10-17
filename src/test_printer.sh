@@ -3,6 +3,7 @@
 TESTDIR=../tests
 
 fail=0
+echo "Testing pretty printer. No output is expected."
 for testcase in `ls $TESTDIR`; do
     if [ -f $TESTDIR/$testcase ]; then
         wigismo -p $TESTDIR/$testcase > test1.wig

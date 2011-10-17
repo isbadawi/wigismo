@@ -94,7 +94,7 @@ int weedVARIABLE_TYPE(VARIABLE *v)
 
     if (v->type->kind == voidK)
     {
-        printf("invalid type void for variable %s.\n", v->name);
+        fprintf(stderr, "%s:%d invalid type void for variable %s.\n", infile, v->lineno, v->name);
         return 0;
     }
 
@@ -119,7 +119,7 @@ int weedARGUMENT_TYPE(ARGUMENT *a)
 
     if (a->type->kind == voidK)
     {
-        printf("invalid type void for argument %s.\n", a->name);
+        fprintf(stderr, "%s:%d invalid type void for argument %s.\n", infile, a->lineno, a->name);
         return 0;
     }
 
@@ -133,7 +133,7 @@ int weedSESSION_END(SESSION *s)
 
     if (!weedSTATEMENTS_END(s->statements))
     {
-        fprintf(stderr, "missing exit statement for session %s\n", s->name);
+        fprintf(stderr, "%s missing exit statement for session %s\n", infile, s->name);
         return 0;
     }
 
@@ -184,7 +184,14 @@ int weedFUNCTION_RETURN_TYPE(FUNCTION *f)
     if (f->returntype->kind == voidK)
         return weedRETURN_TYPE_VOID(f->statements->val.blockS.body);
     else
-        return weedRETURN_TYPE_NE(f->statements->val.blockS.body);
+    {
+        if (!weedRETURN_TYPE_NE(f->statements->val.blockS.body))
+        {
+            fprintf(stderr, "%s missing return in non void function %s\n", infile, f->name);
+            return 0;
+        }
+        return 1;
+    }
 
     return weedFUNCTION_RETURN_TYPE(f->next);
 }
@@ -196,7 +203,7 @@ int weedRETURN_TYPE_VOID(STATEMENT *s)
 
     if (s->kind == returnK && s->val.returnS != NULL)
     {
-        fprintf(stderr, "void function returns something\n");
+        fprintf(stderr, "%s:%d return statement in void function\n", infile, s->lineno);
         return 0;
     }
 
@@ -211,10 +218,7 @@ int weedRETURN_TYPE_VOID(STATEMENT *s)
 int weedRETURN_TYPE_NE(STATEMENT *s)
 {
     if (s == NULL)
-    {
-        fprintf(stderr, "non void function returns something\n");
         return 0;
-    }
 
     if (s->kind == returnK && s->val.returnS != NULL)
         return 1;
@@ -227,6 +231,5 @@ int weedRETURN_TYPE_NE(STATEMENT *s)
         return weedRETURN_TYPE_NE(s->val.ifelseS.thenpart) &&
                weedRETURN_TYPE_NE(s->val.ifelseS.elsepart);
 
-    fprintf(stderr, "non void function returns something\n");
     return 0;
 }        
