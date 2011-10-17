@@ -126,11 +126,11 @@ inputattrs : inputattr
 ;
 
 inputattr : tNAME '=' attr
-             { makeATTRIBUTE("name", $3); }
+             { $$ = makeATTRIBUTE("name", $3); }
           | tTYPE '=' tTEXT
-             { makeATTRIBUTE("type", "text"); }
+             { $$ = makeATTRIBUTE("type", "text"); }
           | tTYPE '=' tRADIO
-             { makeATTRIBUTE("type", "radio"); }
+             { $$ = makeATTRIBUTE("type", "radio"); }
           | attribute
              { $$ = $1; }
 ;
