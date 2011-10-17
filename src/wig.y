@@ -202,7 +202,7 @@ variable : type identifiers ';'
 identifiers : tIDENTIFIER 
               { $$ = makeID($1); }
             | identifiers ',' tIDENTIFIER
-              { $$ = $1; $$->next = makeID($3); }
+              { $$ = makeID($3); $$->next = $1; }
 ;
 
 simpletype : tINT 
