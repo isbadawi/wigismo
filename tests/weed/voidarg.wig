@@ -1,0 +1,7 @@
+service {
+    const html Test = <html>Test</html>;
+
+    int test_function(void x) {
+        return 0;
+    }
+}

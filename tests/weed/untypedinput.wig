@@ -1,0 +1,9 @@
+service {
+    const html InputTest = <html>
+        <input name="test">
+    </html>;
+
+    session Hello() {
+        exit InputTest;
+    }
+}

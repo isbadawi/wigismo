@@ -1,0 +1,5 @@
+service {
+    const html SelectTest = <html>
+        <select></select>
+    </html>;
+}
