@@ -62,6 +62,10 @@ int main(int argc, char *argv[])
         lineno = 1;
         yyparse();
     }
+    /* if there's a syntax error, theservice won't be constructed, and 
+       attempting to walk the AST will result in a segfault. */
+    if (theservice == NULL)
+        return 1;
     
     if (!weedSERVICE(theservice))
         return 1;
