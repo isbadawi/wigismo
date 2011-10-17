@@ -4,6 +4,10 @@ BISON = bison -y -d
 
 CFLAGS = -Wall -pedantic -g
 
+all:
+	make code
+	make check
+
 code: y.tab.o lex.yy.o main.o tree.h tree.o memory.h memory.o error.h error.o pretty.o pretty.h
 	$(CC) lex.yy.o y.tab.o tree.o memory.o error.o pretty.o main.o -o wigismo -lfl
 
@@ -23,6 +27,9 @@ weed:
 
 pretty:
 	./test_printer.sh
+
+unit:
+	echo "no unit tests"
 
 clean:
 	rm -f *.o lex.* y.tab.*
