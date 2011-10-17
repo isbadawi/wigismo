@@ -1,10 +1,10 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<unistd.h> /* for basename */
 #include"tree.h"
 #include"pretty.h"
 #include"weed.h"
-#include"util.h"
 
 void yyparse();
 
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     }
     if (!valid_option(argv[argc - 1]) && freopen(argv[argc - 1], "r", stdin) != NULL)
     {
-        infile = basename(argv[argc - 1]);
+        infile = basename(strdup(argv[argc - 1]));
         lineno = 1;
         yyparse();
     }
