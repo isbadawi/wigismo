@@ -118,7 +118,10 @@ void prettyATTRIBUTE(ATTRIBUTE *a)
 
     prettyATTRIBUTE(a->next);
 
-    printf("%s=\"%s\" ", a->name, a->value);
+    if (a->value == NULL)
+        printf("%s ", a->name);
+    else
+        printf("%s=\"%s\" ", a->name, a->value);
 }
 
 void prettySCHEMA(SCHEMA *s)

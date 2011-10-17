@@ -14,8 +14,8 @@ void print_usage(void)
 {
     printf("Usage: wigismo [options] file\n"
            "Options:\n"
-           "  --help                Display this information.\n"
-           "  --pretty-print        Pretty print parsed file to stdout.\n");
+           "  -h, --help                Display this information.\n"
+           "  -p, --pretty-print        Pretty print parsed file to stdout.\n");
 }
 
 char* options[] = {"--help", "--pretty-print"};
@@ -40,16 +40,17 @@ int main(int argc, char *argv[])
     }
     for (i = 1; i < argc; ++i)
     {
-        if (!strcmp(argv[i], "--help"))
+        if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h"))
         {
             print_usage();
             return 0;
         }
-        if (!strcmp(argv[i], "--pretty-print"))
+        if (!strcmp(argv[i], "--pretty-print") || !strcmp(argv[i], "-p"))
             pretty_print = 1;
     }
     if (!valid_option(argv[argc - 1]) && freopen(argv[argc - 1], "r", stdin) != NULL)
     {
+        infile = argv[argc - 1];
         lineno = 1;
         yyparse();
     }
