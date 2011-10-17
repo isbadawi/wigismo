@@ -4,4 +4,8 @@ service {
     int test_function(void x) {
         return 0;
     }
+
+    session Hello() {
+        exit Test;
+    }
 }
