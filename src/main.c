@@ -2,6 +2,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include"tree.h"
+#include"pretty.h"
 
 void yyparse();
 
@@ -15,6 +16,17 @@ void print_usage(void)
            "Options:\n"
            "  --help                Display this information.\n"
            "  --pretty-print        Pretty print parsed file to stdout.\n");
+}
+
+char* options[] = {"--help", "--pretty-print"};
+
+int valid_option(char *opt)
+{
+    int i;
+    for (i = 0; i < 2; i++)
+        if (!strcmp(opt, options[i]))
+            return 1;
+    return 0;
 }
 
 int main(int argc, char *argv[])
@@ -36,15 +48,17 @@ int main(int argc, char *argv[])
         if (!strcmp(argv[i], "--pretty-print"))
             pretty_print = 1;
     }
-    infile = argv[argc - 1];
-    if (freopen(infile, "r", stdin) != NULL)
+    if (!valid_option(argv[argc - 1]) && freopen(argv[argc - 1], "r", stdin) != NULL)
     {
         lineno = 1;
         yyparse();
     }
+    /* read from stdin, useful for piping */
     else 
     {
-        fprintf(stderr, "Unable to open file: %s\n", infile);
-        return 1;
+        lineno = 1;
+        yyparse();
     }
+    if (pretty_print)
+        prettySERVICE(theservice);
 }
