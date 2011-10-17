@@ -35,14 +35,14 @@ extern SERVICE *theservice;
 };
 
 %token tSERVICE tCONST tHTML tSESSION tSHOW tEXIT tINT tBOOL tSTRING tVOID 
-       tSCHEMA tTUPLE tIF tELSE tWHILE tRETURN tINPUT tSELECT tTEXT tRADIO 
+       tSCHEMA tTUPLE tIF tELSE tWHILE tRETURN tINPUT tSELECT
        tPLUG tRECEIVE tEQ tLEQ tGEQ tNEQ tAND tOR tKEEP tDISCARD tCOMBINE 
        tUMINUS tNAME tTYPE tHTMLOPEN tHTMLCLOSE tOPENINGTAG tCLOSINGTAG
        tOPENINGGAP tCLOSINGGAP tERROR
 
 %token <intconst> tINTCONST
 %token <boolconst> tBOOLCONST
-%token <stringconst> tSTRINGCONST tIDENTIFIER tMETA tWHATEVER
+%token <stringconst> tSTRINGCONST tIDENTIFIER tMETA tWHATEVER tTEXT tRADIO
 
 %type <service> service
 %type <html> htmls html
@@ -62,7 +62,7 @@ extern SERVICE *theservice;
 %type <fieldvalue> fieldvalue fieldvalues nefieldvalues
 %type <plug> plug plugs
 %type <input> input neinputs inputs
-%type <stringconst> lvalue attr
+%type <stringconst> lvalue attr inputtype
 
 %right '='
 %left '+' '-'
@@ -127,13 +127,16 @@ inputattrs : inputattr
 
 inputattr : tNAME '=' attr
              { $$ = makeATTRIBUTE("name", $3); }
-          | tTYPE '=' tTEXT
-             { $$ = makeATTRIBUTE("type", "text"); }
-          | tTYPE '=' tRADIO
-             { $$ = makeATTRIBUTE("type", "radio"); }
+          | tTYPE '=' inputtype
+             { $$ = makeATTRIBUTE("type", $3); }
           | attribute
              { $$ = $1; }
 ;
+
+inputtype : tTEXT 
+            { $$ = $1; }
+          | tRADIO
+            { $$ = $1; }
 
 attributes : /* empty */ 
              { $$ = NULL; }

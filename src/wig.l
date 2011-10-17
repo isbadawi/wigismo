@@ -12,7 +12,7 @@ int i;
 %}
 
 %s WIG HTML HTMLINPUT HTMLTAG GAP
-%x TYPERHS HTMLRHS
+%x TYPERHS HTMLRHS INPUTRHS
 
 %%
 	if (!init) {
@@ -66,17 +66,23 @@ int i;
 <HTML>\<				 BEGIN HTMLTAG; return '<';
 <HTML>\<\/				 BEGIN HTMLTAG; return tOPENINGTAG;
 <HTML>"\<["			     BEGIN GAP; return tOPENINGGAP; 
-<HTMLTAG>\>		   	     BEGIN HTML; return '>';
+<HTMLTAG,HTMLINPUT>\>		   	     BEGIN HTML; return '>';
 <HTMLTAG>\/\>		     BEGIN HTML; return tCLOSINGTAG;
 <HTMLTAG>input			 BEGIN HTMLINPUT; return tINPUT;
 <HTMLTAG>select			 return tSELECT;
-<HTMLINPUT>name   	 	 BEGIN HTMLTAG; return tNAME; 
+<HTMLINPUT>name   	 	 BEGIN INPUTRHS; return tNAME; 
 <HTMLINPUT>type/=	     BEGIN TYPERHS; return tTYPE; 
-<TYPERHS>"="			 ;
-<TYPERHS>text		     BEGIN HTMLINPUT; return tTEXT; 
-<TYPERHS>radio	         BEGIN HTMLINPUT; return tRADIO; 
-<TYPERHS>"\"text\""		 BEGIN HTMLINPUT; return tTEXT; 
-<TYPERHS>"\"radio\""	 BEGIN HTMLINPUT; return tRADIO; 
+<HTMLINPUT>"="			 BEGIN INPUTRHS; return '=';
+<HTMLINPUT>[a-zA-Z_][a-zA-Z0-9_]* { BEGIN INPUTRHS; yylval.stringconst = (char*)malloc(yyleng+1);
+                         sprintf(yylval.stringconst,"%s",yytext); 
+                         return tIDENTIFIER; }
+
+
+<TYPERHS,INPUTRHS>"="			 return '=';
+<TYPERHS>text		     BEGIN HTMLINPUT; yylval.stringconst = strdup("text"); return tTEXT; 
+<TYPERHS>radio	         BEGIN HTMLINPUT; yylval.stringconst = strdup("radio"); return tRADIO; 
+<TYPERHS>"\"text\""		 BEGIN HTMLINPUT; yylval.stringconst = strdup("text"); return tTEXT; 
+<TYPERHS>"\"radio\""	 BEGIN HTMLINPUT; yylval.stringconst = strdup("radio"); return tRADIO; 
 <HTMLTAG>"="             BEGIN HTMLRHS; return '=';
 <HTMLRHS>[a-zA-Z0-9_]+	         { BEGIN HTMLTAG; 
 						 yylval.stringconst = (char*)malloc(yyleng+1);
@@ -87,6 +93,15 @@ int i;
                          yytext[yyleng-1] = '\0';
                          sprintf(yylval.stringconst,"%s",yytext+1);
                          return tSTRINGCONST; }   
+<INPUTRHS>[a-zA-Z0-9_]+	         { BEGIN HTMLINPUT; 
+						 yylval.stringconst = (char*)malloc(yyleng+1);
+                         sprintf(yylval.stringconst,"%s",yytext); 
+                         return tIDENTIFIER; }   
+<INPUTRHS>\"([^\"])*\"    { BEGIN HTMLINPUT; 
+                         yylval.stringconst = (char*)malloc(yyleng-1);
+                         yytext[yyleng-1] = '\0';
+                         sprintf(yylval.stringconst,"%s",yytext+1);
+                         return tSTRINGCONST; }     
 <GAP>"]\>"				 BEGIN HTML; return tCLOSINGGAP;
 "="                      return '=';
 ">"                      return '>';
