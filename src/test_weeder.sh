@@ -4,7 +4,8 @@ WEEDDIR=../tests/weed
 
 fail=0
 for testcase in `ls ../tests/weed`; do
-    if ! wigismo $WEEDDIR/$testcase; then
+    echo $testcase
+    if wigismo $WEEDDIR/$testcase; then
         fail=1
     fi
 done

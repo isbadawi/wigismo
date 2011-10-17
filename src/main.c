@@ -3,6 +3,7 @@
 #include<string.h>
 #include"tree.h"
 #include"pretty.h"
+#include"weed.h"
 
 void yyparse();
 
@@ -60,6 +61,12 @@ int main(int argc, char *argv[])
         lineno = 1;
         yyparse();
     }
+    
+    if (!weedSERVICE(theservice))
+        return 1;
+    
     if (pretty_print)
         prettySERVICE(theservice);
+
+    return 0;
 }

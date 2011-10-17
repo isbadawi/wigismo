@@ -6,10 +6,10 @@ CFLAGS = -Wall -pedantic -g
 
 all:
 	make code
-	make -s check
+	make check
 
-code: y.tab.o lex.yy.o main.o tree.h tree.o memory.h memory.o error.h error.o pretty.o pretty.h
-	$(CC) lex.yy.o y.tab.o tree.o memory.o error.o pretty.o main.o -o wigismo -lfl
+code: y.tab.o lex.yy.o main.o tree.h tree.o memory.h memory.o error.h error.o pretty.o pretty.h weed.o weed.h
+	$(CC) lex.yy.o y.tab.o tree.o memory.o error.o pretty.o weed.o main.o -o wigismo -lfl
 
 y.tab.c y.tab.h: wig.y
 	$(BISON) wig.y
