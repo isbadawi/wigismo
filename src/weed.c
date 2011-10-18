@@ -6,6 +6,7 @@
 extern char *infile; 
 
 int weedVARIABLE_TYPE(VARIABLE *);
+int weedSESSION(SESSION *);
 int weedFUNCTION(FUNCTION *);
 int weedSCHEMA(SCHEMA *);
 int weedHTML(HTML *);
@@ -22,7 +23,7 @@ int weedRETURN_TYPE_NE(STATEMENT *);
 
 int weedSERVICE(SERVICE *s)
 {
-    if (!weedSESSION_END(s->sessions))
+    if (!weedSESSION(s->sessions))
         return 0;
 
     if (!weedHTML(s->htmls))
@@ -49,6 +50,20 @@ int weedSCHEMA(SCHEMA *s)
         return 0;
 
     return weedSCHEMA(s->next);
+}
+
+int weedSESSION(SESSION *s)
+{
+    if (s == NULL)
+        return 1;
+
+    if (!weedSESSION_END(s))
+        return 0;
+
+    if (!weedVARIABLE_TYPE(s->statements->val.blockS.variables))
+        return 0;
+
+    return weedSESSION(s->next);
 }
 
 int weedHTML(HTML *h) 
@@ -95,9 +110,14 @@ int weedHTMLBODY(HTMLBODY *hb)
 
 int weedFUNCTION(FUNCTION *f)
 {
+    if (f == NULL)
+        return 1;
+
     if (!weedFUNCTION_RETURN_TYPE(f))
         return 0;
     if (!weedFUNCTION_ARGUMENTS(f))
+        return 0;
+    if (!weedVARIABLE_TYPE(f->statements->val.blockS.variables))
         return 0;
     return 1;
 }

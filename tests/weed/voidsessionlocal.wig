@@ -1,0 +1,8 @@
+service {
+    const html Test = <html>Test</html>;
+
+    session Hello() {
+        void x;
+        exit Test;
+    }
+}
