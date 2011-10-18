@@ -29,7 +29,9 @@ pretty:
 	./test_printer.sh
 
 unit:
-	echo "no unit tests"
+	@gcc unit_tests.c tree.h tree.o memory.h memory.o weed.o weed.h -o tests
+	@./tests
+	@rm tests
 
 clean:
 	rm -f *.o lex.* y.tab.*

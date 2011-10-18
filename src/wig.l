@@ -93,6 +93,8 @@ int i;
                          yytext[yyleng-1] = '\0';
                          sprintf(yylval.stringconst,"%s",yytext+1);
                          return tSTRINGCONST; }   
+<INPUTRHS>\>			 BEGIN HTML; return '>';
+<INPUTRHS>\/\>			 BEGIN HTML; return tCLOSINGTAG;
 <INPUTRHS>[a-zA-Z0-9_]+	         { BEGIN HTMLINPUT; 
 						 yylval.stringconst = (char*)malloc(yyleng+1);
                          sprintf(yylval.stringconst,"%s",yytext); 
