@@ -7,6 +7,7 @@ extern char *infile;
 
 int weedVARIABLE_TYPE(VARIABLE *);
 int weedFUNCTION(FUNCTION *);
+int weedSCHEMA(SCHEMA *);
 int weedHTML(HTML *);
 int weedHTMLBODY(HTMLBODY *);
 int weedFUNCTION_ARGUMENTS(FUNCTION *);
@@ -30,10 +31,24 @@ int weedSERVICE(SERVICE *s)
     if (!weedFUNCTION(s->functions))
         return 0;
 
+    if (!weedSCHEMA(s->schemas))
+        return 0;
+
     if (!weedVARIABLE_TYPE(s->variables))
         return 0;
 
     return 1;
+}
+
+int weedSCHEMA(SCHEMA *s)
+{
+    if (s == NULL)
+        return 1;
+
+    if (!weedVARIABLE_TYPE(s->variables))
+        return 0;
+
+    return weedSCHEMA(s->next);
 }
 
 int weedHTML(HTML *h) 
