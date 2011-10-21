@@ -1,6 +1,23 @@
 #ifndef __wig_tree_h
 #define __wig_tree_h
 
+typedef enum{htmlSym, variableSym, sessionSym, functionSym, argumentSym, schemaSym} SymbolKind;
+
+typedef struct SYMBOL 
+{
+    char *name;
+    SymbolKind kind;
+    union {
+        struct HTML *htmlS;
+        struct VARIABLE *variableS;
+        struct SESSION *sessionS;
+        struct FUNCTION *functionS;
+        struct ARGUMENT *argumentS;
+        struct SCHEMA *schemaS;
+    } val;
+    struct SYMBOL *next;
+} SYMBOL;
+
 typedef struct SERVICE 
 {
     struct HTML *htmls;
