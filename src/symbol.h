@@ -15,5 +15,7 @@ SYMBOL *put_symbol(SymbolTable *t, char *name, SymbolKind kind);
 SYMBOL *get_symbol(SymbolTable *t, char *name);
 int symbol_exists(SymbolTable *t, char *name);
 
+SymbolTable *mst;
+
 
 #endif
