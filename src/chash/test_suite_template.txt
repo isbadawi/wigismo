@@ -1,0 +1,18 @@
+#include "chash_tests.c"
+
+char* run_tests(void)
+{
+{{ testcases }}
+    return 0;
+}
+
+int main(int argc, const char *argv[])
+{
+    char* result = run_tests();
+    if (result)
+        printf("%s\n", result);
+    else
+        printf("ALL TESTS PASSED\n");
+    printf("Tests run: %d\n", tests_run);
+    return 0;
+} 
