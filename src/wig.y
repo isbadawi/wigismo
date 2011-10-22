@@ -195,7 +195,11 @@ field : simpletype tIDENTIFIER ';'
 nevariables : variable 
                { $$ = $1; }
             | nevariables variable 
-               { $$ = $2; $$->next = $1; }
+               { $$ = $2; 
+                 VARIABLE *v = $$;
+                 while (v->next != NULL)
+                     v = v->next;
+                 v->next = $1; }
 ;
 
 variable : type identifiers ';'

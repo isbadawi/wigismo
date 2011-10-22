@@ -381,10 +381,17 @@ void prettyEXP(EXP *e)
         case idK:
             printf("%s", e->val.idE.name);
             break;
+        case idtupleK:
+            printf("%s.%s", e->val.idtupleE.name, e->val.idtupleE.field);
+            break;
         case assignK:
             printf("%s = ", e->val.assignE.left);
             prettyEXP(e->val.assignE.right);
             break;
+        case assigntupleK:
+            printf("%s.%s = ", e->val.assigntupleE.name, 
+                e->val.assigntupleE.field);
+            prettyEXP(e->val.assignE.right);
         case orK:
         case andK:
         case eqK:

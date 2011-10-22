@@ -305,6 +305,43 @@ void symINPUT(INPUT *i, HTML *h, SymbolTable *table)
         reportStrError("input %s not found in HTML", i->rhs, i->lineno);
 }
 
+int schema_has_var(SCHEMA *s, char *field)
+{
+    VARIABLE *v;
+    for (v = s->variables; v != NULL; v = v->next)
+        if (!strcmp(v->name, field))
+            return 1;
+    return 0;
+}
+
+void symTUPLE(EXP *e, SymbolTable *table)
+{
+    SYMBOL *s;
+    s = get_symbol(table, e->val.idtupleE.name);
+    if (s == NULL || (s->kind != variableSym && s->kind != argumentSym))
+        reportStrError("identifier %s not declared", e->val.idtupleE.name, e->lineno);
+    if (s->kind == variableSym)
+    {
+        SCHEMA *schema;
+        VARIABLE *v = s->val.variableS;
+        if (v->type->kind != tupleK)
+            reportStrError("identifier %s not a tuple", e->val.idtupleE.name, e->lineno);
+        schema = get_symbol_as(table, v->type->name, schemaSym)->val.schemaS;
+        if (!schema_has_var(schema, e->val.idtupleE.field))
+            reportStrError("schema has no field %s", e->val.idtupleE.field, e->lineno);
+    }
+    else if (s->kind == argumentSym)
+    {
+        SCHEMA *schema;
+        ARGUMENT *a = s->val.argumentS;
+        if (a->type->kind != tupleK)
+            reportStrError("identifier %s not a tuple", e->val.idtupleE.name, e->lineno);
+        schema = get_symbol_as(table, a->type->name, schemaSym)->val.schemaS;
+        if (!schema_has_var(schema, e->val.idtupleE.field))
+            reportStrError("schema has no field %s", e->val.idtupleE.field, e->lineno);
+    }         
+}
+
 void symEXP(EXP *e, SymbolTable *table)
 {
     SYMBOL *s;
@@ -320,12 +357,42 @@ void symEXP(EXP *e, SymbolTable *table)
                 reportStrError("identifier %s not declared", e->val.idE.name, e->lineno);
             e->val.idE.idsym = s;    
             break;
+        case idtupleK:
+            symTUPLE(e, table);
+            break;
         case assignK:
             s = get_symbol(table, e->val.assignE.left);
             if(s == NULL || (s->kind != variableSym && s->kind != argumentSym))
                 reportStrError("identifier %s not declared", e->val.assignE.left, e->lineno);
             e->val.assignE.leftsym = s;
             symEXP(e->val.assignE.right, table);
+            break;
+        case assigntupleK:
+            s = get_symbol(table, e->val.assigntupleE.name);
+            if (s == NULL || (s->kind != variableSym && s->kind != argumentSym))
+                reportStrError("identifier %s not declared", e->val.idtupleE.name, e->lineno);
+            if (s->kind == variableSym)
+            {
+                SCHEMA *schema;
+                VARIABLE *v = s->val.variableS;
+                if (v->type->kind != tupleK)
+                    reportStrError("identifier %s not a tuple", e->val.assigntupleE.name, e->lineno);
+                schema = get_symbol_as(table, v->type->name, schemaSym)->val.schemaS;
+                if (!schema_has_var(schema, e->val.assigntupleE.field))
+                    reportStrError("schema has no field %s", e->val.assigntupleE.field, e->lineno);
+            }
+            else if (s->kind == argumentSym)
+            {
+                SCHEMA *schema;
+                ARGUMENT *a = s->val.argumentS;
+                if (a->type->kind != tupleK)
+                    reportStrError("identifier %s not a tuple", e->val.assigntupleE.name, e->lineno);
+                schema = get_symbol_as(table, a->type->name, schemaSym)->val.schemaS;
+                if (!schema_has_var(schema, e->val.assigntupleE.field))
+                    reportStrError("schema has no field %s", e->val.assigntupleE.field, e->lineno);
+            }                     
+            e->val.assignE.leftsym = s;
+            symEXP(e->val.assigntupleE.right, table);
             break;
         case orK:
         case andK:
@@ -373,13 +440,6 @@ void symEXP(EXP *e, SymbolTable *table)
 
 void symID(ID *id, SymbolTable *table)
 {
-    SYMBOL *s;
-    if(id == NULL)
-        return;
-    symID(id->next, table);
-    s = get_symbol(table, id->name);
-    if(s == NULL)
-        reportStrError("Id %s not declared", id->name, id->lineno);
 }
 
 void symSESSION(SESSION *s)

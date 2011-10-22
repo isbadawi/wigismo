@@ -168,16 +168,24 @@ typedef struct EXP
 {
     int lineno;
     TYPE *type;
-    enum {idK, assignK, orK, andK, eqK, ltK, gtK, leqK, geqK, neqK, plusK,
-          minusK, timesK, divK, modK, notK, uminusK, combineK, keepK,
-          discardK, callK, intconstK, boolconstK, stringconstK, tupleconstK} kind;
+    enum {idK, idtupleK, assignK, assigntupleK, orK, andK, eqK, ltK, gtK, 
+          leqK, geqK, neqK, plusK, minusK, timesK, divK, modK, notK, 
+          uminusK, combineK, keepK, discardK, callK, intconstK, boolconstK,
+          stringconstK, tupleconstK} kind;
     union
     {
         struct {char *name;
                 SYMBOL *idsym; } idE; 
+        struct {char *name;
+                char *field;
+                SYMBOL *idsym; } idtupleE; 
         struct {char *left;
                 SYMBOL *leftsym; 
                 struct EXP *right; } assignE;
+        struct {char *name;
+                char *field;
+                SYMBOL *leftsym; 
+                struct EXP *right; } assigntupleE;
         struct {struct EXP *left;
                 struct EXP *right; } binaryE;
         struct {struct EXP *left;

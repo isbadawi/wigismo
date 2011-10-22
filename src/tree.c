@@ -1,6 +1,7 @@
 #include"tree.h"
 #include"memory.h"
 #include<stdlib.h>
+#include<string.h>
 
 extern int lineno;
 
@@ -142,16 +143,11 @@ VARIABLE *makeVARIABLE(TYPE *type, char *name)
 
 VARIABLE *makeVARIABLES(TYPE *type, ID *ids)
 {
+    if (ids == NULL)
+        return NULL;
     VARIABLE *v = makeVARIABLE(type, ids->name);
-    VARIABLE *current = v;
-    ID *id;
-    for (id = ids->next; id != NULL; id = id->next)
-    {
-        current->next = makeVARIABLE(type, id->name);
-        current = current->next;
-    }
+    v->next = makeVARIABLES(type, ids->next);
     return v;
-
 }
 
 ID *makeID(char *name)
@@ -367,19 +363,29 @@ INPUT *makeINPUT(char *lhs, char *rhs)
 {
     INPUT *i = NEW(INPUT);
     i->lineno = lineno;
-    i->lhs = rhs;
+    i->lhs = lhs;
     i->rhs = rhs;
     i->next = NULL;
     return i;
 }
 
-/* TODO for these two: SYMBOL? */
 EXP *makeEXPlvalue(char *lvalue)
 {
     EXP *e = NEW(EXP);
     e->lineno = lineno;
-    e->kind = idK;
-    e->val.idE.name = lvalue;
+    if (strchr(lvalue, '.') != NULL)
+    {
+        char *left = strtok(lvalue, ".");
+        char *right = strtok(NULL, ".");
+        e->kind = idtupleK;
+        e->val.idtupleE.name = left;
+        e->val.idtupleE.field = right;
+    }
+    else
+    {
+        e->kind = idK;
+        e->val.idE.name = lvalue;
+    }
     e->next = NULL;
     return e;
 }
@@ -388,9 +394,21 @@ EXP *makeEXPassign(char *lvalue, EXP *exp)
 {
     EXP *e = NEW(EXP);
     e->lineno = lineno;
-    e->kind = assignK;
-    e->val.assignE.left = lvalue;
-    e->val.assignE.right = exp;
+    if (strchr(lvalue, '.') != NULL)
+    {
+        char *left = strtok(lvalue, ".");
+        char *right = strtok(NULL, ".");
+        e->kind = assigntupleK;
+        e->val.assigntupleE.name = left;
+        e->val.assigntupleE.field = right;
+        e->val.assigntupleE.right = exp;
+    }
+    else
+    {
+        e->kind = assignK;
+        e->val.assignE.left = lvalue;
+        e->val.assignE.right = exp;
+    } 
     e->next = NULL;
     return e;
 }
