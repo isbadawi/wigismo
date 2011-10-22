@@ -70,6 +70,7 @@ typedef struct ATTRIBUTE
 
 typedef struct PLUG
 {
+    int lineno;
     char *name;
     struct EXP *exp;
     struct PLUG *next;
@@ -83,6 +84,7 @@ typedef struct RECEIVE
 
 typedef struct INPUT
 {
+    int lineno;
     char *lhs;
     char *rhs;
     struct INPUT *next;
@@ -155,6 +157,7 @@ typedef struct STATEMENT
 
 typedef struct DOCUMENT
 {
+    int lineno;
     char *name;
     PLUG *plugs;
 } DOCUMENT;
@@ -168,10 +171,10 @@ typedef struct EXP
           discardK, callK, intconstK, boolconstK, stringconstK, tupleconstK} kind;
     union
     {
-        struct {char *name; } idE;
-/*                SYMBOL *idsym; } idE; */
+        struct {char *name;
+                SYMBOL *idsym; } idE; 
         struct {char *left;
-/*                SYMBOL *leftsym; */
+                SYMBOL *leftsym; 
                 struct EXP *right; } assignE;
         struct {struct EXP *left;
                 struct EXP *right; } binaryE;

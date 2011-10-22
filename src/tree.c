@@ -241,6 +241,7 @@ SESSION *makeSESSION(char *name, STATEMENT *body)
 DOCUMENT *makeDOCUMENT(char *name, PLUG *plugs)
 {
     DOCUMENT *d = NEW(DOCUMENT);
+    d->lineno = lineno;
     d->name = name;
     d->plugs = plugs;
     return d;
@@ -353,6 +354,7 @@ RECEIVE *makeRECEIVE(INPUT *inputs)
 PLUG *makePLUG(char *name, EXP *exp)
 {
     PLUG *p = NEW(PLUG);
+    p->lineno = lineno;
     p->name = name;
     p->exp = exp;
     p->next = NULL;
@@ -362,6 +364,7 @@ PLUG *makePLUG(char *name, EXP *exp)
 INPUT *makeINPUT(char *lhs, char *rhs)
 {
     INPUT *i = NEW(INPUT);
+    i->lineno = lineno;
     i->lhs = rhs;
     i->rhs = rhs;
     i->next = NULL;
