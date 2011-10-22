@@ -3,5 +3,6 @@ service {
 
     session Main() {
         test();
+        exit Test;
     }
 }
