@@ -1,0 +1,17 @@
+service {
+    const html Test = <html> test </html>;
+
+    schema S {
+        int x;
+        int y;
+    }
+
+    schema S {
+        bool b;
+        bool c;
+    }
+
+    session Main() {
+        exit Test;
+    }
+}

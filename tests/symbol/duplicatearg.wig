@@ -1,0 +1,11 @@
+service {
+    const html Test = <html>Test</html>;
+
+    int test(int x, int x) {
+        return 0;
+    }
+
+    session Main() {
+        exit Test;
+    }
+}

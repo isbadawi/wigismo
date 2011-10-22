@@ -1,0 +1,11 @@
+service {
+    const html Test = <html>
+        test
+    </html>;
+
+    session Main() {
+        int i;
+        show Test receive[i=test];
+        exit Test;
+    }
+}

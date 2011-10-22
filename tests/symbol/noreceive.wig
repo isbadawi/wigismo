@@ -1,0 +1,10 @@
+service {
+    const html Test = <html>
+        <input name="test" type="text">
+    </html>;
+
+    session Main() {
+        show Test receive[i=test];
+        exit Test;
+    }
+}

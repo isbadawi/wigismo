@@ -1,0 +1,8 @@
+service {
+    const html Test = <html> test </html>;
+    const html Test = <html> other </html>;
+
+    session Main() {
+        exit Test;
+    }
+}
