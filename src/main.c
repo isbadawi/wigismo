@@ -17,15 +17,18 @@ void print_usage(void)
     printf("Usage: wigismo [options] file\n"
            "Options:\n"
            "  -h, --help                Display this information.\n"
-           "  -p, --pretty-print        Pretty print parsed file to stdout.\n");
+           "  -p, --pretty-print        Pretty print parsed file to stdout.\n"
+           "  -s, --no-symbols          Disable symbol table phase)\n");
 }
 
-char* options[] = {"--help", "--pretty-print"};
+char* options[] = {"-h", "--help", 
+                   "-p", "--pretty-print", 
+                   "-s", "--no-symbols"};
 
 int valid_option(char *opt)
 {
     int i;
-    for (i = 0; i < 2; i++)
+    for (i = 0; i < 6; i++)
         if (!strcmp(opt, options[i]))
             return 1;
     return 0;
@@ -34,6 +37,7 @@ int valid_option(char *opt)
 int main(int argc, char *argv[])
 {
     int pretty_print = 0;
+    int symbol_phase = 1;
     int i;
     if (argc == 1)
     {
@@ -49,6 +53,8 @@ int main(int argc, char *argv[])
         }
         if (!strcmp(argv[i], "--pretty-print") || !strcmp(argv[i], "-p"))
             pretty_print = 1;
+        if (!strcmp(argv[i], "--no-symbols") || !strcmp(argv[i], "-s"))
+            symbol_phase = 0;
     }
     if (!valid_option(argv[argc - 1]) && freopen(argv[argc - 1], "r", stdin) != NULL)
     {
@@ -72,6 +78,9 @@ int main(int argc, char *argv[])
     
     if (pretty_print)
         prettySERVICE(theservice);
+
+    if (symbol_phase)
+        symSERVICE(theservice);
 
     return 0;
 }

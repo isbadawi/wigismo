@@ -6,8 +6,8 @@
 
 typedef struct SymbolTable {
     chash *table;
-    SymbolTable *next;
-}
+    struct SymbolTable *next;
+} SymbolTable;
 
 SymbolTable *new_symbol_table(void);
 SymbolTable *enter_new_scope(SymbolTable *table);
@@ -16,6 +16,8 @@ SYMBOL *get_symbol(SymbolTable *t, char *name);
 int symbol_exists(SymbolTable *t, char *name);
 
 SymbolTable *mst;
+
+void symSERVICE(SERVICE *s);
 
 
 #endif

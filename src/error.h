@@ -3,4 +3,6 @@
 
 void yyerror(char *s);
 
+void reportStrError(const char *msg, char *name, int lineno);
+
 #endif

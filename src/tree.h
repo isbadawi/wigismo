@@ -37,6 +37,7 @@ typedef struct SESSION
 
 typedef struct HTML
 {
+    int lineno;
     char *name;
     struct HTMLBODY *htmlbodies;
     struct HTML *next;

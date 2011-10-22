@@ -20,6 +20,7 @@ SERVICE *makeSERVICE(HTML *htmls, SCHEMA *schemas,
 HTML *makeHTML(char *name, HTMLBODY *htmlbodies)
 {
     HTML *h = NEW(HTML);
+    h->lineno = lineno;
     h->name = name;
     h->htmlbodies = htmlbodies;
     h->next = NULL;

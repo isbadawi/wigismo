@@ -4,6 +4,7 @@
 extern char *yytext;
 extern char *infile;
 int lineno;
+int errors = 0;
 
 void yyerror(char *s)
 {
@@ -12,3 +13,11 @@ void yyerror(char *s)
             yytext, lineno, infile);
     fprintf(stderr, "*** compilation terminated ***\n");
 }
+
+void reportStrError(const char *msg, char *name, int lineno)
+{ 
+    fprintf(stderr, "*** ");
+    fprintf(stderr, msg, name);
+    fprintf(stderr, " at line %i of file %s\n", lineno, infile);
+    errors++;
+} 

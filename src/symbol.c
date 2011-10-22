@@ -1,6 +1,23 @@
 #include "symbol.h"
 #include "memory.h"
+#include "error.h"
 #include<stdlib.h>
+#include<string.h>
+
+
+void symHTML(HTML *html);
+void symSESSION(SESSION *s);
+void symSCHEMA(SCHEMA *s);
+void symVARIABLE(VARIABLE *v, SymbolTable *table);
+void symFUNCTION(FUNCTION *f);
+void symFUNCTIONBODIES(FUNCTION *f);
+void symARGUMENT(ARGUMENT *a, SymbolTable *table);
+void symSTATEMENT(STATEMENT *s, SymbolTable *table);
+void symDOCUMENT(DOCUMENT *d, SymbolTable *table);
+void symPLUG(PLUG *p, HTML *html, SymbolTable *table);
+void symRECEIVE(RECEIVE *r, DOCUMENT *d, SymbolTable *table);
+void symINPUT(INPUT *i, HTML *h, SymbolTable *table);
+void symEXP(EXP *e, SymbolTable *table);
 
 SymbolTable *new_symbol_table(void) 
 {
@@ -19,9 +36,10 @@ SymbolTable *enter_new_scope(SymbolTable *table)
 
 SYMBOL *get_symbol(SymbolTable *table, char *name)
 {
+    SYMBOL *symbol;
     if (table == NULL)
         return NULL;
-    SYMBOL *symbol = CHASH_GET_AS(SYMBOL, table->table, name);
+    symbol = CHASH_GET_AS(SYMBOL, table->table, name);
     if (symbol == NULL)
         return get_symbol(table->next, name);
     return symbol;
@@ -29,11 +47,12 @@ SYMBOL *get_symbol(SymbolTable *table, char *name)
 
 SYMBOL *get_symbol_as(SymbolTable *table, char *name, SymbolKind kind)
 {
+    SYMBOL *symbol;
     if (table == NULL)
         return NULL;
-    SYMBOL *symbol = CHASH_GET_AS(SYMBOL, table->table, name);
+    symbol = CHASH_GET_AS(SYMBOL, table->table, name);
     if (symbol == NULL || symbol->kind != kind)
-        return get_symbol_as(table->next, name, kind)l
+        return get_symbol_as(table->next, name, kind);
     return symbol;
 }
 
@@ -111,7 +130,7 @@ void symVARIABLE(VARIABLE *v, SymbolTable *table)
         s->val.variableS = v;
         if(v->type->kind == tupleK)
         {
-            SYMBOL *schema = get_symbol_as(mst, v->type->name, schemaSym)
+            SYMBOL *schema = get_symbol_as(mst, v->type->name, schemaSym);
             if (schema == NULL)
                 reportStrError("tuple %s type not defined", v->name, v->lineno);
         }
@@ -134,10 +153,11 @@ void symFUNCTION(FUNCTION *f)
 
 void symFUNCTIONBODIES(FUNCTION *f)
 {
+    SymbolTable *local;
     if (f == NULL)
         return;
     symFUNCTIONBODIES(f->next);
-    SymbolTable *local = new_symbol_table(mst);
+    local = enter_new_scope(mst);
     symARGUMENT(f->arguments, local);
     symSTATEMENT(f->statements, local);
 }
@@ -147,11 +167,11 @@ void symARGUMENT(ARGUMENT *a, SymbolTable *table)
     if (a == NULL)
         return;
     symARGUMENT(a->next, table);
-    if (local_symbol_exists(a->name, table))
+    if (local_symbol_exists(table, a->name))
         reportStrError("argument %s already defined", a->name, a->lineno);
     if (a->type->kind == tupleK)
     {
-        SYMBOL *schema = get_symbol_as(mst, a->type->name, schemaSym)
+        SYMBOL *schema = get_symbol_as(mst, a->type->name, schemaSym);
         if (schema == NULL)
             reportStrError("tuple %s type not defined", a->name, a->lineno);
     }                     
@@ -187,16 +207,16 @@ void symSTATEMENT(STATEMENT *s, SymbolTable *table)
             break;
         case ifK:
             symEXP(s->val.ifS.condition, table);
-            symSTATEMENT(s->val.ifS.body);
+            symSTATEMENT(s->val.ifS.body, table);
             break;
         case ifelseK:
             symEXP(s->val.ifelseS.condition, table);
-            symSTATEMENT(s->val.ifelseS.thenpart);
-            symSTATEMENT(s->val.ifelseS.elsepart);
+            symSTATEMENT(s->val.ifelseS.thenpart, table);
+            symSTATEMENT(s->val.ifelseS.elsepart, table);
             break;
         case whileK:
             symEXP(s->val.whileS.condition, table);
-            symSTATEMENT(s->val.whileS.body);
+            symSTATEMENT(s->val.whileS.body, table);
             break;
         case expK:
             symEXP(s->val.expS, table);
@@ -234,10 +254,11 @@ void symPLUG(PLUG *p, HTML *html, SymbolTable *table)
 
 void symRECEIVE(RECEIVE *r, DOCUMENT *d, SymbolTable *table)
 {
+    SYMBOL *html;
     if (r == NULL)
         return;
     symRECEIVE(r->next, d, table);
-    SYMBOL *html = get_symbol_as(mst, d->name, htmlSym);
+    html = get_symbol_as(mst, d->name, htmlSym);
     if (html != NULL)
     {
         HTML *h = html->val.htmlS;
@@ -247,8 +268,8 @@ void symRECEIVE(RECEIVE *r, DOCUMENT *d, SymbolTable *table)
 
 char* get_name(ATTRIBUTE *attributes)
 {
-    if (!strcmp(attribute->name, "name"))
-        return attribute->value;
+    if (!strcmp(attributes->name, "name"))
+        return attributes->value;
     return get_name(attributes->next);
 }
 
@@ -262,15 +283,16 @@ int html_has_input(HTMLBODY *hb, char *name)
     if (hb->kind == selectK 
           && !strcmp(get_name(hb->val.selectH.attributes), name))
         return 1;
-    return html_has_input(hb->next);
+    return html_has_input(hb->next, name);
 }
 
 void symINPUT(INPUT *i, HTML *h, SymbolTable *table)
 {
+    SYMBOL *var;
     if (i == NULL)
         return;
-    symINPUT(i->next);
-    SYMBOL *var = get_symbol(table, i->lhs);
+    symINPUT(i->next, h, table);
+    var = get_symbol(table, i->lhs);
     if (var == NULL || (var->kind != variableSym && var->kind != argumentSym))
         reportStrError("identifier %s not declared", i->lhs, i->lineno);
     if (!html_has_input(h->htmlbodies, i->rhs))
@@ -279,6 +301,7 @@ void symINPUT(INPUT *i, HTML *h, SymbolTable *table)
 
 void symEXP(EXP *e, SymbolTable *table)
 {
+    SYMBOL *s;
     if (e == NULL)
         return;
     symEXP(e->next, table);
@@ -286,9 +309,9 @@ void symEXP(EXP *e, SymbolTable *table)
     switch (e->kind)
     {
         case idK:
-            SYMBOL *s = get_symbol(table, e->val.idE.name);
+            s = get_symbol(table, e->val.idE.name);
             if(s == NULL)
-                reportStrError("Identifier %s not declared", e->name, e->lineno);
+                reportStrError("Identifier %s not declared", e->val.idE.name, e->lineno);
                 
             break;
         case assignK:
@@ -296,7 +319,7 @@ void symEXP(EXP *e, SymbolTable *table)
         case andK:
         case eqK:
         case ltK:
-        case gtk:
+        case gtK:
         case leqK:
         case geqK:
         case neqK:
@@ -318,4 +341,8 @@ void symEXP(EXP *e, SymbolTable *table)
             break;
 
     }
+}
+
+void symSESSION(SESSION *s)
+{
 }
