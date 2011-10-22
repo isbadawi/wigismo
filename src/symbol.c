@@ -286,20 +286,36 @@ void symEXP(EXP *e, SymbolTable *table)
     switch (e->kind)
     {
         case idK:
-            SYMBOL *s = get_symbol(table, e->name);
+            SYMBOL *s = get_symbol(table, e->val.idE.name);
             if(s == NULL)
                 reportStrError("Identifier %s not declared", e->name, e->lineno);
                 
             break;
         case assignK:
-        case binaryK:
+        case orK:
+        case andK:
+        case eqK:
+        case ltK:
+        case gtk:
+        case leqK:
+        case geqK:
+        case neqK:
+        case plusK:
+        case minusK:
+        case timesK:
+        case divK:
+        case modK:
+        case notK:
+        case uminusK:
+        case combineK:
         case keepK:
         case discardK:
-        case unaryK:
         case callK:
         case intconstK:
         case boolconstK:
         case stringconstK:
-        case tupleK:
+        case tupleconstK:
+            break;
+
     }
 }
