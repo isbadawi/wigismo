@@ -101,6 +101,7 @@ typedef struct SCHEMA
 
 typedef struct ID
 {
+    int lineno;
     char *name;
     struct ID *next;
 } ID;

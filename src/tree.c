@@ -157,6 +157,7 @@ VARIABLE *makeVARIABLES(TYPE *type, ID *ids)
 ID *makeID(char *name)
 {
     ID *id = NEW(ID);
+    id->lineno = lineno;
     id->name = name;
     id->next = NULL;
     return id;

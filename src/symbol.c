@@ -18,6 +18,7 @@ void symPLUG(PLUG *p, HTML *html, SymbolTable *table);
 void symRECEIVE(RECEIVE *r, DOCUMENT *d, SymbolTable *table);
 void symINPUT(INPUT *i, HTML *h, SymbolTable *table);
 void symEXP(EXP *e, SymbolTable *table);
+void symID(ID *id, SymbolTable *table);
 
 SymbolTable *new_symbol_table(void) 
 {
@@ -311,10 +312,15 @@ void symEXP(EXP *e, SymbolTable *table)
         case idK:
             s = get_symbol(table, e->val.idE.name);
             if(s == NULL)
-                reportStrError("Identifier %s not declared", e->val.idE.name, e->lineno);
-                
+                reportStrError("identifier %s not declared", e->val.idE.name, e->lineno);
+            e->val.idE.idsym = s;    
             break;
         case assignK:
+            s = get_symbol(table, e->val.assignE.left);
+            if(s == NULL || (s->kind != variableSym && s->kind != argumentSym))
+                reportStrError("identifier %s not declared", e->val.assignE.left, e->lineno);
+            e->val.assignE.leftsym = s;
+            break;
         case orK:
         case andK:
         case eqK:
@@ -328,12 +334,28 @@ void symEXP(EXP *e, SymbolTable *table)
         case timesK:
         case divK:
         case modK:
+        case combineK:
+            symEXP(e->val.binaryE.left, table);
+            symEXP(e->val.binaryE.right, table);
+            break;
         case notK:
         case uminusK:
-        case combineK:
+            symEXP(e->val.unaryE, table);
+            break;
         case keepK:
+            symEXP(e->val.keepE.left, table);
+            symID(e->val.keepE.ids, table);
+            break;
         case discardK:
+            symEXP(e->val.discardE.left, table);
+            symID(e->val.discardE.ids, table);
+            break;
         case callK:
+            s = get_symbol_as(table, e->val.callE.name, functionSym);
+            if(s == NULL)
+                reportStrError("Function %s not defined", e->val.callE.name, e->lineno);
+            symEXP(e->val.callE.args, table);
+            break;
         case intconstK:
         case boolconstK:
         case stringconstK:
@@ -343,6 +365,25 @@ void symEXP(EXP *e, SymbolTable *table)
     }
 }
 
+void symID(ID *id, SymbolTable *table)
+{
+    SYMBOL *s;
+    if(id == NULL)
+        return;
+    symID(id->next, table);
+    s = get_symbol(table, id->name);
+    if(s == NULL)
+        reportStrError("Id %s not declared", id->name, id->lineno);
+}
+
 void symSESSION(SESSION *s)
 {
+    SYMBOL *sym;
+    if(s == NULL)
+        return;
+    symSESSION(s->next);
+    sym = get_symbol(mst, s->name);
+    if(sym != NULL)
+        reportStrError("session %s already declared", s->name, s->lineno);
+    symSTATEMENT(s->statements, mst);
 }
