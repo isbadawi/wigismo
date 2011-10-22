@@ -170,6 +170,11 @@ void symARGUMENT(ARGUMENT *a, SymbolTable *table)
     symARGUMENT(a->next, table);
     if (local_symbol_exists(table, a->name))
         reportStrError("argument %s already defined", a->name, a->lineno);
+    else
+    {
+        SYMBOL *sym = put_symbol(table, a->name, argumentSym);
+        sym->val.argumentS = a;
+    }
     if (a->type->kind == tupleK)
     {
         SYMBOL *schema = get_symbol_as(mst, a->type->name, schemaSym);
@@ -385,5 +390,11 @@ void symSESSION(SESSION *s)
     sym = get_symbol(mst, s->name);
     if(sym != NULL)
         reportStrError("session %s already declared", s->name, s->lineno);
+    else
+    {
+        sym = put_symbol(mst, s->name, sessionSym);
+        sym->val.sessionS = s;
+    }
+
     symSTATEMENT(s->statements, mst);
 }

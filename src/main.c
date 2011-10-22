@@ -5,12 +5,14 @@
 #include"tree.h"
 #include"pretty.h"
 #include"weed.h"
+#include"symbol.h"
 
 void yyparse();
 
 SERVICE *theservice;
 char *infile;
 extern int lineno;
+extern int errors;
 
 void print_usage(void)
 {
@@ -74,13 +76,17 @@ int main(int argc, char *argv[])
         return 1;
     
     if (!weedSERVICE(theservice))
-        return 1;
+        return 1; 
     
     if (pretty_print)
         prettySERVICE(theservice);
 
     if (symbol_phase)
         symSERVICE(theservice);
+
+    if (errors)
+        return 1;
+
 
     return 0;
 }
