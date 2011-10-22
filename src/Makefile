@@ -21,12 +21,16 @@ check:
 	make -s pretty
 	make -s weed
 	make -s unit
+	make -s symbol
 
 weed: 
 	./test_weeder.sh
 
 pretty:
 	./test_printer.sh
+
+symbol:
+	./test_symbol.sh
 
 unit:
 	@gcc unit_tests.c tree.h tree.o memory.h memory.o weed.o weed.h -o tests

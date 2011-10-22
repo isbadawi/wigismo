@@ -1,9 +1,9 @@
 #!/bin/bash
 
-TESTDIR=../tests/weed
+TESTDIR=../tests/symbol
 
 fail=0
-echo "*** Testing weeder. Error messages are expected. ***"
+echo "*** Testing symbol table phase. Error messages are expected. ***"
 for testcase in `ls $TESTDIR`; do
     if wigismo $TESTDIR/$testcase; then
         fail=1
@@ -11,5 +11,5 @@ for testcase in `ls $TESTDIR`; do
 done
 
 if [ $fail -eq 0 ]; then
-    echo "*** Weeder tests passed. ***"
+    echo "*** Symbol table tests passed. ***"
 fi
