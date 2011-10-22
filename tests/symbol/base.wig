@@ -1,9 +1,0 @@
-service {
-    const html Test = <html>
-        test
-    </html>;
-
-    session Main() {
-
-    }
-}
