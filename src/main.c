@@ -78,14 +78,14 @@ int main(int argc, char *argv[])
     if (!weedSERVICE(theservice))
         return 1; 
     
-    if (pretty_print)
-        prettySERVICE(theservice);
-
     if (symbol_phase)
         symSERVICE(theservice);
 
     if (errors)
         return 1;
+
+    if (pretty_print)
+        prettySERVICE(theservice);
 
 
     return 0;
