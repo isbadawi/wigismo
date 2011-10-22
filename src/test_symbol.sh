@@ -7,7 +7,6 @@ echo "*** Testing symbol table phase. Error messages are expected. ***"
 for testcase in `ls $TESTDIR`; do
     if wigismo $TESTDIR/$testcase; then
         fail=1
-        echo $testcase
     fi
 done
 
