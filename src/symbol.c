@@ -325,6 +325,7 @@ void symEXP(EXP *e, SymbolTable *table)
             if(s == NULL || (s->kind != variableSym && s->kind != argumentSym))
                 reportStrError("identifier %s not declared", e->val.assignE.left, e->lineno);
             e->val.assignE.leftsym = s;
+            symEXP(e->val.assignE.right, table);
             break;
         case orK:
         case andK:
