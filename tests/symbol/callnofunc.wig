@@ -1,0 +1,7 @@
+service {
+    const html Test = <html>Test</html>;
+
+    session Main() {
+        test();
+    }
+}
