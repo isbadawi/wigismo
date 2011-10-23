@@ -297,9 +297,13 @@ void prettySTATEMENT(STATEMENT *s)
                 dedent();
             } 
             else 
+            {
                 prettySTATEMENT(s->val.ifelseS.thenpart);
+                printf("\n");
+            }
 
-            printf("\nelse\n");
+            print_indent();
+            printf("else\n");
             
             if (s->val.ifelseS.elsepart->kind != blockK)
             {
@@ -553,9 +557,13 @@ void prettySCOPE(SymbolTable *table)
     if(table == NULL)
         return;
     print_indent();
+    printf("=================================================\n");
+    print_indent();
     printf("=============");
     printf("|Symbols in this Scope|");
     printf("=============\n");
+    print_indent();
+    printf("=================================================\n");
     prettySymbolTable(table);
     print_indent();
     printf("=================================================\n\n");
