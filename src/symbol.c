@@ -391,7 +391,7 @@ void symEXP(EXP *e, SymbolTable *table)
                 if (!schema_has_var(schema, e->val.assigntupleE.field))
                     reportStrError("schema has no field %s", e->val.assigntupleE.field, e->lineno);
             }                     
-            e->val.assignE.leftsym = s;
+            e->val.assigntupleE.leftsym = s;
             symEXP(e->val.assigntupleE.right, table);
             break;
         case orK:
