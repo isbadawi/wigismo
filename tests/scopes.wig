@@ -1,0 +1,26 @@
+service {
+    const html Test = <html>Test</html>;
+
+    schema S {
+        int x;
+    }
+
+    int x;
+
+    int test(bool x) {
+        int y;
+        y = 10;
+        while (y > 0) {
+            string x;
+            y = y - 1;
+        }
+        return 0;
+    }
+
+    session Main() {
+        tuple S x;
+        x.x = test(true);
+        exit Test;
+    }
+
+}

@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 static int _indent = 0;
-static int _spaces = 0;
+static int _spaces = 1;
 
 void prettyHTML(HTML *);
 void prettySCHEMA(SCHEMA *);
@@ -24,6 +24,7 @@ void prettyEXP(EXP *e);
 void prettyID(ID *id);
 void prettyFIELDVALUE(FIELDVALUE *f);
 void prettySYMBOL(void *i);
+void prettySCOPE(SymbolTable *t);
 void prettySymbolTable(SymbolTable *table);
 void prettyRECEIVE(RECEIVE *r);
 void prettyINPUT(INPUT *i);
@@ -49,6 +50,7 @@ void prettySERVICE(SERVICE *service)
 {
     printf("service\n{\n");
     indent();
+    prettySCOPE(mst);
     prettyHTML(service->htmls);
     prettySCHEMA(service->schemas);
     prettyVARIABLE(service->variables);
@@ -259,14 +261,10 @@ void prettySTATEMENT(STATEMENT *s)
             printf(";\n");
             break;
         case blockK:
-            _spaces = 0;
+            _spaces = 1;
             printf("{\n");
             indent();
-            printf("=======================");
-            printf("|Symbols in this Scope|");
-            printf("=======================");
-            prettySymbolTable(s->val.blockS.table);
-            printf("=======================");
+            prettySCOPE(s->val.blockS.table);
             prettyVARIABLE(s->val.blockS.variables);
             prettySTATEMENT(s->val.blockS.body);
             dedent();
@@ -518,19 +516,22 @@ void prettySYMBOL(void *i)
     switch(s->kind)
     {
         case htmlSym:
-            printf("HTML");
+            printf("html");
             break;
         case variableSym:
-            printf("variable");
+            prettyTYPE(s->val.variableS->type);
+            printf(" variable");
             break;
         case sessionSym:
             printf("session");
             break;
         case functionSym:
-            printf("function");
+            printf("function returning ");
+            prettyTYPE(s->val.functionS->returntype);
             break;
         case argumentSym:
-            printf("argument");
+            prettyTYPE(s->val.argumentS->type);
+            printf(" argument");
             break;            
         case schemaSym:
             printf("schema");
@@ -545,4 +546,17 @@ void prettySymbolTable(SymbolTable *table)
     prettySymbolTable(table->next);
     chash_pretty_print(table->table, prettySYMBOL, _indent + _spaces);
     _spaces += 4;
+}
+
+void prettySCOPE(SymbolTable *table)
+{
+    if(table == NULL)
+        return;
+    print_indent();
+    printf("=============");
+    printf("|Symbols in this Scope|");
+    printf("=============\n");
+    prettySymbolTable(table);
+    print_indent();
+    printf("=================================================\n\n");
 }

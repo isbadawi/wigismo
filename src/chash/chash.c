@@ -177,8 +177,9 @@ void chash_pretty_print(chash* table, chash_callback_t* print_item, int spaces)
     int i;
     for (i = 0; i < table->size; ++i)
     {
-        while(spaces--)
-            printf(" ");
+        int j;
+        for (j = 0; j < spaces; ++j)
+            putc(' ', stdout);
         printf("%s: ", items[i]->key);
         print_item(items[i]->data);
         printf("\n");
