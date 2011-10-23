@@ -84,6 +84,6 @@ void** chash_values(chash* table);
 */
 chash_item** chash_items(chash* table);
 
-void chash_pretty_print(chash* table, chash_callback_t* print_item);
+void chash_pretty_print(chash* table, chash_callback_t* print_item, int spaces);
 
 #endif 

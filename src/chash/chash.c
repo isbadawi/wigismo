@@ -171,18 +171,16 @@ chash_item** chash_items(chash* table)
     return items;
 }
 
-void chash_pretty_print(chash* table, chash_callback_t* print_item)
+void chash_pretty_print(chash* table, chash_callback_t* print_item, int spaces)
 {
-    printf("{\n");
     chash_item** items = chash_items(table);
     int i;
     for (i = 0; i < table->size; ++i)
     {
-        printf("    \"%s\": ", items[i]->key);
+        while(spaces--)
+            printf(" ");
+        printf("%s: ", items[i]->key);
         print_item(items[i]->data);
-        if (i < table->size - 1)
-            printf(",");
         printf("\n");
     }
-    printf("}");
 }

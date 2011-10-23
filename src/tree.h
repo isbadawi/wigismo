@@ -148,7 +148,8 @@ typedef struct STATEMENT
                 struct STATEMENT *thenpart;
                 struct STATEMENT *elsepart; } ifelseS;
         struct {struct STATEMENT *body;
-                struct VARIABLE *variables; } blockS;
+                struct VARIABLE *variables;
+                struct SymbolTable *table;} blockS;
         struct {struct EXP *condition;
                 struct STATEMENT *body;} whileS;
         struct {struct DOCUMENT *document;

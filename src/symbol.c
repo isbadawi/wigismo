@@ -181,7 +181,7 @@ void symARGUMENT(ARGUMENT *a, SymbolTable *table)
         if (schema == NULL)
             reportStrError("tuple %s type not defined", a->name, a->lineno);
     }                     
-}
+}                                             
 
 void symSTATEMENT(STATEMENT *s, SymbolTable *table)
 {
@@ -208,6 +208,7 @@ void symSTATEMENT(STATEMENT *s, SymbolTable *table)
             break;
         case blockK:
             local_table = enter_new_scope(table);
+            s->val.blockS.table = local_table;
             symVARIABLE(s->val.blockS.variables, local_table);
             symSTATEMENT(s->val.blockS.body, local_table);
             break;

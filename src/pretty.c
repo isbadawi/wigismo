@@ -1,8 +1,11 @@
 #include "pretty.h"
+#include "symbol.h"
+#include "chash/chash.h"
 #include <stdio.h>
 #include <stdlib.h>
 
 static int _indent = 0;
+static int _spaces = 0;
 
 void prettyHTML(HTML *);
 void prettySCHEMA(SCHEMA *);
@@ -20,6 +23,8 @@ void prettyPLUG(PLUG *p);
 void prettyEXP(EXP *e);
 void prettyID(ID *id);
 void prettyFIELDVALUE(FIELDVALUE *f);
+void prettySYMBOL(void *i);
+void prettySymbolTable(SymbolTable *table);
 void prettyRECEIVE(RECEIVE *r);
 void prettyINPUT(INPUT *i);
 
@@ -59,7 +64,6 @@ void prettyHTML(HTML *htmls)
         return;
 
     prettyHTML(htmls->next);
-
     print_indent();
     printf("const html %s = <html>", htmls->name);
     prettyHTMLBODY(htmls->htmlbodies);
@@ -255,8 +259,14 @@ void prettySTATEMENT(STATEMENT *s)
             printf(";\n");
             break;
         case blockK:
+            _spaces = 0;
             printf("{\n");
             indent();
+            printf("=======================");
+            printf("|Symbols in this Scope|");
+            printf("=======================");
+            prettySymbolTable(s->val.blockS.table);
+            printf("=======================");
             prettyVARIABLE(s->val.blockS.variables);
             prettySTATEMENT(s->val.blockS.body);
             dedent();
@@ -498,4 +508,41 @@ void prettyINPUT(INPUT *i)
         printf(", ");
     
     printf("%s=%s", i->lhs, i->rhs);
+}
+
+void prettySYMBOL(void *i)
+{
+    SYMBOL *s;
+    s = (SYMBOL*)i;
+
+    switch(s->kind)
+    {
+        case htmlSym:
+            printf("HTML");
+            break;
+        case variableSym:
+            printf("variable");
+            break;
+        case sessionSym:
+            printf("session");
+            break;
+        case functionSym:
+            printf("function");
+            break;
+        case argumentSym:
+            printf("argument");
+            break;            
+        case schemaSym:
+            printf("schema");
+            break;
+    }
+}
+
+void prettySymbolTable(SymbolTable *table)
+{
+    if(table == NULL)
+        return;
+    prettySymbolTable(table->next);
+    chash_pretty_print(table->table, prettySYMBOL, _indent + _spaces);
+    _spaces += 4;
 }
