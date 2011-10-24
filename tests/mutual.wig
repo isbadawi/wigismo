@@ -1,0 +1,78 @@
+service {
+    const html Query = <html>
+        <p>PARITY TESTER</p>
+        <p>ENTER A POSITIVE NUMBER:
+        <input name="x" type="text">
+        </p>
+    </html>;
+
+    const html Result = <html>
+        <p>The number you entered, <[num]>, is <[parity]>.</p>
+    </html>;
+
+    const html ParityTable = <html>
+        <[table]>
+    </html>;
+
+    schema Status {
+        bool OK;
+        string error;
+    }
+
+    bool odd(int x) {
+        if (x == 1)
+            return true;
+        else
+            return even(x - 1);
+    }
+
+    bool even(int x) {
+        if (x == 0)
+            return true;
+        else
+            return odd(x - 1);
+    }
+
+    tuple Status validate (int x) {
+        tuple Status result;
+        if (x < 0) {
+            result.OK = false;
+            result.error = "Input was negative!";
+        }
+        else
+            result.OK = true;
+        return result;
+
+    }
+
+    session Main() {
+        bool parity;
+        int x;
+        tuple Status status;
+        status.OK = false;
+        while (!status.OK) {
+            show Query receive [x = x];
+            status = validate(x);
+        }
+        {
+            string table;
+            int i;
+            table = "";
+            i = 1;
+            while (i <= 12) {
+                int j;
+                j = 1;
+                while (j <= 12) {
+                    if (even(i * j))
+                        table = table + "even ";
+                    else
+                        table = table + "odd ";
+                }
+                table = table + "<br />";
+            }
+            show plug ParityTable[table = table];
+        }
+        exit plug Result [num = x, parity = parity];
+
+    }
+}
