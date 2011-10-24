@@ -1,0 +1,9 @@
+service {
+    const html Test = <html>
+        <[test]>
+    </html>;
+
+    session Main() {
+        exit plug Test[test=x];
+    }
+}

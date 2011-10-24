@@ -1,0 +1,15 @@
+service {
+    const html Test = <html>Test</html>;
+
+    schema S {
+        int x;
+        bool y;
+    }
+
+    session Main() {
+        tuple S myS;
+        int x;
+        x = myS.z;
+        exit Test;
+    }
+}
