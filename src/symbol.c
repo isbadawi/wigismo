@@ -295,15 +295,19 @@ int html_has_input(HTMLBODY *hb, char *name)
 
 void symINPUT(INPUT *i, HTML *h, SymbolTable *table)
 {
-    SYMBOL *var;
     if (i == NULL)
         return;
     symINPUT(i->next, h, table);
-    var = get_symbol(table, i->lhs);
-    if (var == NULL || (var->kind != variableSym && var->kind != argumentSym))
-        reportStrError("identifier %s not declared", i->lhs, i->lineno);
-    if (!html_has_input(h->htmlbodies, i->rhs))
-        reportStrError("input %s not found in HTML", i->rhs, i->lineno);
+    if (strchr(i->lhs, '.') != NULL)
+        symTUPLE(makeEXPlvalue(i->lhs), table);
+    else
+    {
+        SYMBOL *var = get_symbol(table, i->lhs);
+        if (var == NULL || (var->kind != variableSym && var->kind != argumentSym))
+            reportStrError("identifier %s not declared", i->lhs, i->lineno);
+        if (!html_has_input(h->htmlbodies, i->rhs))
+            reportStrError("input %s not found in HTML", i->rhs, i->lineno);
+    }
 }
 
 int schema_has_var(SCHEMA *s, char *field)
