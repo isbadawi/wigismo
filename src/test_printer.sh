@@ -4,7 +4,7 @@ TESTDIR=../tests
 
 fail=0
 echo "*** Testing pretty printer. No output is expected. ***"
-for testcase in `ls $TESTDIR`; do
+for testcase in $TESTDIR/*.wig; do
     if [ -f $TESTDIR/$testcase ]; then
         wigismo -p -s $TESTDIR/$testcase > test1.wig
         wigismo -p -s test1.wig > test2.wig

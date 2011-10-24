@@ -16,6 +16,7 @@ void symSTATEMENT(STATEMENT *s, SymbolTable *table);
 void symDOCUMENT(DOCUMENT *d, SymbolTable *table);
 void symPLUG(PLUG *p, HTML *html, SymbolTable *table);
 void symRECEIVE(RECEIVE *r, DOCUMENT *d, SymbolTable *table);
+void symTUPLE(EXP *e, SymbolTable *table);
 void symINPUT(INPUT *i, HTML *h, SymbolTable *table);
 void symEXP(EXP *e, SymbolTable *table);
 void symID(ID *id, SymbolTable *table);
@@ -158,9 +159,13 @@ void symFUNCTIONBODIES(FUNCTION *f)
     if (f == NULL)
         return;
     symFUNCTIONBODIES(f->next);
+    /* remark: we enter a new scope here, and not in the block statement,
+       so that function arguments and locals will be in the same scope */
     local = enter_new_scope(mst);
+    f->statements->val.blockS.table = local;
     symARGUMENT(f->arguments, local);
-    symSTATEMENT(f->statements, local);
+    symVARIABLE(f->statements->val.blockS.variables, local);
+    symSTATEMENT(f->statements->val.blockS.body, local);  
 }
 
 void symARGUMENT(ARGUMENT *a, SymbolTable *table)

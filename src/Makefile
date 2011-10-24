@@ -42,3 +42,4 @@ unit:
 
 clean:
 	rm -f *.o lex.* y.tab.*
+	rm -f chash/chash.o
