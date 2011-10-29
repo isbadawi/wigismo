@@ -7,6 +7,7 @@ extern char *infile;
 
 int weedVARIABLE_TYPE(VARIABLE *);
 int weedSESSION(SESSION *);
+int weedSESSION_RETURN(STATEMENT *);
 int weedFUNCTION(FUNCTION *);
 int weedSCHEMA(SCHEMA *);
 int weedHTML(HTML *);
@@ -63,7 +64,47 @@ int weedSESSION(SESSION *s)
     if (!weedVARIABLE_TYPE(s->statements->val.blockS.variables))
         return 0;
 
+    if (!weedSESSION_RETURN(s->statements))
+        return 0;
+
     return weedSESSION(s->next);
+}
+
+int weedSESSION_RETURN(STATEMENT *s) 
+{
+    if (s == NULL)
+        return 1;
+
+    switch(s->kind)
+    {
+        case sequenceK:
+            if (!(weedSESSION_RETURN(s->val.sequenceS.first) &&
+                  weedSESSION_RETURN(s->val.sequenceS.second)))
+                return 0;
+            break;
+        case returnK:
+            fprintf(stderr, "%s:%d return statements not allowed in sessions\n", infile, s->lineno);
+            return 0;
+        case ifK:
+            if (!weedSESSION_RETURN(s->val.ifS.body))
+                return 0;
+            break;
+        case ifelseK:
+            if (!(weedSESSION_RETURN(s->val.ifelseS.thenpart) &&
+                  weedSESSION_RETURN(s->val.ifelseS.elsepart)))
+                return 0;
+            break;
+        case blockK:
+            if (!weedSESSION_RETURN(s->val.blockS.body))
+                return 0;
+            break;
+        case whileK:
+            if (!weedSESSION_RETURN(s->val.whileS.body))
+                return 0;
+            break;
+        default:
+            return 1;
+    }
 }
 
 int weedHTML(HTML *h) 
