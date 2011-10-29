@@ -6,6 +6,7 @@
 #include"pretty.h"
 #include"weed.h"
 #include"symbol.h"
+#include"type.h"
 
 void yyparse();
 
@@ -89,8 +90,8 @@ int main(int argc, char *argv[])
     if (errors)
         return 1;
 
-//    if (type_phase)
-//        typeSERVICE(theservice);
+    if (type_phase)
+        typeSERVICE(theservice);
 
     if (errors)
         return 1;

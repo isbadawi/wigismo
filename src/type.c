@@ -325,3 +325,16 @@ void typeEXP(EXP *exp)
     }
 }
 
+void typeSESSION(SESSION *s)
+{
+    typeSTATEMENT(s->statements, NULL);
+}
+
+void typeFIELDVALUE(FIELDVALUE *fv)
+{
+    if (fv == NULL)
+        return;
+    typeFIELDVALUE(fv->next);
+    typeEXP(fv->exp);
+}
+

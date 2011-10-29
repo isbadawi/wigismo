@@ -9,7 +9,7 @@ all:
 	make -s check
 
 code: y.tab.o lex.yy.o main.o tree.h tree.o memory.h memory.o error.h error.o pretty.o pretty.h weed.o weed.h symbol.o symbol.h type.o type.h chash/chash.o
-	$(CC) lex.yy.o y.tab.o tree.o memory.o error.o pretty.o weed.o symbol.o chash/chash.o main.o -o wigismo -lfl
+	$(CC) lex.yy.o y.tab.o tree.o memory.o error.o pretty.o weed.o symbol.o type.o chash/chash.o main.o -o wigismo -lfl
 
 chash/chash.o:
 	cd chash; make
