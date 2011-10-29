@@ -6,9 +6,14 @@
 #include "type.h"
 
 void initTypes();
-int equalTYPE(EXP *s, EXP *t);
-int verifyTupleEquivalence(EXP *s, EXP *t);
-int hasFieldValue(FIELDVALUE *s, EXP *t)
+int compareSchemaStructuralEquivalence(TYPE *s, TYPE *t);
+int hasVariableInSchema(VARIABLE *v, SCHEMA *s)
+int equalTYPE(TYPE *s, TYPE *t);
+void typeFUNCTION(FUNCTION *);
+void typeSESSION(SESSION *);
+void typeSTATEMENT(STATEMENT *, TYPE *);
+void typeEXP(EXP *);
+void typeFIELDVALUE(FIELDVALUE *);
 
 TYPE *intTYPE, *boolTYPE, *stringTYPE;
 
@@ -197,13 +202,15 @@ void typeEXP(EXP *exp)
             typeEXP(exp->val.assignE.right);
             if (!equalTYPE(typeVar(exp->val.assignE.leftsym), exp->val.assignE.right->type))
                 reportError("invalid assignment", exp->lineno);
-            exp->type = exp->val.assignE.right;
+            exp->type = exp->val.assignE.right->type;
             break;
         case assigntupleK:
             typeEXP(exp->val.assigntupleE.right);
             if (!equalTYPE(typeSchemaVar(exp->val.assigntupleE.schema, exp->val.assigntupleE.field), 
                            exp->val.assigntupleE.right->type))
                 reportError("invalid assignment", exp->lineno);
+            exp->type = exp->val.assigntupleE.right->type;
+            break;
         case orK:
         case andK:
             typeEXP(exp->val.binaryE.left);
@@ -216,12 +223,19 @@ void typeEXP(EXP *exp)
         case gtK:
         case leqK:
         case geqK:
+        {
+            TYPE *left;
+            TYPE *right;
             typeEXP(exp->val.binaryE.left);
             typeEXP(exp->val.binaryE.right);
-            checkINTorSTRING(exp->val.binaryE.left->type);
-            checkINTorSTRING(exp->val.binaryE.right->type);
+            left = exp->val.binaryE.left->type;
+            right = exp-val.binaryE.right->type;
+            if (!((left->kind == intK && right->kind == intK) ||
+                  (left->kind == stringK && right->kind == stringK)))
+                reportError("non-comparable types", exp->lineno);
             exp->type = boolTYPE;
             break;
+        }
         case eqK:
         case neK:
             typeEXP(exp->val.binaryE.left);
