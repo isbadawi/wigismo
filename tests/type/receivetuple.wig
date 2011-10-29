@@ -1,0 +1,15 @@
+service {
+    const html Test = <html>
+        <input type="text" name="test">
+    </html>;
+
+    schema S {
+        int x;
+    }
+
+    session Main() {
+        tuple S x;
+        show Test receive [x=test];
+        exit Test;
+    }
+}
