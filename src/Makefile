@@ -8,7 +8,7 @@ all:
 	make code
 	make -s check
 
-code: y.tab.o lex.yy.o main.o tree.h tree.o memory.h memory.o error.h error.o pretty.o pretty.h weed.o symbol.o weed.h chash/chash.o
+code: y.tab.o lex.yy.o main.o tree.h tree.o memory.h memory.o error.h error.o pretty.o pretty.h weed.o weed.h symbol.o symbol.h type.o type.h chash/chash.o
 	$(CC) lex.yy.o y.tab.o tree.o memory.o error.o pretty.o weed.o symbol.o chash/chash.o main.o -o wigismo -lfl
 
 chash/chash.o:
@@ -25,6 +25,7 @@ check:
 	make -s weed
 	make -s unit
 	make -s symbol
+	make -s type
 
 weed: 
 	./test_weeder.sh
@@ -34,6 +35,9 @@ pretty:
 
 symbol:
 	./test_symbol.sh
+
+type:
+	./test_type.sh
 
 unit:
 	@gcc unit_tests.c tree.h tree.o memory.h memory.o weed.o weed.h -o tests
