@@ -185,7 +185,7 @@ typedef struct EXP
                 struct EXP *right; } assignE;
         struct {char *name;
                 char *field;
-                SCHEMA *leftschema; 
+                SCHEMA *schema; 
                 struct EXP *right; } assigntupleE;
         struct {struct EXP *left;
                 struct EXP *right; } binaryE;

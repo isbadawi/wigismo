@@ -7,7 +7,7 @@
 
 void initTypes();
 int compareSchemaStructuralEquivalence(TYPE *s, TYPE *t);
-int hasVariableInSchema(VARIABLE *v, SCHEMA *s)
+int hasVariableInSchema(VARIABLE *v, SCHEMA *s);
 int equalTYPE(TYPE *s, TYPE *t);
 void typeFUNCTION(FUNCTION *);
 void typeSESSION(SESSION *);
@@ -17,7 +17,7 @@ void typeFIELDVALUE(FIELDVALUE *);
 
 TYPE *intTYPE, *boolTYPE, *stringTYPE;
 
-void initTypes()
+void initTypes(void)
 {
     intTYPE = makeTYPEint();
     boolTYPE = makeTYPEbool();
@@ -183,6 +183,19 @@ SCHEMA *generate_schema(FIELDVALUE *fv)
     return makeSCHEMA(schema_name, variable_from_fieldvalue(fv));
 }
 
+int checkARGUMENTS(ARGUMENT *arguments, EXP *exps)
+{
+    if (arguments == NULL && exps == NULL)
+        return 1;
+    if (arguments == NULL && exps != NULL)
+        return 0;
+    if (arguments != NULL && exps == NULL)
+        return 0;
+    if (!equalTYPE(arguments->type, exps->type))
+        return 0;
+    return checkARGUMENTS(arguments->next, exps->next);
+}
+
 void typeEXP(EXP *exp)
 {
     SCHEMA *schema;
@@ -215,8 +228,8 @@ void typeEXP(EXP *exp)
         case andK:
             typeEXP(exp->val.binaryE.left);
             typeEXP(exp->val.binaryE.right);
-            checkBOOL(exp->val.binaryE.left->type);
-            checkBOOL(exp->val.binaryE.right->type);
+            checkBOOL(exp->val.binaryE.left->type, exp->lineno);
+            checkBOOL(exp->val.binaryE.right->type, exp->lineno);
             exp->type = boolTYPE;
             break;
         case ltK:
@@ -270,24 +283,26 @@ void typeEXP(EXP *exp)
         case modK:
             typeEXP(exp->val.binaryE.left);
             typeEXP(exp->val.binaryE.right);
-            checkINT(exp->val.binaryE.left->type);
-            checkINT(exp->val.binaryE.right->type);
+            checkINT(exp->val.binaryE.left->type, exp->lineno);
+            checkINT(exp->val.binaryE.right->type, exp->lineno);
             exp->type = intTYPE;
             break;
         case uminusK:
             typeEXP(exp->val.unaryE);
-            checkINT(exp->val.unaryE->type);
+            checkINT(exp->val.unaryE->type, exp->lineno);
             exp->type = intTYPE;
             break;
         case notK:
             typeEXP(exp->val.unaryE);
-            checkBOOL(exp->val.unaryE->type);
+            checkBOOL(exp->val.unaryE->type, exp->lineno);
             exp->type = boolTYPE;
             break;
         case callK:
         {
             FUNCTION *f = get_symbol(mst, exp->val.callE.name)->val.functionS;
             typeEXP(exp->val.callE.args);
+            if (!checkARGUMENTS(f->arguments, exp->val.callE.args))
+                reportStrError("wrong signature for %s", f->name, exp->lineno)l
             exp->type = f->returntype;
         }
         case intconstK:
