@@ -22,7 +22,7 @@ void reportStrError(const char *msg, char *name, int lineno)
     errors++;
 }
 
-void reportError(char *s, int lineno)
+void reportError(const char *s, int lineno)
 {
     fprintf(stderr, "*** ");
     fprintf(stderr, "%s at line %i\n", s, lineno);

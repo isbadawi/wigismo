@@ -144,9 +144,10 @@ VARIABLE *makeVARIABLE(TYPE *type, char *name)
 
 VARIABLE *makeVARIABLES(TYPE *type, ID *ids)
 {
+    VARIABLE *v;
     if (ids == NULL)
         return NULL;
-    VARIABLE *v = makeVARIABLE(type, ids->name);
+    v = makeVARIABLE(type, ids->name);
     v->next = makeVARIABLES(type, ids->next);
     return v;
 }
