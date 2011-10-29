@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "memory.h"
 #include "error.h"
@@ -97,7 +98,7 @@ void typeFUNCTION(FUNCTION *f)
     if(f == NULL)
         return;
     typeFUNCTION(f->next);
-    typeSTATEMENT(f->statements, f->returntype, NULL);
+    typeSTATEMENT(f->statements, f->returntype);
 }
 
 void typeSTATEMENT(STATEMENT *s, TYPE *returntype)
@@ -242,7 +243,7 @@ void typeEXP(EXP *exp)
             typeEXP(exp->val.binaryE.left);
             typeEXP(exp->val.binaryE.right);
             left = exp->val.binaryE.left->type;
-            right = exp-val.binaryE.right->type;
+            right = exp->val.binaryE.right->type;
             if (!((left->kind == intK && right->kind == intK) ||
                   (left->kind == stringK && right->kind == stringK)))
                 reportError("non-comparable types", exp->lineno);
@@ -250,7 +251,7 @@ void typeEXP(EXP *exp)
             break;
         }
         case eqK:
-        case neK:
+        case neqK:
             typeEXP(exp->val.binaryE.left);
             typeEXP(exp->val.binaryE.right);
             if (!equalTYPE(exp->val.binaryE.left->type, exp->val.binaryE.right->type))
@@ -302,7 +303,7 @@ void typeEXP(EXP *exp)
             FUNCTION *f = get_symbol(mst, exp->val.callE.name)->val.functionS;
             typeEXP(exp->val.callE.args);
             if (!checkARGUMENTS(f->arguments, exp->val.callE.args))
-                reportStrError("wrong signature for %s", f->name, exp->lineno)l
+                reportStrError("wrong signature for %s", f->name, exp->lineno);
             exp->type = f->returntype;
         }
         case intconstK:
