@@ -179,13 +179,13 @@ typedef struct EXP
                 SYMBOL *idsym; } idE; 
         struct {char *name;
                 char *field;
-                SYMBOL *idsym; } idtupleE; 
+                SCHEMA *schema; } idtupleE; 
         struct {char *left;
                 SYMBOL *leftsym; 
                 struct EXP *right; } assignE;
         struct {char *name;
                 char *field;
-                SYMBOL *leftsym; 
+                SCHEMA *leftschema; 
                 struct EXP *right; } assigntupleE;
         struct {struct EXP *left;
                 struct EXP *right; } binaryE;

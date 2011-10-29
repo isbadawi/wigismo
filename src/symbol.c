@@ -339,6 +339,7 @@ void symTUPLE(EXP *e, SymbolTable *table)
         schema = get_symbol_as(table, v->type->name, schemaSym)->val.schemaS;
         if (!schema_has_var(schema, e->val.idtupleE.field))
             reportStrError("schema has no field %s", e->val.idtupleE.field, e->lineno);
+        e->val.idtupleE.schema = schema;
     }
     else if (s->kind == argumentSym)
     {
@@ -349,12 +350,14 @@ void symTUPLE(EXP *e, SymbolTable *table)
         schema = get_symbol_as(table, a->type->name, schemaSym)->val.schemaS;
         if (!schema_has_var(schema, e->val.idtupleE.field))
             reportStrError("schema has no field %s", e->val.idtupleE.field, e->lineno);
+        e->val.idtupleE.schema = schema;
     }         
 }
 
 void symEXP(EXP *e, SymbolTable *table)
 {
     SYMBOL *s;
+    SCHEMA *schema;
     if (e == NULL)
         return;
     symEXP(e->next, table);
@@ -390,6 +393,8 @@ void symEXP(EXP *e, SymbolTable *table)
                 schema = get_symbol_as(table, v->type->name, schemaSym)->val.schemaS;
                 if (!schema_has_var(schema, e->val.assigntupleE.field))
                     reportStrError("schema has no field %s", e->val.assigntupleE.field, e->lineno);
+                e->val.assigntupleE.schema = schema;
+                
             }
             else if (s->kind == argumentSym)
             {
@@ -400,8 +405,8 @@ void symEXP(EXP *e, SymbolTable *table)
                 schema = get_symbol_as(table, a->type->name, schemaSym)->val.schemaS;
                 if (!schema_has_var(schema, e->val.assigntupleE.field))
                     reportStrError("schema has no field %s", e->val.assigntupleE.field, e->lineno);
+                e->val.assigntupleE.schema = schema;
             }                     
-            e->val.assigntupleE.leftsym = s;
             symEXP(e->val.assigntupleE.right, table);
             break;
         case orK:
@@ -444,7 +449,6 @@ void symEXP(EXP *e, SymbolTable *table)
         case stringconstK:
         case tupleconstK:
             break;
-
     }
 }
 

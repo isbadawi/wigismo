@@ -142,3 +142,156 @@ void typeSTATEMENT(STATEMENT *s, TYPE *returntype)
     }
 }
 
+TYPE* typeVar(SYMBOL *s)
+{
+    if (s->kind == variableSym)
+        return s->val.variableS->type;
+    else if (s->kind == argumentSym)
+        return s->val.argumentS->type;
+}
+
+TYPE* typeSchemaVar(SCHEMA *s, char *var)
+{
+    VARIABLE *v;
+    for (v = s->variables; v != NULL; v = v->next)
+        if (!strcmp(v->name, var))
+            return v->type;
+    return NULL;
+}
+
+VARIABLE *variable_from_fieldvalue(FIELDVALUE *fv)
+{
+    VARIABLE *v;
+    if (fv == NULL)
+        return NULL;
+    v = makeVARIABLE(fv->exp->type, fv->name);
+    v->next = variable_from_fieldvalue(fv->next);
+    return v;
+}
+
+SCHEMA *generate_schema(FIELDVALUE *fv)
+{
+    static int calls = 0;
+    char *schema_name = (char*)malloc(15);
+    /* identifiers can't start with a number, so this won't conflict with anything */
+    sprintf(schema_name, "%danon", calls++);
+    return makeSCHEMA(schema_name, variable_from_fieldvalue(fv));
+}
+
+void typeEXP(EXP *exp)
+{
+    SCHEMA *schema;
+    SYMBOL *s;
+    if (exp == NULL)
+        return;
+    typeEXP(exp->next);
+    switch (exp->kind)
+    {
+        case idK:
+            exp->type = typeVar(exp->val.idE.idsym);
+            break;
+        case idtupleK:
+            exp->type = typeSchemaVar(exp->val.idtupleE.schema, exp->val.idtupleE.field);
+            break;
+        case assignK:
+            typeEXP(exp->val.assignE.right);
+            if (!equalTYPE(typeVar(exp->val.assignE.leftsym), exp->val.assignE.right->type))
+                reportError("invalid assignment", exp->lineno);
+            exp->type = exp->val.assignE.right;
+            break;
+        case assigntupleK:
+            typeEXP(exp->val.assigntupleE.right);
+            if (!equalTYPE(typeSchemaVar(exp->val.assigntupleE.schema, exp->val.assigntupleE.field), 
+                           exp->val.assigntupleE.right->type))
+                reportError("invalid assignment", exp->lineno);
+        case orK:
+        case andK:
+            typeEXP(exp->val.binaryE.left);
+            typeEXP(exp->val.binaryE.right);
+            checkBOOL(exp->val.binaryE.left->type);
+            checkBOOL(exp->val.binaryE.right->type);
+            exp->type = boolTYPE;
+            break;
+        case ltK:
+        case gtK:
+        case leqK:
+        case geqK:
+            typeEXP(exp->val.binaryE.left);
+            typeEXP(exp->val.binaryE.right);
+            checkINTorSTRING(exp->val.binaryE.left->type);
+            checkINTorSTRING(exp->val.binaryE.right->type);
+            exp->type = boolTYPE;
+            break;
+        case eqK:
+        case neK:
+            typeEXP(exp->val.binaryE.left);
+            typeEXP(exp->val.binaryE.right);
+            if (!equalTYPE(exp->val.binaryE.left->type, exp->val.binaryE.right->type))
+                reportError("non-comparable types", exp->lineno);
+            exp->type = boolTYPE;
+            break;
+        case plusK:
+        {
+            TYPE *left;
+            TYPE *right;
+            typeEXP(exp->val.binaryE.left);
+            typeEXP(exp->val.binaryE.right);
+            left = exp->val.binaryE.left->type;
+            right = exp->val.binaryE.right->type; 
+            if (left->kind == intK && right->kind == intK)
+                exp->type = intTYPE;
+            else if (left->kind == stringK && right->kind == stringK)
+                exp->type = stringTYPE;
+            else if (left->kind == intK && right->kind == stringK)
+                exp->type = stringTYPE;
+            else if (left->kind == stringK && right->kind == intK)
+                exp->type = stringTYPE;
+            else
+                reportError("invalid types for +", exp->lineno);
+            break;
+        }
+        case minusK:
+        case timesK:
+        case divK:
+        case modK:
+            typeEXP(exp->val.binaryE.left);
+            typeEXP(exp->val.binaryE.right);
+            checkINT(exp->val.binaryE.left->type);
+            checkINT(exp->val.binaryE.right->type);
+            exp->type = intTYPE;
+            break;
+        case uminusK:
+            typeEXP(exp->val.unaryE);
+            checkINT(exp->val.unaryE->type);
+            exp->type = intTYPE;
+            break;
+        case notK:
+            typeEXP(exp->val.unaryE);
+            checkBOOL(exp->val.unaryE->type);
+            exp->type = boolTYPE;
+            break;
+        case callK:
+        {
+            FUNCTION *f = get_symbol(mst, exp->val.callE.name)->val.functionS;
+            typeEXP(exp->val.callE.args);
+            exp->type = f->returntype;
+        }
+        case intconstK:
+            exp->type = intTYPE;
+            break;
+        case boolconstK:
+            exp->type = boolTYPE;
+            break;
+        case stringconstK:
+            exp->type = stringTYPE;
+            break;
+        case tupleconstK:
+            typeFIELDVALUE(exp->val.tupleE.fieldvalues);
+            schema = generate_schema(exp->val.tupleE.fieldvalues);
+            exp->type = makeTYPEtuple(schema->name);
+            s = put_symbol(mst, schema->name, schemaSym);
+            s->val.schemaS = schema;
+            break;
+    }
+}
+
