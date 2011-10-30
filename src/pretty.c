@@ -28,6 +28,7 @@ void prettySCOPE(SymbolTable *t);
 void prettySymbolTable(SymbolTable *table);
 void prettyRECEIVE(RECEIVE *r);
 void prettyINPUT(INPUT *i);
+void printTYPE(EXP *e);
 
 static void print_indent(void)
 {
@@ -388,6 +389,10 @@ void prettyEXP(EXP *e)
 
     prettyEXP(e->next);
     
+    extern int print_types;
+    if (print_types)
+        printf("(");
+
     switch(e->kind)
     {
         case idK:
@@ -463,6 +468,14 @@ void prettyEXP(EXP *e)
             printf("}");
             break;
     }
+
+    if (print_types)
+    {
+        printf(" : ");
+        prettyTYPE(e->type);
+        printf(")");
+    }
+
 }
 
 void prettyID(ID *id)

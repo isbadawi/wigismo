@@ -155,6 +155,7 @@ void typeSTATEMENT(STATEMENT *s, TYPE *returntype)
             typeRECEIVE(s->val.showS.receives);
             break;
         case exitK:
+            typePLUG(s->val.exitS.document->plugs);
             break;
         case returnK:
             if (s->val.returnS == NULL)
