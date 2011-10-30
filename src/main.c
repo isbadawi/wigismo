@@ -14,7 +14,7 @@ SERVICE *theservice;
 char *infile;
 extern int lineno;
 extern int errors;
-    int print_types = 1;
+int print_types = 1;
 
 void print_usage(void)
 {
@@ -23,8 +23,8 @@ void print_usage(void)
            "  -h, --help                Display this information.\n"
            "  -p, --pretty-print        Pretty print parsed file to stdout.\n"
            "  -n, --suppress-types      Don't print type information\n"
-           "  -s, --no-symbols          Disable symbol table phase\n"
-           "  -t, --no-types            Disable type checking phase\n");
+           "  -s, --no-symbols          Disable symbol table phase (implies -t)\n"
+           "  -t, --no-types            Disable type checking phase (implies -n)\n");
 }
 
 char* options[] = {"-h", "--help", 
@@ -63,9 +63,16 @@ int main(int argc, char *argv[])
         if (!strcmp(argv[i], "--pretty-print") || !strcmp(argv[i], "-p"))
             pretty_print = 1;
         if (!strcmp(argv[i], "--no-symbols") || !strcmp(argv[i], "-s"))
+        {
             symbol_phase = 0;
-        if (!strcmp(argv[i], "--no-types") || !strcmp(argv[i], "-t"))
             type_phase = 0;
+            print_types = 0;
+        }
+        if (!strcmp(argv[i], "--no-types") || !strcmp(argv[i], "-t"))
+        {
+            type_phase = 0;
+            print_types = 0;
+        }
         if (!strcmp(argv[i], "--suppress-types") || !strcmp(argv[i], "-n"))
             print_types = 0;
     }

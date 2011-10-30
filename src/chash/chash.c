@@ -3,6 +3,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include<stdio.h>
+#include<ctype.h>
 
 static int hash(char *str)
 {
@@ -177,6 +178,9 @@ void chash_pretty_print(chash* table, chash_callback_t* print_item, int spaces)
     int i;
     for (i = 0; i < table->size; ++i)
     {
+
+        if (isdigit(items[i]->key[0]))
+            continue;
         int j;
         for (j = 0; j < spaces; ++j)
             putc(' ', stdout);

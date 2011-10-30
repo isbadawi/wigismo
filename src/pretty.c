@@ -388,6 +388,10 @@ void prettyEXP(EXP *e)
         printf(", ");
 
     prettyEXP(e->next);
+
+    extern int print_types;
+    if (print_types)
+        printf("(");
     
     extern int print_types;
     if (print_types)
@@ -469,13 +473,13 @@ void prettyEXP(EXP *e)
             break;
     }
 
+
     if (print_types)
     {
         printf(" : ");
         prettyTYPE(e->type);
         printf(")");
     }
-
 }
 
 void prettyID(ID *id)
