@@ -1,0 +1,9 @@
+service {
+    const html Test = <html>Test</html>;
+
+    session Main() {
+        bool b;
+        b = tuple{x=4} == tuple{x="str"};
+        exit Test;
+    }
+}

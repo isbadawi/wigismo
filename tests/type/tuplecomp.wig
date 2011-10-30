@@ -1,0 +1,19 @@
+service {
+    const html Test = <html>Test</html>;
+
+    schema S {
+        int x;
+    }
+
+    schema T {
+        int y;
+    }
+
+    session Main() {
+        bool b;
+        tuple S s;
+        tuple T t;
+        b = s == t;
+        exit Test;
+    }
+}
