@@ -7,13 +7,13 @@
 #include "type.h"
 
 void initTypes();
-int equalTYPE(EXP *s, EXP *t);
+int equalTYPE(TYPE *s, TYPE *t);
 int compareSchemaStructuralEquivalence(TYPE *s, TYPE *t);
 int hasVariableInSchema(VARIABLE *v, SCHEMA *s);
 void checkBOOL(TYPE *t, int lineno);
 void checkINT(TYPE *t, int lineno);
 int verifyTupleEquivalence(EXP *s, EXP *t);
-int hasFieldValue(FIELDVALUE *s, EXP *t)
+int hasFieldValue(FIELDVALUE *s, EXP *t);
 void typeFUNCTION(FUNCTION *);
 void typeSESSION(SESSION *);
 void typeSTATEMENT(STATEMENT *, TYPE *);
@@ -23,6 +23,8 @@ void verifyIdsInTuple(EXP *exp, ID *ids);
 int tupleContainsId(ID *id, SCHEMA *s);
 void verifyTupleCombine(EXP *left, EXP *right);
 int compatibleTuples(VARIABLE *l, SCHEMA *r);
+TYPE *typeVar(SYMBOL *s);
+TYPE *typeSchemaVar(SCHEMA *, char *);
 
 
 TYPE *intTYPE, *boolTYPE, *stringTYPE;
@@ -90,20 +92,41 @@ void checkINT(TYPE *t, int lineno)
         reportError("int type expected", lineno);
 }
 
+void checkSTRING(TYPE *t, int lineno)  
+{
+    if(t->kind != stringK)
+        reportError("string type expected", lineno);
+}
+
 void typeSERVICE(SERVICE *s)
 {
+   initTypes();
    typeFUNCTION(s->functions);
    typeSESSION(s->sessions);
 }
 
-//TODO check that returns return proper type
-// need to pass symbol table to check identifiers (x+1 is int if x is int)
 void typeFUNCTION(FUNCTION *f)
 {
     if(f == NULL)
         return;
     typeFUNCTION(f->next);
     typeSTATEMENT(f->statements, f->returntype);
+}
+
+void typeINPUT(INPUT *i)
+{
+    if (i == NULL)
+        return;
+    typeINPUT(i->next);
+    checkSTRING(typeVar(i->leftsym), i->lineno);
+}
+
+void typeRECEIVE(RECEIVE *r)
+{
+    if (r == NULL)
+        return;
+    typeRECEIVE(r->next);
+    typeINPUT(r->inputs);
 }
 
 void typeSTATEMENT(STATEMENT *s, TYPE *returntype)
@@ -118,10 +141,17 @@ void typeSTATEMENT(STATEMENT *s, TYPE *returntype)
         case sequenceK:
             typeSTATEMENT(s->val.sequenceS.first, returntype);
             typeSTATEMENT(s->val.sequenceS.second, returntype);
-        case showK:  //TODO always accept strings?
+            break;
+        case showK: 
+           /* typeDOCUMENT(s->val.showS.document); */
+            typeRECEIVE(s->val.showS.receives);
+            break;
         case exitK:
             break;
         case returnK:
+            if (s->val.returnS == NULL)
+                break;
+            typeEXP(s->val.returnS);
             if(returntype->kind != voidK)
             {
                 if(!equalTYPE(s->val.returnS->type, returntype))
@@ -134,22 +164,24 @@ void typeSTATEMENT(STATEMENT *s, TYPE *returntype)
             typeSTATEMENT(s->val.blockS.body, returntype);
             break;
         case ifK:
-            checkBOOL(s->val.whileS.condition->type, s->lineno);
+            typeEXP(s->val.ifS.condition);
+            checkBOOL(s->val.ifS.condition->type, s->lineno);
             typeSTATEMENT(s->val.ifS.body, returntype);
             break;
         case ifelseK:
-            checkBOOL(s->val.whileS.condition->type, s->lineno);
+            typeEXP(s->val.ifelseS.condition);
+            checkBOOL(s->val.ifelseS.condition->type, s->lineno);
             typeSTATEMENT(s->val.ifelseS.thenpart, returntype);
             typeSTATEMENT(s->val.ifelseS.elsepart, returntype);
             break;
         case whileK:
+            typeEXP(s->val.whileS.condition);
             checkBOOL(s->val.whileS.condition->type, s->lineno);
             typeSTATEMENT(s->val.whileS.body, returntype);
             break;
         case expK:
             typeEXP(s->val.expS);
             break;
-
     }
 }
 
@@ -159,6 +191,7 @@ TYPE* typeVar(SYMBOL *s)
         return s->val.variableS->type;
     else if (s->kind == argumentSym)
         return s->val.argumentS->type;
+    return NULL;
 }
 
 TYPE* typeSchemaVar(SCHEMA *s, char *var)
@@ -280,7 +313,10 @@ void typeEXP(EXP *exp)
             else if (left->kind == stringK && right->kind == intK)
                 exp->type = stringTYPE;
             else
+            {
                 reportError("invalid types for +", exp->lineno);
+                exp->type = intTYPE;
+            }
             break;
         }
         case minusK:
@@ -299,6 +335,7 @@ void typeEXP(EXP *exp)
             exp->type = intTYPE;
             break;
         case combineK:
+        {
             TYPE *left;
             TYPE *right;
             typeEXP(exp->val.binaryE.left);
@@ -310,6 +347,7 @@ void typeEXP(EXP *exp)
             else
                 reportError("invalid operand types for <<", exp->lineno);
             break;
+        }
         case keepK:
             typeEXP(exp->val.keepE.left);
             if(exp->val.keepE.left->type->kind == tupleK)
@@ -336,6 +374,7 @@ void typeEXP(EXP *exp)
             if (!checkARGUMENTS(f->arguments, exp->val.callE.args))
                 reportStrError("wrong signature for %s", f->name, exp->lineno);
             exp->type = f->returntype;
+            break;
         }
         case intconstK:
             exp->type = intTYPE;

@@ -312,6 +312,7 @@ void symINPUT(INPUT *i, HTML *h, SymbolTable *table)
             reportStrError("identifier %s not declared", i->lhs, i->lineno);
         if (!html_has_input(h->htmlbodies, i->rhs))
             reportStrError("input %s not found in HTML", i->rhs, i->lineno);
+        i->leftsym = var;
     }
 }
 
@@ -357,7 +358,6 @@ void symTUPLE(EXP *e, SymbolTable *table)
 void symEXP(EXP *e, SymbolTable *table)
 {
     SYMBOL *s;
-    SCHEMA *schema;
     if (e == NULL)
         return;
     symEXP(e->next, table);

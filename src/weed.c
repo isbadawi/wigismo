@@ -105,6 +105,7 @@ int weedSESSION_RETURN(STATEMENT *s)
         default:
             return 1;
     }
+    return 1;
 }
 
 int weedHTML(HTML *h) 

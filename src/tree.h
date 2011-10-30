@@ -87,6 +87,7 @@ typedef struct INPUT
 {
     int lineno;
     char *lhs;
+    SYMBOL *leftsym;
     char *rhs;
     struct INPUT *next;
 } INPUT;
