@@ -6,8 +6,8 @@ fail=0
 echo "*** Testing pretty printer. No output is expected. ***"
 for testcase in $TESTDIR/*.wig; do
     if [ -f $TESTDIR/$testcase ]; then
-        wigismo -p -s $TESTDIR/$testcase > test1.wig
-        wigismo -p -s test1.wig > test2.wig
+        wigismo -p -s -n $TESTDIR/$testcase > test1.wig
+        wigismo -p -s -n test1.wig > test2.wig
         if ! cmp --silent test1.wig test2.wig; then
             echo "pretty(parse(x)) != pretty(parse(pretty(parse(x))))"
             echo "for x = $TESTDIR/$testcase"
