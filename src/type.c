@@ -7,14 +7,23 @@
 #include "type.h"
 
 void initTypes();
+int equalTYPE(EXP *s, EXP *t);
 int compareSchemaStructuralEquivalence(TYPE *s, TYPE *t);
 int hasVariableInSchema(VARIABLE *v, SCHEMA *s);
-int equalTYPE(TYPE *s, TYPE *t);
+void checkBOOL(TYPE *t, int lineno);
+void checkINT(TYPE *t, int lineno);
+int verifyTupleEquivalence(EXP *s, EXP *t);
+int hasFieldValue(FIELDVALUE *s, EXP *t)
 void typeFUNCTION(FUNCTION *);
 void typeSESSION(SESSION *);
 void typeSTATEMENT(STATEMENT *, TYPE *);
 void typeEXP(EXP *);
 void typeFIELDVALUE(FIELDVALUE *);
+void verifyIdsInTuple(EXP *exp, ID *ids);
+int tupleContainsId(ID *id, SCHEMA *s);
+void verifyTupleCombine(EXP *left, EXP *right);
+int compatibleTuples(VARIABLE *l, SCHEMA *r);
+
 
 TYPE *intTYPE, *boolTYPE, *stringTYPE;
 
@@ -72,17 +81,13 @@ int hasVariableInSchema(VARIABLE *v, SCHEMA *s)
 void checkBOOL(TYPE *t, int lineno)
 {
     if(t->kind != boolK)
-    {
         reportError("bool type expected", lineno);
-    }
 }
 
-void checkINT(TYPE *t, int lineno)
+void checkINT(TYPE *t, int lineno)  
 {
     if(t->kind != intK)
-    {
         reportError("int type expected", lineno);
-    }
 }
 
 void typeSERVICE(SERVICE *s)
@@ -293,6 +298,32 @@ void typeEXP(EXP *exp)
             checkINT(exp->val.unaryE->type, exp->lineno);
             exp->type = intTYPE;
             break;
+        case combineK:
+            TYPE *left;
+            TYPE *right;
+            typeEXP(exp->val.binaryE.left);
+            typeEXP(exp->val.binaryE.right);
+            left = exp->val.binaryE.left->type;
+            right = exp->val.binaryE.right->type; 
+            if (left->kind == tupleK && right->kind == tupleK)
+                verifyTupleCombine(exp->val.binaryE.left, exp->val.binaryE.right);
+            else
+                reportError("invalid operand types for <<", exp->lineno);
+            break;
+        case keepK:
+            typeEXP(exp->val.keepE.left);
+            if(exp->val.keepE.left->type->kind == tupleK)
+                verifyIdsInTuple(exp->val.keepE.left, exp->val.keepE.ids);
+            else
+                reportError("invalid left operand for /+", exp->lineno);
+            break;
+        case discardK:
+            typeEXP(exp->val.discardE.left);
+            if(exp->val.discardE.left->type->kind == tupleK)
+                verifyIdsInTuple(exp->val.discardE.left, exp->val.discardE.ids);
+            else
+                reportError("invalid left operand for /-", exp->lineno);
+            break;
         case notK:
             typeEXP(exp->val.unaryE);
             checkBOOL(exp->val.unaryE->type, exp->lineno);
@@ -325,6 +356,67 @@ void typeEXP(EXP *exp)
     }
 }
 
+void verifyIdsInTuple(EXP *exp, ID *ids)
+{
+    SCHEMA *schema = get_symbol(mst, exp->type->name)->val.schemaS;
+    ID *currID = ids;
+    
+    while (currID != NULL)
+    {
+        if (!tupleContainsId(currID, schema))
+        {
+            reportError("invalid ids to discard from tuple", exp->lineno);
+            return;
+        }
+        currID = currID->next;
+    }
+
+}
+
+int tupleContainsId(ID *id, SCHEMA *s)
+{
+    VARIABLE *currV = s->variables;
+    
+    while (currV != NULL)
+    {
+        if (strcmp(id->name, currV->name) == 0)
+            return 1;
+        currV = currV->next;
+    }
+    return 0;
+}
+
+void verifyTupleCombine(EXP *left, EXP *right)
+{
+    SCHEMA *schemaL = get_symbol(mst, left->type->name)->val.schemaS;
+    SCHEMA *schemaR = get_symbol(mst, right->type->name)->val.schemaS;
+    VARIABLE *currLeftV = schemaL->variables;                      
+   
+    while(currLeftV != NULL)
+    {
+        if(!compatibleTuples(currLeftV, schemaR))
+        {
+            reportError("cannot combine tuples", left->lineno);
+            return;
+        }
+        currLeftV = currLeftV->next;
+    }
+}
+
+int compatibleTuples(VARIABLE *l, SCHEMA *r)
+{
+    VARIABLE *currRightV = r->variables;
+
+    while(currRightV != NULL)
+    {
+        if(strcmp(l->name, currRightV->name))
+            if(l->type->kind != currRightV->type->kind)
+                return 0;
+        currRightV = currRightV->next;
+    }
+    return 1;
+}
+
 void typeSESSION(SESSION *s)
 {
     typeSTATEMENT(s->statements, NULL);
@@ -337,4 +429,3 @@ void typeFIELDVALUE(FIELDVALUE *fv)
     typeFIELDVALUE(fv->next);
     typeEXP(fv->exp);
 }
-
