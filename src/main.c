@@ -14,6 +14,7 @@ SERVICE *theservice;
 char *infile;
 extern int lineno;
 extern int errors;
+    int print_types = 1;
 
 void print_usage(void)
 {
@@ -46,7 +47,6 @@ int main(int argc, char *argv[])
     int pretty_print = 0;
     int symbol_phase = 1;
     int type_phase = 1;
-    int print_types = 1;
     int i;
     if (argc == 1)
     {
