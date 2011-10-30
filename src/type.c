@@ -129,6 +129,14 @@ void typeRECEIVE(RECEIVE *r)
     typeINPUT(r->inputs);
 }
 
+void typePLUG(PLUG *p)
+{
+    if (p == NULL)
+        return;
+    typePLUG(p->next);
+    typeEXP(p->exp);
+}
+
 void typeSTATEMENT(STATEMENT *s, TYPE *returntype)
 {
     if(s == NULL)
@@ -143,7 +151,7 @@ void typeSTATEMENT(STATEMENT *s, TYPE *returntype)
             typeSTATEMENT(s->val.sequenceS.second, returntype);
             break;
         case showK: 
-           /* typeDOCUMENT(s->val.showS.document); */
+            typePLUG(s->val.showS.document->plugs);
             typeRECEIVE(s->val.showS.receives);
             break;
         case exitK:

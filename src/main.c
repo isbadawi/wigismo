@@ -21,19 +21,21 @@ void print_usage(void)
            "Options:\n"
            "  -h, --help                Display this information.\n"
            "  -p, --pretty-print        Pretty print parsed file to stdout.\n"
+           "  -n, --suppress-types      Don't print type information\n"
            "  -s, --no-symbols          Disable symbol table phase\n"
            "  -t, --no-types            Disable type checking phase\n");
 }
 
 char* options[] = {"-h", "--help", 
                    "-p", "--pretty-print", 
+                   "-n", "--suppress-types",
                    "-s", "--no-symbols",
                    "-t", "--no-types" }; 
 
 int valid_option(char *opt)
 {
     int i;
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < 10; i++)
         if (!strcmp(opt, options[i]))
             return 1;
     return 0;
@@ -44,6 +46,7 @@ int main(int argc, char *argv[])
     int pretty_print = 0;
     int symbol_phase = 1;
     int type_phase = 1;
+    int print_types = 1;
     int i;
     if (argc == 1)
     {
@@ -63,6 +66,8 @@ int main(int argc, char *argv[])
             symbol_phase = 0;
         if (!strcmp(argv[i], "--no-types") || !strcmp(argv[i], "-t"))
             type_phase = 0;
+        if (!strcmp(argv[i], "--suppress-types") || !strcmp(argv[i], "-n"))
+            print_types = 0;
     }
     if (!valid_option(argv[argc - 1]) && freopen(argv[argc - 1], "r", stdin) != NULL)
     {
