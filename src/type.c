@@ -452,7 +452,7 @@ int compatibleTuples(VARIABLE *l, SCHEMA *r)
 
     while(currRightV != NULL)
     {
-        if(strcmp(l->name, currRightV->name))
+        if(!strcmp(l->name, currRightV->name))
             if(l->type->kind != currRightV->type->kind)
                 return 0;
         currRightV = currRightV->next;
