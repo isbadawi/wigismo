@@ -19,7 +19,7 @@ void typeSESSION(SESSION *);
 void typeSTATEMENT(STATEMENT *, TYPE *);
 void typeEXP(EXP *);
 void typeFIELDVALUE(FIELDVALUE *);
-void verifyIdsInTuple(EXP *exp, ID *ids);
+int verifyIdsInTuple(EXP *exp, ID *ids);
 int tupleContainsId(ID *id, SCHEMA *s);
 void verifyTupleCombine(EXP *left, EXP *right);
 int compatibleTuples(VARIABLE *l, SCHEMA *r);
@@ -38,6 +38,8 @@ void initTypes(void)
 
 int equalTYPE(TYPE *s, TYPE *t)
 {
+    if (s == NULL || t == NULL)
+        return 0;
     if (s->kind != t->kind) return 0;
     if (s->kind == tupleK)
     {
@@ -231,44 +233,61 @@ SCHEMA *generate_schema(FIELDVALUE *fv)
     char *name = generate_schema_name();
     return makeSCHEMA(name, variable_from_fieldvalue(fv));
 }                                    
+ 
+VARIABLE *vars_from_ids(SCHEMA *s, ID *id)
+{
+    VARIABLE *v;
+    if (id == NULL)
+        return NULL;
+    v = makeVARIABLE(typeSchemaVar(s, id->name), id->name);
+    v->next = vars_from_ids(s, id->next);
+    return v;
+}    
 
 SCHEMA *make_keep_result(EXP *e)
 {
-    SCHEMA *schema = get_symbol(mst, exp->val.keepE.left->type->name)->val.schemaS;
-    ID *id = exp->val.keepE.ids;
+    SCHEMA *schema = get_symbol(mst, e->val.keepE.left->type->name)->val.schemaS;
+    ID *id = e->val.keepE.ids;
     return makeSCHEMA(generate_schema_name(), vars_from_ids(schema, id));
+}
+ 
+VARIABLE *copyVARIABLES(VARIABLE *vars)
+{
+    VARIABLE *v;
+    if (vars == NULL)
+        return vars;
+    v = makeVARIABLE(vars->type, vars->name);
+    v->next = copyVARIABLES(vars->next);
+    return v;
+} 
+
+int id_in(char *id, ID *ids) {
+    if (ids == NULL)
+        return 0;
+    if (!strcmp(id, ids->name))
+        return 1;
+    return id_in(id, ids->next);
 }
 
 SCHEMA *make_discard_result(EXP *e)
 {
-    SCHEMA *schema = get_symbol(mst, exp->val.discardE.left->type->name)->val.schemaS;
-    ID *id = exp->val.discardE.ids;
+    SCHEMA *schema = get_symbol(mst, e->val.discardE.left->type->name)->val.schemaS;
+    ID *ids = e->val.discardE.ids;
     VARIABLE *rootV = copyVARIABLES(schema->variables);
-    VARIABLE *prev;
-    while (id != NULL)
+    while (rootV != NULL && id_in(rootV->name, ids))
+        rootV = rootV->next;
+    if (rootV == NULL)
+        return makeSCHEMA(generate_schema_name(), rootV);
+    VARIABLE *prev = rootV;
+    VARIABLE *v;
+    for (v = rootV->next; v != NULL; v = v->next)
     {
-
-        id = id->next;
+        if (id_in(v->name, ids))
+            prev->next = v->next;
+        else
+            prev = v;
     }
-
-}
-
-VARIABLE *copyVARIABLES(VARIABLE *vars)
-{
-    if (vars == NULL)
-        return vars;
-    VARIABLE *v = makeVARIABLE(vars->type, vars->name);
-    v->next = copyVARIABLES(vars->next);
-    return v;
-}
-
-VARIABLE *vars_from_ids(SCHEMA *s, ID *id)
-{
-    if (id == NULL)
-        return NULL;
-    VARIABLE *v = makeVARIABLE(typeSchemaVar(s, id->name), id->name);
-    v->next = vars_from_ids(s, id->next);
-    return v;
+    return makeSCHEMA(generate_schema_name(), rootV);
 }
 
 int checkARGUMENTS(ARGUMENT *arguments, EXP *exps)
@@ -413,6 +432,7 @@ void typeEXP(EXP *exp)
             }
             else
                 reportError("invalid left operand for \\+", exp->lineno);
+            fflush(stdout);
             break;
         case discardK:
             typeEXP(exp->val.discardE.left);
@@ -464,7 +484,7 @@ void typeEXP(EXP *exp)
     }
 }
 
-void verifyIdsInTuple(EXP *exp, ID *ids)
+int verifyIdsInTuple(EXP *exp, ID *ids)
 {
     SCHEMA *schema = get_symbol(mst, exp->type->name)->val.schemaS;
     ID *currID = ids;
@@ -472,13 +492,10 @@ void verifyIdsInTuple(EXP *exp, ID *ids)
     while (currID != NULL)
     {
         if (!tupleContainsId(currID, schema))
-        {
-            reportError("invalid ids to discard from tuple", exp->lineno);
-            return;
-        }
+            return 0;
         currID = currID->next;
     }
-
+    return 1;
 }
 
 int tupleContainsId(ID *id, SCHEMA *s)
