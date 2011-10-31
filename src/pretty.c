@@ -392,10 +392,6 @@ void prettyEXP(EXP *e)
     extern int print_types;
     if (print_types)
         printf("(");
-    
-    extern int print_types;
-    if (print_types)
-        printf("(");
 
     switch(e->kind)
     {
