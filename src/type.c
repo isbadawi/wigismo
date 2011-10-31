@@ -217,13 +217,58 @@ VARIABLE *variable_from_fieldvalue(FIELDVALUE *fv)
     return v;
 }
 
-SCHEMA *generate_schema(FIELDVALUE *fv)
+char *generate_schema_name(void)
 {
     static int calls = 0;
     char *schema_name = (char*)malloc(15);
     /* identifiers can't start with a number, so this won't conflict with anything */
     sprintf(schema_name, "%danon", calls++);
-    return makeSCHEMA(schema_name, variable_from_fieldvalue(fv));
+    return schema_name;
+}
+
+SCHEMA *generate_schema(FIELDVALUE *fv)
+{
+    char *name = generate_schema_name();
+    return makeSCHEMA(name, variable_from_fieldvalue(fv));
+}                                    
+
+SCHEMA *make_keep_result(EXP *e)
+{
+    SCHEMA *schema = get_symbol(mst, exp->val.keepE.left->type->name)->val.schemaS;
+    ID *id = exp->val.keepE.ids;
+    return makeSCHEMA(generate_schema_name(), vars_from_ids(schema, id));
+}
+
+SCHEMA *make_discard_result(EXP *e)
+{
+    SCHEMA *schema = get_symbol(mst, exp->val.discardE.left->type->name)->val.schemaS;
+    ID *id = exp->val.discardE.ids;
+    VARIABLE *rootV = copyVARIABLES(schema->variables);
+    VARIABLE *prev;
+    while (id != NULL)
+    {
+
+        id = id->next;
+    }
+
+}
+
+VARIABLE *copyVARIABLES(VARIABLE *vars)
+{
+    if (vars == NULL)
+        return vars;
+    VARIABLE *v = makeVARIABLE(vars->type, vars->name);
+    v->next = copyVARIABLES(vars->next);
+    return v;
+}
+
+VARIABLE *vars_from_ids(SCHEMA *s, ID *id)
+{
+    if (id == NULL)
+        return NULL;
+    VARIABLE *v = makeVARIABLE(typeSchemaVar(s, id->name), id->name);
+    v->next = vars_from_ids(s, id->next);
+    return v;
 }
 
 int checkARGUMENTS(ARGUMENT *arguments, EXP *exps)
@@ -355,16 +400,36 @@ void typeEXP(EXP *exp)
         case keepK:
             typeEXP(exp->val.keepE.left);
             if(exp->val.keepE.left->type->kind == tupleK)
-                verifyIdsInTuple(exp->val.keepE.left, exp->val.keepE.ids);
+            {
+                if(verifyIdsInTuple(exp->val.keepE.left, exp->val.keepE.ids))
+                {
+                    schema = make_keep_result(exp);
+                    exp->type = makeTYPEtuple(schema->name);
+                    s = put_symbol(mst, schema->name, schemaSym);
+                    s->val.schemaS = schema;
+                }                        
+                else
+                    reportError("invalid ids for \\+", exp->lineno);
+            }
             else
-                reportError("invalid left operand for /+", exp->lineno);
+                reportError("invalid left operand for \\+", exp->lineno);
             break;
         case discardK:
             typeEXP(exp->val.discardE.left);
             if(exp->val.discardE.left->type->kind == tupleK)
-                verifyIdsInTuple(exp->val.discardE.left, exp->val.discardE.ids);
+            {
+                if (verifyIdsInTuple(exp->val.discardE.left, exp->val.discardE.ids))
+                {
+                    schema = make_discard_result(exp);
+                    exp->type = makeTYPEtuple(schema->name);
+                    s = put_symbol(mst, schema->name, schemaSym);
+                    s->val.schemaS = schema;
+                }
+                else
+                    reportError("invalid ids for \\-", exp->lineno);
+            }
             else
-                reportError("invalid left operand for /-", exp->lineno);
+                reportError("invalid left operand for \\-", exp->lineno);
             break;
         case notK:
             typeEXP(exp->val.unaryE);
