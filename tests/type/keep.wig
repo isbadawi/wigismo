@@ -1,0 +1,8 @@
+service {
+    const html Test = <html>Test</html>;
+
+    session Main() {
+        tuple{x=4, y="string", z=true} \+ w;
+        exit Test;
+    }
+}
