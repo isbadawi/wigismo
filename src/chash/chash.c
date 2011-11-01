@@ -179,7 +179,7 @@ void chash_pretty_print(chash* table, chash_callback_t* print_item, int spaces)
     for (i = 0; i < table->size; ++i)
     {
 
-        if (isdigit(items[i]->key[0]))
+        if (items[i]->key[0] == '<')
             continue;
         int j;
         for (j = 0; j < spaces; ++j)

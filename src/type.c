@@ -224,7 +224,7 @@ char *generate_schema_name(void)
     static int calls = 0;
     char *schema_name = (char*)malloc(15);
     /* identifiers can't start with a number, so this won't conflict with anything */
-    sprintf(schema_name, "%danon", calls++);
+    sprintf(schema_name, "<%d>", calls++);
     return schema_name;
 }
 
@@ -447,6 +447,8 @@ void typeEXP(EXP *exp)
                     s = put_symbol(mst, schema->name, schemaSym);
                     s->val.schemaS = schema;
                 }
+                else
+                    reportError("incompatible tuples", exp->lineno);
             }
             else
                 reportError("invalid operand types for <<", exp->lineno);
@@ -468,7 +470,6 @@ void typeEXP(EXP *exp)
             }
             else
                 reportError("invalid left operand for \\+", exp->lineno);
-            fflush(stdout);
             break;
         case discardK:
             typeEXP(exp->val.discardE.left);
@@ -556,10 +557,7 @@ int verifyTupleCombine(EXP *left, EXP *right)
     while(currLeftV != NULL)
     {
         if(!compatibleTuples(currLeftV, schemaR))
-        {
-            reportError("cannot combine tuples", left->lineno);
             return 0;
-        }
         currLeftV = currLeftV->next;
     }
     return 1;
@@ -581,6 +579,9 @@ int compatibleTuples(VARIABLE *l, SCHEMA *r)
 
 void typeSESSION(SESSION *s)
 {
+    if (s == NULL)
+        return;
+    typeSESSION(s->next);
     typeSTATEMENT(s->statements, NULL);
 }
 
