@@ -64,14 +64,15 @@ extern SERVICE *theservice;
 %type <input> input neinputs inputs
 %type <stringconst> lvalue attr inputtype
 
-%right '='
+%right '='               
+%left tOR
+%left tAND 
+%nonassoc tEQ tLEQ tGEQ tNEQ '<' '>'
 %left '+' '-'
 %left '*' '/' '%'
-%left tAND tOR
 %left tKEEP tDISCARD
 %right tCOMBINE
 %right '!' tUMINUS
-%nonassoc tEQ tLEQ tGEQ tNEQ '<' '>'
 
 %% /* productions */
 

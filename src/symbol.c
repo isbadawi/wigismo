@@ -1,6 +1,7 @@
 #include "symbol.h"
 #include "memory.h"
 #include "error.h"
+#include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
 
@@ -20,6 +21,7 @@ void symTUPLE(EXP *e, SymbolTable *table);
 void symINPUT(INPUT *i, HTML *h, SymbolTable *table);
 void symEXP(EXP *e, SymbolTable *table);
 void symID(ID *id, SymbolTable *table);
+void symFIELDVALUE(FIELDVALUE *fv, SymbolTable *table);
 
 SymbolTable *new_symbol_table(void) 
 {
@@ -447,9 +449,19 @@ void symEXP(EXP *e, SymbolTable *table)
         case intconstK:
         case boolconstK:
         case stringconstK:
+            break;
         case tupleconstK:
+            symFIELDVALUE(e->val.tupleE.fieldvalues, table);
             break;
     }
+}
+
+void symFIELDVALUE(FIELDVALUE *fv, SymbolTable *table)
+{
+    if (fv == NULL)
+        return;
+    symFIELDVALUE(fv->next, table);
+    symEXP(fv->exp, table);
 }
 
 void symID(ID *id, SymbolTable *table)
