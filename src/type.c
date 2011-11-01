@@ -21,7 +21,7 @@ void typeEXP(EXP *);
 void typeFIELDVALUE(FIELDVALUE *);
 int verifyIdsInTuple(EXP *exp, ID *ids);
 int tupleContainsId(ID *id, SCHEMA *s);
-void verifyTupleCombine(EXP *left, EXP *right);
+int verifyTupleCombine(EXP *left, EXP *right);
 int compatibleTuples(VARIABLE *l, SCHEMA *r);
 TYPE *typeVar(SYMBOL *s);
 TYPE *typeSchemaVar(SCHEMA *, char *);
@@ -290,6 +290,34 @@ SCHEMA *make_discard_result(EXP *e)
     return makeSCHEMA(generate_schema_name(), rootV);
 }
 
+int var_in(VARIABLE *v, VARIABLE *vars)
+{
+    if (vars == NULL)
+        return 0;
+    if (!strcmp(v->name, vars->name))
+        return 1;
+    return var_in(v, vars->next);
+}
+
+SCHEMA *make_combine_result(EXP *e)
+{
+    SCHEMA *left = get_symbol(mst, e->val.binaryE.left->type->name)->val.schemaS;
+    SCHEMA *right = get_symbol(mst, e->val.binaryE.right->type->name)->val.schemaS;
+    /* all the variables in left */
+    VARIABLE *vars = copyVARIABLES(left->variables);
+    VARIABLE *v;
+    for (v = right->variables; v != NULL; v = v->next)
+    {
+        if (!var_in(v, vars))
+        {
+            VARIABLE *temp = vars;
+            vars = makeVARIABLE(v->type, v->name);
+            vars->next = temp;
+        }
+    }
+    return makeSCHEMA(generate_schema_name(), vars);
+}
+
 int checkARGUMENTS(ARGUMENT *arguments, EXP *exps)
 {
     if (arguments == NULL && exps == NULL)
@@ -411,7 +439,15 @@ void typeEXP(EXP *exp)
             left = exp->val.binaryE.left->type;
             right = exp->val.binaryE.right->type; 
             if (left->kind == tupleK && right->kind == tupleK)
-                verifyTupleCombine(exp->val.binaryE.left, exp->val.binaryE.right);
+            {
+                if (verifyTupleCombine(exp->val.binaryE.left, exp->val.binaryE.right))
+                {
+                    schema = make_combine_result(exp);
+                    exp->type = makeTYPEtuple(schema->name);
+                    s = put_symbol(mst, schema->name, schemaSym);
+                    s->val.schemaS = schema;
+                }
+            }
             else
                 reportError("invalid operand types for <<", exp->lineno);
             break;
@@ -511,7 +547,7 @@ int tupleContainsId(ID *id, SCHEMA *s)
     return 0;
 }
 
-void verifyTupleCombine(EXP *left, EXP *right)
+int verifyTupleCombine(EXP *left, EXP *right)
 {
     SCHEMA *schemaL = get_symbol(mst, left->type->name)->val.schemaS;
     SCHEMA *schemaR = get_symbol(mst, right->type->name)->val.schemaS;
@@ -522,10 +558,11 @@ void verifyTupleCombine(EXP *left, EXP *right)
         if(!compatibleTuples(currLeftV, schemaR))
         {
             reportError("cannot combine tuples", left->lineno);
-            return;
+            return 0;
         }
         currLeftV = currLeftV->next;
     }
+    return 1;
 }
 
 int compatibleTuples(VARIABLE *l, SCHEMA *r)
