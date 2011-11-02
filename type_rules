@@ -3,11 +3,18 @@ Carla Morawicz - 260330178
 
 Type rules in ordinary prose:
 
+========
+Services
+========
+A service is type correct if the sessions and functions within are type 
+correct.
+
 ====================
 Sessions & Functions
 ====================
 A session or function is type correct if its body is type correct.
 
+==========
 Statements
 ==========
 
