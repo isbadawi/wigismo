@@ -3,6 +3,41 @@ Carla Morawicz - 260330178
 
 Type rules in ordinary prose:
 
+====================
+Sessions & Functions
+====================
+A session or function is type correct if its body is type correct.
+
+Statements
+==========
+
+The skip statement (";") is always type correct.
+
+A sequence (s1, s2) of statements is type correct is s1 and s2 are both
+type correct.  
+
+The expressions plugged into the show statement must type check; the variables 
+received from a show must not be of a tuple type.
+
+The expressions plugged into the exit statement must type check. 
+
+A return statement is type correct if the type of the expression returned is
+compatible with the return type of the function.
+(Return statements in sessions do not pass the weeder.)
+
+Block statements are type correct if their body is type correct.
+
+An if statement is type correct if the condition expression is of type bool
+and the body is type correct.
+
+An if/else statement is type correct if the condition expression is of type bool
+and both the then part and the else part of the statement are type correct.
+
+A while statement is type correct if the condition expression is of type bool
+and the body is type correct.
+
+An expression statement is type correct if the expression is type correct.
+
 ==========
 [-|*|/|%]:
 ==========
@@ -20,14 +55,13 @@ both are strings, the result is a string, otherwise it's an int.
 Assign
 ======
 The type of the expression on the right hand side of the "=" must either be
-of the same type or a compatible sub-type as the identifier on the left 
-hand side; the result is the type that is evaluated from the right-hand side
-expression.
+of the same type or a compatible type as the identifier on the left hand side;
+the result is the type that is evaluated from the right-hand side expression.
 
 =====
 && ||
 =====
-The left and right expressions must by of type bool; the result is of type
+The left and right expressions must be of type bool; the result is of type
 bool.                
 
 ============
@@ -46,7 +80,7 @@ the other schema with the same type -- the result is of type bool.
 ===========
 Unary minus
 ===========
-The right expression must be of type int; the result is of type int.
+The expression must be of type int; the result is of type int.
 
 =============
 Function Call
@@ -58,30 +92,28 @@ return type of the function.
 ===
  !
 ===
-The right expression must be of type bool; the result is of type bool.
+The expression must be of type bool; the result is of type bool.
 
-============
-Int constant
-============
-Any integer 0|[1-9][0-9]* is of type int; the literals "true" and "false" are of type bool; any double quoted string is of type string. 
+=========
+Constants
+=========
+Any integer 0|[1-9][0-9]* is of type int.
+The literals "true" and "false" are of type bool. \
+Any double quoted string is of type string.  
+Tuple literals have a tuple type -- their schema is defined implicitly by
+the types of their field values, assuming they type check.
 
-====
-Show
-====
-The plugs 
 
-====
-Exit
-====
-
-====
-Keep
-====
-
-=======
-Discard
-=======
+=============
+Keep, Discard
+=============
+The expression on the left-hand-side must be of type tuple; each identifier 
+appearing on the right hand side must appear in its schema; the result is tuple
+type with a new schema generated automatically. 
 
 =======
 Combine
 =======
+The expressions on the left and right sides must be of type tuple; the common 
+variables in their schemas must have the same type; the result is a tuple whose
+schema is composed of the union of their variables.
