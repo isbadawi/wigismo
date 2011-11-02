@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+extern int print_symbols;
 static int _indent = 0;
 static int _spaces = 1;
 
@@ -51,7 +52,8 @@ void prettySERVICE(SERVICE *service)
 {
     printf("service\n{\n");
     indent();
-    prettySCOPE(mst);
+    if (print_symbols)
+        prettySCOPE(mst);
     prettyHTML(service->htmls);
     prettySCHEMA(service->schemas);
     prettyVARIABLE(service->variables);
@@ -265,7 +267,8 @@ void prettySTATEMENT(STATEMENT *s)
             _spaces = 1;
             printf("{\n");
             indent();
-            prettySCOPE(s->val.blockS.table);
+            if (print_symbols)
+                prettySCOPE(s->val.blockS.table);
             prettyVARIABLE(s->val.blockS.variables);
             prettySTATEMENT(s->val.blockS.body);
             dedent();

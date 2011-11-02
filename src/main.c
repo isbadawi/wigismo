@@ -15,6 +15,7 @@ char *infile;
 extern int lineno;
 extern int errors;
 int print_types = 1;
+int print_symbols = 1;
 
 void print_usage(void)
 {
@@ -22,13 +23,15 @@ void print_usage(void)
            "Options:\n"
            "  -h, --help                Display this information.\n"
            "  -p, --pretty-print        Pretty print parsed file to stdout.\n"
+           "  -x, --suppress-symbols    Don't print symbol information\n"
            "  -n, --suppress-types      Don't print type information\n"
-           "  -s, --no-symbols          Disable symbol table phase (implies -t)\n"
+           "  -s, --no-symbols          Disable symbol table phase (implies -t, -x)\n"
            "  -t, --no-types            Disable type checking phase (implies -n)\n");
 }
 
 char* options[] = {"-h", "--help", 
                    "-p", "--pretty-print", 
+                   "-x", "--suppress-symbols"
                    "-n", "--suppress-types",
                    "-s", "--no-symbols",
                    "-t", "--no-types" }; 
@@ -66,6 +69,7 @@ int main(int argc, char *argv[])
         {
             symbol_phase = 0;
             type_phase = 0;
+            print_symbols = 0;
             print_types = 0;
         }
         if (!strcmp(argv[i], "--no-types") || !strcmp(argv[i], "-t"))
@@ -73,6 +77,8 @@ int main(int argc, char *argv[])
             type_phase = 0;
             print_types = 0;
         }
+        if (!strcmp(argv[i], "--suppress-symbols") || !strcmp(argv[i], "-x"))
+            print_symbols = 0;
         if (!strcmp(argv[i], "--suppress-types") || !strcmp(argv[i], "-n"))
             print_types = 0;
     }
