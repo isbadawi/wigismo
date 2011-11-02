@@ -1,0 +1,87 @@
+Ismail Badawi - 260375313
+Carla Morawicz - 260330178
+
+Type rules in ordinary prose:
+
+==========
+[-|*|/|%]:
+==========
+The left operand to the [-*/%] expression must be of type int; the right 
+operand of the [-*/%] expression must be of type int; the result is of type
+int.
+
+=========
+Addition:
+=========
+For addition, the two operands must be either strings or ints. If either or
+both are strings, the result is a string, otherwise it's an int.
+
+======
+Assign
+======
+The type of the expression on the right hand side of the "=" must either be
+of the same type or a compatible sub-type as the identifier on the left 
+hand side; the result is the type that is evaluated from the right-hand side
+expression.
+
+=====
+&& ||
+=====
+The left and right expressions must by of type bool; the result is of type
+bool.                
+
+============
+<, >, <=, >=
+============
+The left and right expressions must be of type int; the result is of type bool.
+
+======
+==, !=
+======                                                          
+The types of the left and right expressions must be the same or compatible,
+where compatibility in the case of tuples refers to structural equivalence --
+that is, every variable that appears in one of the schemas also appears in
+the other schema with the same type -- the result is of type bool.
+
+===========
+Unary minus
+===========
+The right expression must be of type int; the result is of type int.
+
+=============
+Function Call
+=============
+The types of the arguments of a function call must correspond to the types 
+declared in the function's signature; the type of the expression is the 
+return type of the function.
+
+===
+ !
+===
+The right expression must be of type bool; the result is of type bool.
+
+============
+Int constant
+============
+Any integer 0|[1-9][0-9]* is of type int; the literals "true" and "false" are of type bool; any double quoted string is of type string. 
+
+====
+Show
+====
+The plugs 
+
+====
+Exit
+====
+
+====
+Keep
+====
+
+=======
+Discard
+=======
+
+=======
+Combine
+=======
