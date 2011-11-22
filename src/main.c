@@ -7,6 +7,7 @@
 #include"weed.h"
 #include"symbol.h"
 #include"type.h"
+#include"code.h"
 
 void yyparse();
 
@@ -26,27 +27,13 @@ void print_usage(void)
            "  -x, --suppress-symbols    Don't print symbol information\n"
            "  -n, --suppress-types      Don't print type information\n"
            "  -s, --no-symbols          Disable symbol table phase (implies -t, -x)\n"
-           "  -t, --no-types            Disable type checking phase (implies -n)\n");
-}
-
-char* options[] = {"-h", "--help", 
-                   "-p", "--pretty-print", 
-                   "-x", "--suppress-symbols"
-                   "-n", "--suppress-types",
-                   "-s", "--no-symbols",
-                   "-t", "--no-types" }; 
-
-int valid_option(char *opt)
-{
-    int i;
-    for (i = 0; i < 10; i++)
-        if (!strcmp(opt, options[i]))
-            return 1;
-    return 0;
+           "  -t, --no-types            Disable type checking phase (implies -n)\n"
+           "  -o, --output FILE         Redirect output to file (defaults to stdout).\n");
 }
 
 int main(int argc, char *argv[])
 {
+    FILE *outfile = stdout;
     int pretty_print = 0;
     int symbol_phase = 1;
     int type_phase = 1;
@@ -81,8 +68,13 @@ int main(int argc, char *argv[])
             print_symbols = 0;
         if (!strcmp(argv[i], "--suppress-types") || !strcmp(argv[i], "-n"))
             print_types = 0;
+        if (!strcmp(argv[i], "--output") || !strcmp(argv[i], "-o"))
+        {
+            i++;
+            outfile = fopen(argv[i], "r");
+        }
     }
-    if (!valid_option(argv[argc - 1]) && freopen(argv[argc - 1], "r", stdin) != NULL)
+    if (freopen(argv[argc - 1], "r", stdin) != NULL)
     {
         infile = basename(strdup(argv[argc - 1]));
         lineno = 1;
@@ -116,6 +108,8 @@ int main(int argc, char *argv[])
 
     if (pretty_print)
         prettySERVICE(theservice);
+
+    codeSERVICE(theservice, outfile);
 
     return 0;
 }
