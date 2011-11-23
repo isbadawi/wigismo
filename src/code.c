@@ -1,6 +1,7 @@
 #include "code.h"
 #include "tree.h"
 #include <stdio.h>
+#include<string.h>
 
 FILE *out;
 
@@ -10,6 +11,8 @@ void print_header(char*);
 void codeHTML(HTML*);
 ID *gaps_in(HTMLBODY*);
 void print_gaps(ID*);
+void print_attributes(ATTRIBUTE*);
+void codeHTMLBODY(HTMLBODY*);
 
 void codeSERVICE(SERVICE *service, FILE *_out)
 {
@@ -44,8 +47,87 @@ void codeHTML(HTML *html)
     fprintf(out, "def output_%s(", html->name);
     print_gaps(gaps_in(html->htmlbodies));
     fprintf(out, "):\n");
-/*    codeHTMLBODY(html->htmlbodies); */
+    codeHTMLBODY(html->htmlbodies);
 }
+
+void codeHTMLBODY(HTMLBODY *htmlbody)
+{
+    if (htmlbody == NULL)
+        return;
+
+    codeHTMLBODY(htmlbody->next);
+    
+    print_indent();
+    fprintf(out, "print '");
+    switch (htmlbody->kind)
+    {
+        case opentagK:
+        case selfclosingK:
+            fprintf(out, "<%s ", htmlbody->val.tagH.name);
+            print_attributes(htmlbody->val.tagH.attributes);
+            if (htmlbody->kind == selfclosingK)
+                fprintf(out, "/");
+            fprintf(out, ">");
+            break;
+        case closetagK:
+            fprintf(out, "</%s>", htmlbody->val.tagH.name);
+            break;
+        case gapK:
+            fprintf(out, "%%s");                    
+            break;
+        case whateverK:
+        {
+            int len = strlen(htmlbody->val.whateverH);
+            int i;
+            for (i = 0; i < len; ++i)
+            {
+                if (i == len - 1 && htmlbody->val.whateverH[i] == ' ')
+                    break;
+                if (htmlbody->val.whateverH[i] == '\n')
+                    fprintf(out, "%s", "\\n");
+                else
+                    fprintf(out, "%c", htmlbody->val.whateverH[i]);
+            }
+            break;
+        }
+        case metaK:
+            fprintf(out, "<!--%s-->", htmlbody->val.metaH);
+            break;
+        case inputK:
+            fprintf(out, "<input ");
+            print_attributes(htmlbody->val.inputH.attributes);
+            fprintf(out, ">");
+            break;
+        case selectK:
+            fprintf(out, "<select ");
+            print_attributes(htmlbody->val.selectH.attributes);
+            fprintf(out, ">',\n");
+            codeHTMLBODY(htmlbody->val.selectH.htmlbodies);
+            fprintf(out, "print '</select>',\n");
+            break;
+    }
+    if (htmlbody->kind != selectK)
+    {
+        fprintf(out, "'");
+        if (htmlbody->kind == gapK)
+            fprintf(out, " %% %s", htmlbody->val.gapH);
+        fprintf(out, ",\n");
+    }
+}
+
+void print_attributes(ATTRIBUTE *a)
+{
+    if (a == NULL)
+        return;
+
+    print_attributes(a->next);
+    
+    if (a->value == NULL)
+        fprintf(out, "%s ", a->name);
+    else
+        fprintf(out, "%s=\"%s\" ", a->name, a->value);
+}
+
 
 ID *gaps_in(HTMLBODY *body)
 {
