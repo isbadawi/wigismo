@@ -4,26 +4,45 @@
 #include<string.h>
 
 FILE *out;
+static int _indent = 0;
 
 
-void print_indent();
+void indent()
+{
+    _indent += 4;
+}
+
+void dedent() 
+{
+    _indent -= 4;
+}
+
+void print_indent()
+{
+    int i;
+    for (i = 0; i < _indent; i++)
+        fprintf(out, " ");
+}
+
 void print_header(char*);
 void codeHTML(HTML*);
 ID *gaps_in(HTMLBODY*);
 void print_gaps(ID*);
 void print_attributes(ATTRIBUTE*);
 void codeHTMLBODY(HTMLBODY*);
+void codeFUNCTION(FUNCTION*);
+void codeARGUMENT(ARGUMENT*);
+void codeSTATEMENT(STATEMENT*);
+void codeEXP(EXP*);
+void codeFIELDVALUE(FIELDVALUE*);
+void codeID(ID*);
 
 void codeSERVICE(SERVICE *service, FILE *_out)
 {
       out = _out;
       print_header(service->name);
       codeHTML(service->htmls);
-}
-
-void print_indent()
-{
-    fprintf(out, "    ");
+      codeFUNCTION(service->functions);
 }
 
 void print_header(char *service)
@@ -47,7 +66,10 @@ void codeHTML(HTML *html)
     fprintf(out, "def output_%s(", html->name);
     print_gaps(gaps_in(html->htmlbodies));
     fprintf(out, "):\n");
+    indent();
     codeHTMLBODY(html->htmlbodies);
+    dedent();
+    fprintf(out, "\n");
 }
 
 void codeHTMLBODY(HTMLBODY *htmlbody)
@@ -153,4 +175,204 @@ void print_gaps(ID *id)
     fprintf(out, "%s", id->name);
 }
 
+void codeFUNCTION(FUNCTION *f)
+{
+    fprintf(out, "def %s(", f->name);
+    codeARGUMENT(f->arguments);
+    fprintf(out, "):\n");
+    codeSTATEMENT(f->statements);
+}
 
+void codeARGUMENT(ARGUMENT *a)
+{
+    if (a == NULL)
+        return;
+    if (a->next != NULL)
+        fprintf(out, ", ");
+    fprintf(out, "%s", a->name);
+}
+
+void codeSTATEMENT(STATEMENT *s)
+{
+    if (s == NULL)
+        return;
+
+    if (s->kind != sequenceK)
+        print_indent();
+
+    switch (s->kind)
+    {
+        case skipK:
+            fprintf(out, "pass");
+            break;
+        case sequenceK:
+            codeSTATEMENT(s->val.sequenceS.first);
+            codeSTATEMENT(s->val.sequenceS.second);
+            break;
+        case showK:
+        case exitK:
+            break;
+        case returnK:
+            fprintf(out, "return ");
+            codeEXP(s->val.returnS);
+            break;
+        case blockK:
+        /* FIXME scoping */
+            indent();
+            codeSTATEMENT(s->val.blockS.body);
+            dedent();
+            break;
+        case ifK:
+            fprintf(out, "if ");
+            codeEXP(s->val.ifS.condition);
+            fprintf(out, ":\n");
+            indent();
+            codeSTATEMENT(s->val.ifS.body);
+            dedent();
+            break;
+        case ifelseK:
+            fprintf(out, "if ");
+            codeEXP(s->val.ifelseS.condition);
+            fprintf(out, ":\n");
+            indent();
+            codeSTATEMENT(s->val.ifelseS.thenpart);
+            fprintf(out, "else:\n");
+            codeSTATEMENT(s->val.ifelseS.elsepart);
+            dedent();
+            break;
+        case whileK:
+            fprintf(out, "while ");
+            codeEXP(s->val.whileS.condition);
+            fprintf(out, ":\n");
+            indent();
+            codeSTATEMENT(s->val.whileS.body);
+            dedent();
+            break;
+        case expK:
+            codeEXP(s->val.expS);
+            break;
+    }
+    fprintf(out, "\n");
+}
+
+void codeEXP(EXP *e)
+{
+    char* _ops[30];
+    if (e == NULL)
+        return;
+    codeEXP(e->next);
+    if (e->next != NULL)
+        fprintf(out, ", ");
+
+    _ops[orK] = "or";
+    _ops[andK] = "and";
+    _ops[eqK] = "==";
+    _ops[ltK] = "<";
+    _ops[gtK] = ">";
+    _ops[leqK] = "<=";
+    _ops[geqK] = ">=";
+    _ops[neqK] = "!=";
+    _ops[plusK] = "+";
+    _ops[minusK] = "-";
+    _ops[timesK] = "*";
+    _ops[divK] = "/";
+    _ops[modK] = "%";
+
+    switch (e->kind)
+    {
+        case idK:
+            break;
+        case idtupleK:
+            break;
+        case assignK:
+            break;
+        case assigntupleK:
+            break;
+        case orK:
+        case andK:
+        case eqK:
+        case ltK:
+        case gtK:
+        case leqK:
+        case geqK:
+        case neqK:
+        case plusK:
+        case minusK:
+        case timesK:
+        case divK:
+        case modK:
+            codeEXP(e->val.binaryE.left);
+            fprintf(out, " %s ", _ops[e->kind]);
+            codeEXP(e->val.binaryE.right);
+            break;
+        case notK:
+            fprintf(out, "not ");
+            codeEXP(e->val.unaryE);
+            break;
+        case uminusK:
+            fprintf(out, "-");
+            codeEXP(e->val.unaryE);
+        case combineK:
+            fprintf(out, "runtime.tuple_combine(");
+            codeEXP(e->val.binaryE.left);
+            fprintf(out, ", ");
+            codeEXP(e->val.binaryE.right);
+            fprintf(out, ")");
+            break;
+        case keepK:
+            fprintf(out, "runtime.tuple_keep(");
+            codeEXP(e->val.keepE.left);
+            fprintf(out, ", ");
+            codeID(e->val.keepE.ids);
+            fprintf(out, ")");
+            break;
+        case discardK:
+            fprintf(out, "runtime.tuple_discard(");
+            codeEXP(e->val.discardE.left);
+            fprintf(out, ", ");
+            codeID(e->val.discardE.ids);
+            fprintf(out, ")");
+            break;
+        case callK:
+            fprintf(out, "%s(", e->val.callE.name);
+            codeEXP(e->val.callE.args);
+            fprintf(out, ")");
+            break;
+        case intconstK:
+            fprintf(out, "%d", e->val.intconstE);
+            break;
+        case boolconstK:
+            fprintf(out, "%s", e->val.boolconstE ? "True" : "False");
+            break;
+        case stringconstK:
+            fprintf(out, "\"%s\"", e->val.stringconstE);
+            break;
+        case tupleconstK:
+            fprintf(out, "{");
+            codeFIELDVALUE(e->val.tupleE.fieldvalues);
+            fprintf(out, "}");
+            break;
+    }
+}
+
+void codeFIELDVALUE(FIELDVALUE *fv)
+{
+    if (fv == NULL)
+        return;
+
+    codeFIELDVALUE(fv->next);
+    if (fv->next != NULL)
+        fprintf(out, ", ");
+    fprintf(out, "'%s': ", fv->name);
+    codeEXP(fv->exp);
+}
+
+void codeID(ID *id)
+{
+    if (id == NULL)
+        return;
+    codeID(id->next);
+    if (id->next != NULL)
+        fprintf(out, ", ");
+    fprintf(out, "'%s'", id->name);
+}
