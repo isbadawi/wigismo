@@ -5,7 +5,7 @@ TESTDIR=../tests/symbol
 fail=0
 echo "*** Testing symbol table phase. Error messages are expected. ***"
 for testcase in `ls $TESTDIR`; do
-    if wigismo $TESTDIR/$testcase; then
+    if wigismo -c $TESTDIR/$testcase; then
         fail=1
     fi
 done

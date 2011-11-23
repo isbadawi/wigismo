@@ -8,6 +8,7 @@
 #include"symbol.h"
 #include"type.h"
 #include"code.h"
+#include"util.h"
 
 void yyparse();
 
@@ -27,16 +28,19 @@ void print_usage(void)
            "  -x, --suppress-symbols    Don't print symbol information\n"
            "  -n, --suppress-types      Don't print type information\n"
            "  -s, --no-symbols          Disable symbol table phase (implies -t, -x)\n"
-           "  -t, --no-types            Disable type checking phase (implies -n)\n"
+           "  -t, --no-types            Disable type checking phase (implies -n, -c)\n"
+           "  -c, --no-code             Disable code generation.\n"
            "  -o, --output FILE         Redirect output to file (defaults to stdout).\n");
 }
 
 int main(int argc, char *argv[])
 {
-    FILE *outfile = stdout;
+    char *outfilename;
+    int o_switch = 0;
     int pretty_print = 0;
     int symbol_phase = 1;
     int type_phase = 1;
+    int code_phase = 1;
     int i;
     if (argc == 1)
     {
@@ -58,38 +62,43 @@ int main(int argc, char *argv[])
             type_phase = 0;
             print_symbols = 0;
             print_types = 0;
+            code_phase = 0;
         }
         if (!strcmp(argv[i], "--no-types") || !strcmp(argv[i], "-t"))
         {
             type_phase = 0;
             print_types = 0;
+            code_phase = 0;
         }
         if (!strcmp(argv[i], "--suppress-symbols") || !strcmp(argv[i], "-x"))
             print_symbols = 0;
         if (!strcmp(argv[i], "--suppress-types") || !strcmp(argv[i], "-n"))
             print_types = 0;
+        if (!strcmp(argv[i], "--no-code") || !strcmp(argv[i], "-c"))
+            code_phase = 0;
         if (!strcmp(argv[i], "--output") || !strcmp(argv[i], "-o"))
         {
             i++;
-            outfile = fopen(argv[i], "r");
+            outfilename = argv[i];
+            o_switch = 1;
         }
     }
     if (freopen(argv[argc - 1], "r", stdin) != NULL)
     {
+        if (!o_switch)
+            outfilename = replace_extension(argv[argc - 1], ".py");
         infile = basename(strdup(argv[argc - 1]));
         lineno = 1;
         yyparse();
     }
-    /* read from stdin, useful for piping */
-    else 
-    {
-        lineno = 1;
-        yyparse();
-    }
+    else
+        return 1;
+
     /* if there's a syntax error, theservice won't be constructed, and 
        attempting to walk the AST will result in a segfault. */
     if (theservice == NULL)
         return 1;
+    theservice->name = strip_extension(argv[argc - 1]);
     
     if (!weedSERVICE(theservice))
         return 1; 
@@ -109,7 +118,11 @@ int main(int argc, char *argv[])
     if (pretty_print)
         prettySERVICE(theservice);
 
-    codeSERVICE(theservice, outfile);
+    if (code_phase)
+    {
+        FILE *outfile = fopen(outfilename, "w");
+        codeSERVICE(theservice, outfile);
+    }
 
     return 0;
 }

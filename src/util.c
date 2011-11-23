@@ -1,0 +1,28 @@
+#include "util.h"
+#include <string.h>
+#include <stdlib.h>
+
+char* replace_extension(char *filename, char *ext)
+{
+    char *base = strip_extension(filename);
+    char *newname = malloc(strlen(base) + 4);
+    strcpy(newname, base);
+    strcat(newname, ".py");
+    return newname;
+}
+
+char *strip_extension(char *filename)
+{
+    if (strchr(filename, '.') == NULL)
+        return filename;
+    int len = strlen(filename);
+    int i;
+    for (i = len - 1; i >= 0; i--)
+        if (filename[i] == '.')
+            break;
+
+    char *newname = (char*)malloc(i);
+    strncpy(newname, filename, i); 
+    return newname;
+}
+ 
