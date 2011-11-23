@@ -53,7 +53,7 @@ class Store(object):
         finally:
             f.close()
 
-    def put(self, name, value):
+    def set(self, name, value):
         try:
             f = open(self.service, 'r')
             d = pickle.Unpickler(f).load()
@@ -61,6 +61,7 @@ class Store(object):
             f.close()
             f = open(self.service, 'w')
             pickle.Pickler(f).dump(d)
+            return value
         finally:
             f.close()
 
@@ -82,3 +83,7 @@ def tuple_combine(t1, t2):
     result = t1.copy()
     result.update(t2)
     return result
+
+def set(d, key, val):
+    d[key] = val
+    return val

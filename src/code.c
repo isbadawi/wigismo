@@ -80,7 +80,7 @@ void codeHTMLBODY(HTMLBODY *htmlbody)
     codeHTMLBODY(htmlbody->next);
     
     print_indent();
-    fprintf(out, "print '");
+    fprintf(out, "sys.stdout.write('");
     switch (htmlbody->kind)
     {
         case opentagK:
@@ -123,9 +123,9 @@ void codeHTMLBODY(HTMLBODY *htmlbody)
         case selectK:
             fprintf(out, "<select ");
             print_attributes(htmlbody->val.selectH.attributes);
-            fprintf(out, ">',\n");
+            fprintf(out, ">')\n");
             codeHTMLBODY(htmlbody->val.selectH.htmlbodies);
-            fprintf(out, "print '</select>',\n");
+            fprintf(out, "sys.stdout.write('</select>')\n");
             break;
     }
     if (htmlbody->kind != selectK)
@@ -133,7 +133,7 @@ void codeHTMLBODY(HTMLBODY *htmlbody)
         fprintf(out, "'");
         if (htmlbody->kind == gapK)
             fprintf(out, " %% %s", htmlbody->val.gapH);
-        fprintf(out, ",\n");
+        fprintf(out, ")\n");
     }
 }
 
@@ -172,11 +172,15 @@ void print_gaps(ID *id)
     print_gaps(id->next);
     if (id->next != NULL)
         fprintf(out, ", ");
-    fprintf(out, "%s", id->name);
+    fprintf(out, "%s=''", id->name);
 }
 
 void codeFUNCTION(FUNCTION *f)
 {
+    if (f == NULL)
+        return;
+    codeFUNCTION(f->next);
+
     fprintf(out, "def %s(", f->name);
     codeARGUMENT(f->arguments);
     fprintf(out, "):\n");
