@@ -21,7 +21,7 @@ char *strip_extension(char *filename)
         if (filename[i] == '.')
             break;
 
-    char *newname = (char*)malloc(i);
+    char *newname = (char*)malloc(i+1);
     strncpy(newname, filename, i); 
     return newname;
 }
