@@ -5,9 +5,9 @@
 char* replace_extension(char *filename, char *ext)
 {
     char *base = strip_extension(filename);
-    char *newname = malloc(strlen(base) + 4);
+    char *newname = malloc(strlen(base) + strlen(ext) + 1);
     strcpy(newname, base);
-    strcat(newname, ".py");
+    strcat(newname, ext);
     return newname;
 }
 
