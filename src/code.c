@@ -7,6 +7,29 @@ FILE *out;
 static int _indent = 0;
 
 
+static char* _ops[30];
+static char* _defaults[10];
+
+void init_ops_and_defaults(void)
+{
+    _ops[orK] = "or";
+    _ops[andK] = "and";
+    _ops[eqK] = "==";
+    _ops[ltK] = "<";
+    _ops[gtK] = ">";
+    _ops[leqK] = "<=";
+    _ops[geqK] = ">=";
+    _ops[neqK] = "!=";
+    _ops[plusK] = "+";
+    _ops[minusK] = "-";
+    _ops[timesK] = "*";
+    _ops[divK] = "/";
+    _ops[modK] = "%";
+    _defaults[intK] = "0";
+    _defaults[boolK] = "False";
+    _defaults[stringK] = "''";
+}
+
 void indent()
 {
     _indent += 4;
@@ -40,6 +63,7 @@ void codeID(ID*);
 void codeSERVICE(SERVICE *service, FILE *_out)
 {
       out = _out;
+      init_ops_and_defaults();
       print_header(service->name);
       codeHTML(service->htmls);
       codeFUNCTION(service->functions);
@@ -53,7 +77,8 @@ void print_header(char *service)
 
     fprintf(out, "import cgitb\ncgitb.enable()\n\n");
 
-    fprintf(out, "g = runtime.Store('%s_globals.pck')\n\n", service);
+    fprintf(out, "g = runtime.Store('%s_globals.pck')\n", service);
+    fprintf(out, "locals = {}\n\n");
 }
 
 void codeHTML(HTML *html)
@@ -261,30 +286,25 @@ void codeSTATEMENT(STATEMENT *s)
 
 void codeEXP(EXP *e)
 {
-    char* _ops[30];
     if (e == NULL)
         return;
     codeEXP(e->next);
     if (e->next != NULL)
         fprintf(out, ", ");
 
-    _ops[orK] = "or";
-    _ops[andK] = "and";
-    _ops[eqK] = "==";
-    _ops[ltK] = "<";
-    _ops[gtK] = ">";
-    _ops[leqK] = "<=";
-    _ops[geqK] = ">=";
-    _ops[neqK] = "!=";
-    _ops[plusK] = "+";
-    _ops[minusK] = "-";
-    _ops[timesK] = "*";
-    _ops[divK] = "/";
-    _ops[modK] = "%";
 
     switch (e->kind)
     {
         case idK:
+            if (e->val.idE.idsym->kind == variableSym)
+            {
+                VARIABLE *v = e->val.idE.idsym->val.variableS;
+                fprintf(out, "%s.get('%s_%d', %s)", 
+                             v->global ? "g" : "locals",
+                             v->name, v->id, _defaults[v->type->kind]);
+            }
+            else
+                fprintf(out, "%s", e->val.idE.idsym->val.argumentS->name);
             break;
         case idtupleK:
             break;

@@ -111,6 +111,8 @@ typedef struct ID
 typedef struct VARIABLE
 {
     int lineno;
+    int id;
+    int global;
     char *name;
     struct TYPE *type;
     struct VARIABLE *next;

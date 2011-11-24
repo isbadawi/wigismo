@@ -219,6 +219,8 @@ int weedSESSION_END(SESSION *s)
 
 int weedSTATEMENTS_END(STATEMENT *s)
 {
+    if (s == NULL)
+        return 0;
     if (s->kind == exitK)
         return 1;
     else if (s->kind == blockK)

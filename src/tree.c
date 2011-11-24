@@ -5,6 +5,15 @@
 #include<string.h>
 
 extern int lineno;
+static int id = 1;
+
+void mark_global(VARIABLE *v)
+{
+    if (v == NULL)
+        return;
+    mark_global(v->next);
+    v->global = 1;
+}
 
 SERVICE *makeSERVICE(HTML *htmls, SCHEMA *schemas, 
                      VARIABLE *variables, FUNCTION *functions,
@@ -14,6 +23,7 @@ SERVICE *makeSERVICE(HTML *htmls, SCHEMA *schemas,
     s->htmls = htmls;
     s->schemas = schemas;
     s->variables = variables;
+    mark_global(s->variables);
     s->functions = functions;
     s->sessions = sessions;
     return s;
@@ -135,6 +145,8 @@ SCHEMA *makeSCHEMA(char *name, VARIABLE *variables)
 VARIABLE *makeVARIABLE(TYPE *type, char *name)
 {
     VARIABLE *v = NEW(VARIABLE);
+    v->id = id++;
+    v->global = 0;
     v->lineno = lineno;
     v->name = name;
     v->type = type;
