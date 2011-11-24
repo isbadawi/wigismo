@@ -82,7 +82,7 @@ void print_header(char *service)
     fprintf(out, "import cgitb\ncgitb.enable()\n\n");
 
     fprintf(out, "g = runtime.Store('%s_globals.pck')\n", service);
-    fprintf(out, "locals = {}\n\n");
+    fprintf(out, "l = {}\n\n");
 }
 
 void codeHTML(HTML *html)
@@ -213,7 +213,9 @@ void codeFUNCTION(FUNCTION *f)
     fprintf(out, "def %s(", f->name);
     codeARGUMENT(f->arguments);
     fprintf(out, "):\n");
+    indent();
     codeSTATEMENT(f->statements);
+    dedent();
 }
 
 void codeARGUMENT(ARGUMENT *a)
@@ -243,7 +245,7 @@ void codeSTATEMENT(STATEMENT *s)
     if (s == NULL)
         return;
 
-    if (s->kind != sequenceK)
+    if (s->kind != sequenceK && s->kind != blockK)
         print_indent();
 
     switch (s->kind)
@@ -270,10 +272,7 @@ void codeSTATEMENT(STATEMENT *s)
             codeEXP(s->val.returnS);
             break;
         case blockK:
-        /* FIXME scoping */
-            indent();
             codeSTATEMENT(s->val.blockS.body);
-            dedent();
             break;
         case ifK:
             fprintf(out, "if ");
@@ -324,7 +323,7 @@ void codeEXP(EXP *e)
             {
                 VARIABLE *v = e->val.idE.idsym->val.variableS;
                 fprintf(out, "%s.get('%s_%d', %s)", 
-                             v->global ? "g" : "locals",
+                             v->global ? "g" : "l",
                              v->name, v->id, _defaults[v->type->kind]);
             }
             else
@@ -335,7 +334,7 @@ void codeEXP(EXP *e)
             {
                 VARIABLE *v = e->val.idtupleE.idsym->val.variableS;
                 fprintf(out, "%s.get('%s_%d', %s).get('%s', %s)", 
-                             v->global ? "g" : "locals",
+                             v->global ? "g" : "l",
                              v->name, v->id, _defaults[v->type->kind],
                              e->val.idtupleE.field, 
                              _defaults[typeSchemaVar(e->val.idtupleE.schema, e->val.idtupleE.field)->kind]);  
@@ -353,7 +352,7 @@ void codeEXP(EXP *e)
                 if (v->global)
                     fprintf(out, "g.set('%s_%d', ", v->name, v->id);
                 else
-                    fprintf(out, "runtime.set(locals, '%s_%d', ", v->name,v->id);
+                    fprintf(out, "runtime.set(l, '%s_%d', ", v->name,v->id);
                 codeEXP(e->val.assignE.right);
                 fprintf(out, ")");
             }
@@ -371,7 +370,7 @@ void codeEXP(EXP *e)
                     fprintf(out, "g.set_key('%s_%d', '%s', ",
                                  v->name, v->id, e->val.assigntupleE.field);
                 else
-                    fprintf(out, "runtime.set_key(locals, '%s_%d', '%s', ",
+                    fprintf(out, "runtime.set_key(l, '%s_%d', '%s', ",
                                  v->name, v->id, e->val.assigntupleE.field);
                 codeEXP(e->val.assigntupleE.right);
                 fprintf(out, ")");
@@ -478,6 +477,8 @@ void codeSESSION(SESSION *s)
     codeSESSION(s->next);
 
     /* FIXME this is just temporary */
-    fprintf(out, "def session_%s():\n", s->name);
+    fprintf(out, "def session_%s(sessionid):\n", s->name);
+    indent();
     codeSTATEMENT(s->statements);
+    dedent();
 }
