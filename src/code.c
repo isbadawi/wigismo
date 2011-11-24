@@ -136,6 +136,10 @@ void codeHTMLBODY(HTMLBODY *htmlbody)
                     break;
                 if (htmlbody->val.whateverH[i] == '\n')
                     fprintf(out, "%s", "\\n");
+                else if (htmlbody->val.whateverH[i] == '\\')
+                    fprintf(out, "%s", "\\\\");
+                else if (htmlbody->val.whateverH[i] == '\'')
+                    fprintf(out, "%s", "\\\'");
                 else
                     fprintf(out, "%c", htmlbody->val.whateverH[i]);
             }
