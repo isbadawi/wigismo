@@ -61,6 +61,7 @@ void codeSTATEMENT(STATEMENT*);
 void codeEXP(EXP*);
 void codeFIELDVALUE(FIELDVALUE*);
 void codeID(ID*);
+void codeSESSION(SESSION*);
 
 void codeSERVICE(SERVICE *service, FILE *_out)
 {
@@ -69,6 +70,7 @@ void codeSERVICE(SERVICE *service, FILE *_out)
       print_header(service->name);
       codeHTML(service->htmls);
       codeFUNCTION(service->functions);
+      codeSESSION(service->sessions);
 }
 
 void print_header(char *service)
@@ -223,6 +225,19 @@ void codeARGUMENT(ARGUMENT *a)
     fprintf(out, "%s", a->name);
 }
 
+void codePLUG(PLUG *p)
+{
+    if (p == NULL)
+        return;
+    codePLUG(p->next);
+
+    if (p->next != NULL)
+        fprintf(out, ", ");
+
+    fprintf(out, "%s=", p->name);
+    codeEXP(p->exp);
+}
+
 void codeSTATEMENT(STATEMENT *s)
 {
     if (s == NULL)
@@ -241,7 +256,14 @@ void codeSTATEMENT(STATEMENT *s)
             codeSTATEMENT(s->val.sequenceS.second);
             break;
         case showK:
+            break;
         case exitK:
+            fprintf(out, "runtime.output(sessionid, lambda: output_%s(",
+                         s->val.exitS.document->name);
+            codePLUG(s->val.exitS.document->plugs);
+            fprintf(out, "), exit=True)\n");
+            print_indent();
+            fprintf(out, "sys.exit(0)");
             break;
         case returnK:
             fprintf(out, "return ");
@@ -447,4 +469,15 @@ void codeID(ID *id)
     if (id->next != NULL)
         fprintf(out, ", ");
     fprintf(out, "'%s'", id->name);
+}
+
+void codeSESSION(SESSION *s)
+{
+    if (s == NULL)
+        return;
+    codeSESSION(s->next);
+
+    /* FIXME this is just temporary */
+    fprintf(out, "def session_%s():\n", s->name);
+    codeSTATEMENT(s->statements);
 }
