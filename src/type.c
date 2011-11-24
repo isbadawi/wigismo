@@ -24,7 +24,6 @@ int tupleContainsId(ID *id, SCHEMA *s);
 int verifyTupleCombine(EXP *left, EXP *right);
 int compatibleTuples(VARIABLE *l, SCHEMA *r);
 TYPE *typeVar(SYMBOL *s);
-TYPE *typeSchemaVar(SCHEMA *, char *);
 
 
 TYPE *intTYPE, *boolTYPE, *stringTYPE;

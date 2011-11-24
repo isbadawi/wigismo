@@ -65,6 +65,18 @@ class Store(object):
         finally:
             f.close()
 
+    def set_key(self, name, key, value):
+       try:
+            f = open(self.service, 'r')
+            d = pickle.Unpickler(f).load()
+            d[name][key] = value
+            f.close()
+            f = open(self.service, 'w')
+            pickle.Pickler(f).dump(d)
+            return value
+        finally:
+            f.close()  
+
 def tuple_keep(t, *ids):
     result = {}
     for key in t:
@@ -86,4 +98,8 @@ def tuple_combine(t1, t2):
 
 def set(d, key, val):
     d[key] = val
+    return val
+
+def set_key(d, name, key, val):
+    d[name][key] = val
     return val

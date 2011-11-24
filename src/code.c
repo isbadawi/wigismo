@@ -1,5 +1,6 @@
 #include "code.h"
 #include "tree.h"
+#include "type.h"
 #include <stdio.h>
 #include<string.h>
 
@@ -28,6 +29,7 @@ void init_ops_and_defaults(void)
     _defaults[intK] = "0";
     _defaults[boolK] = "False";
     _defaults[stringK] = "''";
+    _defaults[tupleK] = "{}";
 }
 
 void indent()
@@ -307,10 +309,56 @@ void codeEXP(EXP *e)
                 fprintf(out, "%s", e->val.idE.idsym->val.argumentS->name);
             break;
         case idtupleK:
+            if (e->val.idtupleE.idsym->kind == variableSym)
+            {
+                VARIABLE *v = e->val.idtupleE.idsym->val.variableS;
+                fprintf(out, "%s.get('%s_%d', %s).get('%s', %s)", 
+                             v->global ? "g" : "locals",
+                             v->name, v->id, _defaults[v->type->kind],
+                             e->val.idtupleE.field, 
+                             _defaults[typeSchemaVar(e->val.idtupleE.schema, e->val.idtupleE.field)->kind]);  
+            }
+            else
+                fprintf(out, "%s.get('%s', %s)", 
+                             e->val.idtupleE.idsym->val.argumentS->name, 
+                             e->val.idtupleE.field,
+                            _defaults[typeSchemaVar(e->val.idtupleE.schema, e->val.idtupleE.field)->kind]);
             break;
         case assignK:
+            if (e->val.assignE.leftsym->kind == variableSym)
+            {
+                VARIABLE *v = e->val.assignE.leftsym->val.variableS;
+                if (v->global)
+                    fprintf(out, "g.set('%s_%d', ", v->name, v->id);
+                else
+                    fprintf(out, "runtime.set(locals, '%s_%d', ", v->name,v->id);
+                codeEXP(e->val.assignE.right);
+                fprintf(out, ")");
+            }
+            else
+            {
+                fprintf(out, "%s = ", e->val.assignE.leftsym->val.argumentS->name);
+                codeEXP(e->val.assignE.right);
+            }
             break;
         case assigntupleK:
+            if (e->val.assigntupleE.leftsym->kind == variableSym)
+            {
+                VARIABLE *v = e->val.assigntupleE.leftsym->val.variableS;
+                if (v->global)
+                    fprintf(out, "g.set_key('%s_%d', '%s', ",
+                                 v->name, v->id, e->val.assigntupleE.field);
+                else
+                    fprintf(out, "runtime.set_key(locals, '%s_%d', '%s', ",
+                                 v->name, v->id, e->val.assigntupleE.field);
+                codeEXP(e->val.assigntupleE.right);
+                fprintf(out, ")");
+            }
+            else
+            {
+                fprintf(out, "%s['%s'] = ", e->val.assigntupleE.name, e->val.assigntupleE.field);
+                codeEXP(e->val.assigntupleE.right);
+            }
             break;
         case orK:
         case andK:

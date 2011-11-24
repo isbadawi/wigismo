@@ -4,5 +4,6 @@
 #include "tree.h"
 
 void typeSERVICE(SERVICE *);
+TYPE* typeSchemaVar(SCHEMA*, char*);
 
 #endif

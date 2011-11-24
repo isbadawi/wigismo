@@ -355,6 +355,7 @@ void symTUPLE(EXP *e, SymbolTable *table)
             reportStrError("schema has no field %s", e->val.idtupleE.field, e->lineno);
         e->val.idtupleE.schema = schema;
     }         
+    e->val.idtupleE.idsym = s;
 }
 
 void symEXP(EXP *e, SymbolTable *table)
@@ -396,6 +397,7 @@ void symEXP(EXP *e, SymbolTable *table)
                 if (!schema_has_var(schema, e->val.assigntupleE.field))
                     reportStrError("schema has no field %s", e->val.assigntupleE.field, e->lineno);
                 e->val.assigntupleE.schema = schema;
+                e->val.assigntupleE.leftsym = s;
                 
             }
             else if (s->kind == argumentSym)
@@ -408,6 +410,7 @@ void symEXP(EXP *e, SymbolTable *table)
                 if (!schema_has_var(schema, e->val.assigntupleE.field))
                     reportStrError("schema has no field %s", e->val.assigntupleE.field, e->lineno);
                 e->val.assigntupleE.schema = schema;
+                e->val.assigntupleE.leftsym = s;
             }                     
             symEXP(e->val.assigntupleE.right, table);
             break;
