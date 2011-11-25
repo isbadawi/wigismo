@@ -244,6 +244,62 @@ void codePLUG(PLUG *p)
     codeEXP(p->exp);
 }
 
+int has_show(STATEMENT *s)
+{
+    if (s == NULL);
+        return 0;
+
+    switch (s->kind)
+    {
+        case skipK:
+        case exitK:
+        case returnK:
+        case expK:
+        case ifK:
+        case ifelseK:
+        case whileK:
+            return 0;
+        case blockK:
+            return has_show(s->val.blockS.body);
+        case sequenceK:
+            return has_show(s->val.sequenceS.first) ||
+                   has_show(s->val.sequenceS.second);
+        case showK:
+            return 1;
+    }
+
+}
+
+void find_shows(STATEMENT *s)
+{
+    if (s == NULL)
+        return;
+    switch (s->kind)
+    {
+        case skipK:
+        case showK:
+        case exitK:
+        case expK:
+        case returnK:
+        case blockK:
+            return;
+        case ifK:
+            s->val.ifS.has_show = has_show(s->val.ifS.body);
+            find_shows(s->val.ifS.body);
+            break;
+        case ifelseK:
+            s->val.ifelseS.then_has_show = has_show(s->val.ifelseS.thenpart);
+            s->val.ifelseS.else_has_show = has_show(s->val.ifelseS.elsepart);
+            find_shows(s->val.ifelseS.thenpart);
+            find_shows(s->val.ifelseS.elsepart);
+            break;
+        case whileK:
+            s->val.whileS.has_show = has_show(s->val.whileS.body);
+            find_shows(s->val.whileS.body);
+            break;
+    }
+}
+
 void codeSTATEMENT(STATEMENT *s)
 {
     if (s == NULL)
@@ -279,31 +335,41 @@ void codeSTATEMENT(STATEMENT *s)
             codeSTATEMENT(s->val.blockS.body);
             break;
         case ifK:
-            fprintf(out, "if ");
-            codeEXP(s->val.ifS.condition);
-            fprintf(out, ":\n");
-            indent();
-            codeSTATEMENT(s->val.ifS.body);
-            dedent();
+            if (s->val.ifS.has_show == 0)
+            {
+                fprintf(out, "if ");
+                codeEXP(s->val.ifS.condition);
+                fprintf(out, ":\n");
+                indent();
+                codeSTATEMENT(s->val.ifS.body);
+                dedent();
+            }
             break;
         case ifelseK:
-            fprintf(out, "if ");
-            codeEXP(s->val.ifelseS.condition);
-            fprintf(out, ":\n");
-            indent();
-            codeSTATEMENT(s->val.ifelseS.thenpart);
-            fprintf(out, "else:\n");
-            codeSTATEMENT(s->val.ifelseS.elsepart);
-            dedent();
+            if (s->val.ifelseS.then_has_show == 0 &&
+                s->val.ifelseS.else_has_show == 0)
+            {
+                fprintf(out, "if ");
+                codeEXP(s->val.ifelseS.condition);
+                fprintf(out, ":\n");
+                indent();
+                codeSTATEMENT(s->val.ifelseS.thenpart);
+                fprintf(out, "else:\n");
+                codeSTATEMENT(s->val.ifelseS.elsepart);
+                dedent();
+            }
             break;
         case whileK:
-            fprintf(out, "while ");
-            codeEXP(s->val.whileS.condition);
-            fprintf(out, ":\n");
-            indent();
-            codeSTATEMENT(s->val.whileS.body);
-            dedent();
-            break;
+            if (s->val.whileS.has_show == 0)
+            {
+                fprintf(out, "while ");
+                codeEXP(s->val.whileS.condition);
+                fprintf(out, ":\n");
+                indent();
+                codeSTATEMENT(s->val.whileS.body);
+                dedent();
+                break;
+            }
         case expK:
             codeEXP(s->val.expS);
             break;

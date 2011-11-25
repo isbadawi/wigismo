@@ -322,6 +322,7 @@ STATEMENT *makeSTATEMENTif(EXP *exp, STATEMENT *body)
     s->kind = ifK;
     s->val.ifS.body = body;
     s->val.ifS.condition = exp;
+    s->val.ifS.has_show = 0;
     return s;
 }
 
@@ -333,6 +334,8 @@ STATEMENT *makeSTATEMENTifelse(EXP *exp, STATEMENT *then, STATEMENT *elsepart)
     s->val.ifelseS.condition = exp;
     s->val.ifelseS.thenpart = then;
     s->val.ifelseS.elsepart = elsepart;
+    s->val.ifelseS.then_has_show = 0;
+    s->val.ifelseS.else_has_show = 0;
     return s;
 }
 
@@ -343,6 +346,7 @@ STATEMENT *makeSTATEMENTwhile(EXP *exp, STATEMENT *body)
     s->kind = whileK;
     s->val.whileS.condition = exp;
     s->val.whileS.body = body;
+    s->val.whileS.has_show = 0;
     return s;
 }
 
