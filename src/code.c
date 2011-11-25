@@ -6,6 +6,8 @@
 
 FILE *out;
 static int _indent = 0;
+static int _id = 0;
+static char *session = NULL;
 
 
 static char* _ops[30];
@@ -220,6 +222,7 @@ void codeFUNCTION(FUNCTION *f)
     indent();
     codeSTATEMENT(f->statements);
     dedent();
+    fprintf(out, "\n");
 }
 
 void codeARGUMENT(ARGUMENT *a)
@@ -281,7 +284,12 @@ void find_shows(STATEMENT *s)
         case exitK:
         case expK:
         case returnK:
+        case sequenceK:
+            find_shows(s->val.sequenceS.first);
+            find_shows(s->val.sequenceS.second);
+            break;
         case blockK:
+            find_shows(s->val.blockS.body);
             return;
         case ifK:
             s->val.ifS.has_show = has_show(s->val.ifS.body);
@@ -312,12 +320,30 @@ void codeSTATEMENT(STATEMENT *s)
     {
         case skipK:
             fprintf(out, "pass");
+            fprintf(out, "\n");
             break;
         case sequenceK:
             codeSTATEMENT(s->val.sequenceS.first);
+         /*   fprintf(out, "\n"); */
             codeSTATEMENT(s->val.sequenceS.second);
             break;
         case showK:
+            fprintf(out, "runtime.output(sessionid, lambda: output_%s(",
+                         s->val.exitS.document->name);
+            codePLUG(s->val.exitS.document->plugs);
+            fprintf(out, "))\n");
+            print_indent();
+            fprintf(out, "state = runtime.Store(sessionid)\n");
+            print_indent();
+            fprintf(out, "l.set('locals', locals)\n");
+            print_indent();
+            int id = _id++;
+            fprintf(out, "l.set('start', 'session_%s_%d')\n", session, id);
+            print_indent();
+            fprintf(out, "sys.exit(0)\n\n");
+            _indent = 0;
+            fprintf(out, "def session_%s_%d(sessionid):\n", session, id);
+            indent();
             break;
         case exitK:
             fprintf(out, "runtime.output(sessionid, lambda: output_%s(",
@@ -326,24 +352,24 @@ void codeSTATEMENT(STATEMENT *s)
             fprintf(out, "), exit=True)\n");
             print_indent();
             fprintf(out, "sys.exit(0)");
+            fprintf(out, "\n");
             break;
         case returnK:
             fprintf(out, "return ");
             codeEXP(s->val.returnS);
+            fprintf(out, "\n");
             break;
         case blockK:
             codeSTATEMENT(s->val.blockS.body);
             break;
         case ifK:
-            if (s->val.ifS.has_show == 0)
-            {
-                fprintf(out, "if ");
-                codeEXP(s->val.ifS.condition);
-                fprintf(out, ":\n");
-                indent();
-                codeSTATEMENT(s->val.ifS.body);
+            fprintf(out, "if ");
+            codeEXP(s->val.ifS.condition);
+            fprintf(out, ":\n");
+            indent();
+            codeSTATEMENT(s->val.ifS.body);
+            if (s->val.ifS.has_show)
                 dedent();
-            }
             break;
         case ifelseK:
             if (s->val.ifelseS.then_has_show == 0 &&
@@ -372,9 +398,9 @@ void codeSTATEMENT(STATEMENT *s)
             }
         case expK:
             codeEXP(s->val.expS);
+            fprintf(out, "\n");
             break;
     }
-    fprintf(out, "\n");
 }
 
 void codeEXP(EXP *e)
@@ -547,8 +573,9 @@ void codeSESSION(SESSION *s)
     codeSESSION(s->next);
 
     /* FIXME this is just temporary */
-    fprintf(out, "def session_%s(sessionid):\n", s->name);
+    fprintf(out, "def session_%s_%d(sessionid):\n", s->name, _id++);
     indent();
+    session = s->name;
     codeSTATEMENT(s->statements);
     dedent();
 }
