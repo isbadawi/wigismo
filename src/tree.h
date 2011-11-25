@@ -148,10 +148,14 @@ typedef struct STATEMENT
                 struct STATEMENT *second;} sequenceS;
         struct {struct EXP *condition;
                 struct STATEMENT *body;
-                int has_show; } ifS;
+                int has_show; 
+                int afterid;
+                } ifS;
         struct {struct EXP *condition;
                 struct STATEMENT *thenpart;
                 struct STATEMENT *elsepart;
+                int elseid;
+                int afterelseid;
                 int then_has_show;
                 int else_has_show;} ifelseS;
         struct {struct STATEMENT *body;
@@ -159,6 +163,8 @@ typedef struct STATEMENT
                 struct SymbolTable *table;} blockS;
         struct {struct EXP *condition;
                 struct STATEMENT *body;
+                int whileid;
+                int afterwhileid;
                 int has_show; } whileS;
         struct {struct DOCUMENT *document;
                 struct RECEIVE *receives;} showS;

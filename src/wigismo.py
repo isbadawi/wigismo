@@ -74,7 +74,7 @@ class Store(object):
             f = open(self.service, 'w')
             pickle.Pickler(f).dump(d)
             return value
-        finally:
+       finally:
             f.close()  
 
 def tuple_keep(t, *ids):

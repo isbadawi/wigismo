@@ -8,8 +8,8 @@ all:
 	make code
 	make -s check
 
-code: y.tab.o lex.yy.o main.o tree.h tree.o memory.h memory.o error.h error.o pretty.o pretty.h weed.o weed.h symbol.o symbol.h type.o type.h code.h code.o util.h util.o chash/chash.o
-	$(CC) lex.yy.o y.tab.o tree.o memory.o error.o pretty.o weed.o symbol.o type.o code.o util.o chash/chash.o main.o -o wigismo -lfl
+code: y.tab.o lex.yy.o main.o tree.h tree.o memory.h memory.o error.h error.o pretty.o pretty.h weed.o weed.h symbol.o symbol.h type.o type.h code.h code.o util.h util.o resource.h resource.o chash/chash.o
+	$(CC) lex.yy.o y.tab.o tree.o memory.o error.o pretty.o weed.o symbol.o type.o code.o util.o resource.o chash/chash.o main.o -o wigismo -lfl
 
 chash/chash.o:
 	cd chash; make

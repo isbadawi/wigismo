@@ -1,6 +1,7 @@
 #include "code.h"
 #include "tree.h"
 #include "type.h"
+#include "resource.h"
 #include <stdio.h>
 #include<string.h>
 
@@ -52,6 +53,7 @@ void print_indent()
 }
 
 void print_header(char*);
+void print_footer(SESSION*);
 void codeHTML(HTML*);
 ID *gaps_in(HTMLBODY*);
 void print_gaps(ID*);
@@ -73,17 +75,50 @@ void codeSERVICE(SERVICE *service, FILE *_out)
       codeHTML(service->htmls);
       codeFUNCTION(service->functions);
       codeSESSION(service->sessions);
+      print_footer(service->sessions);
+}
+
+void print_footer(SESSION *s)
+{
+    SESSION* t = s;
+    fprintf(out, "def wigismo_restart():\n");
+    fprintf(out, "    state = wigismo.Store(wigismo.sessionid)\n");
+    fprintf(out, "    l.update(state.get('locals'))\n");
+    fprintf(out, "    globals()[state.get('start')](wigismo.sessionid)\n\n");
+
+    while (t != NULL)
+    {
+        fprintf(out, "if wigismo.sessionid == '%s':\n", s->name);
+        fprintf(out, "    session_%s('%s$' + wigismo.random_string(20))\n", s->name, s->name);
+        fprintf(out, "    sys.exit(0)\n");
+        fprintf(out, "if wigismo.sessionid.startswith('%s$'):\n", s->name);
+        fprintf(out, "    wigismo_restart();\n");
+        fprintf(out, "    sys.exit(0)\n");
+        t = t->next;
+    }
+    fprintf(out, "print 'Content-type: text/html'\n");
+    fprintf(out, "print\n");
+    fprintf(out, "print '<title>Illegal request</title>'\n");
+    fprintf(out, "print '<p>Try one of these:</p>'\n");
+    fprintf(out, "print '<ul>'\n");
+    while (s != NULL)
+    {
+        fprintf(out, "print '<li><a href=\"?%s\">%s</a></li>'\n", s->name, s->name);
+        s = s->next;
+    }
+    fprintf(out, "print '</ul>'\n");
+    fprintf(out, "sys.exit(0)\n");
 }
 
 void print_header(char *service)
 {
     fprintf(out, "#!/usr/bin/python\n"
                  "import sys\n"
-                 "import runtime\n");
+                 "import wigismo\n");
 
     fprintf(out, "import cgitb\ncgitb.enable()\n\n");
 
-    fprintf(out, "g = runtime.Store('%s_globals.pck')\n", service);
+    fprintf(out, "g = wigismo.Store('%s_globals.pck')\n", service);
     fprintf(out, "l = {}\n\n");
 }
 
@@ -324,35 +359,34 @@ void codeSTATEMENT(STATEMENT *s)
             break;
         case sequenceK:
             codeSTATEMENT(s->val.sequenceS.first);
-         /*   fprintf(out, "\n"); */
             codeSTATEMENT(s->val.sequenceS.second);
             break;
         case showK:
-            fprintf(out, "runtime.output(sessionid, lambda: output_%s(",
+            fprintf(out, "wigismo.output(sessionid, lambda: output_%s(",
                          s->val.exitS.document->name);
             codePLUG(s->val.exitS.document->plugs);
             fprintf(out, "))\n");
             print_indent();
-            fprintf(out, "state = runtime.Store(sessionid)\n");
+            fprintf(out, "state = wigismo.Store(sessionid)\n");
             print_indent();
             fprintf(out, "l.set('locals', locals)\n");
             print_indent();
             int id = _id++;
-            fprintf(out, "l.set('start', 'session_%s_%d')\n", session, id);
+            fprintf(out, "l.set('start', 'session_%s_show_%d')\n", session, id);
             print_indent();
             fprintf(out, "sys.exit(0)\n\n");
             _indent = 0;
-            fprintf(out, "def session_%s_%d(sessionid):\n", session, id);
+            fprintf(out, "def session_%s_show_%d(sessionid):\n", session, id);
             indent();
             break;
         case exitK:
-            fprintf(out, "runtime.output(sessionid, lambda: output_%s(",
+            fprintf(out, "wigismo.output(sessionid, lambda: output_%s(",
                          s->val.exitS.document->name);
             codePLUG(s->val.exitS.document->plugs);
             fprintf(out, "), exit=True)\n");
             print_indent();
             fprintf(out, "sys.exit(0)");
-            fprintf(out, "\n");
+            fprintf(out, "\n\n");
             break;
         case returnK:
             fprintf(out, "return ");
@@ -363,13 +397,31 @@ void codeSTATEMENT(STATEMENT *s)
             codeSTATEMENT(s->val.blockS.body);
             break;
         case ifK:
-            fprintf(out, "if ");
-            codeEXP(s->val.ifS.condition);
-            fprintf(out, ":\n");
-            indent();
-            codeSTATEMENT(s->val.ifS.body);
             if (s->val.ifS.has_show)
+            {
+                fprintf(out, "if ");
+                codeEXP(s->val.ifS.condition);
+                fprintf(out, ":\n");
+                indent();
+                codeSTATEMENT(s->val.ifS.body);
+            }
+            else
+            {
+                int id = s->val.ifS.afterid;
+                fprintf(out, "if not (");
+                codeEXP(s->val.ifS.condition);
+                fprintf(out, "):\n");
+                indent();
+                print_indent();
+                fprintf(out, "session_%s_%d(sessionid)\n", session, id);
                 dedent();
+                codeSTATEMENT(s->val.ifS.body);
+                print_indent();
+                fprintf(out, "session_%s_%d(sessionid)\n\n", session, id);
+                _indent = 0;
+                fprintf(out, "def session_%s_%d(sessionid):\n", session, id);
+                indent();
+            }
             break;
         case ifelseK:
             if (s->val.ifelseS.then_has_show == 0 &&
@@ -448,7 +500,7 @@ void codeEXP(EXP *e)
                 if (v->global)
                     fprintf(out, "g.set('%s_%d', ", v->name, v->id);
                 else
-                    fprintf(out, "runtime.set(l, '%s_%d', ", v->name,v->id);
+                    fprintf(out, "wigismo.set(l, '%s_%d', ", v->name,v->id);
                 codeEXP(e->val.assignE.right);
                 fprintf(out, ")");
             }
@@ -466,7 +518,7 @@ void codeEXP(EXP *e)
                     fprintf(out, "g.set_key('%s_%d', '%s', ",
                                  v->name, v->id, e->val.assigntupleE.field);
                 else
-                    fprintf(out, "runtime.set_key(l, '%s_%d', '%s', ",
+                    fprintf(out, "wigismo.set_key(l, '%s_%d', '%s', ",
                                  v->name, v->id, e->val.assigntupleE.field);
                 codeEXP(e->val.assigntupleE.right);
                 fprintf(out, ")");
@@ -502,21 +554,21 @@ void codeEXP(EXP *e)
             fprintf(out, "-");
             codeEXP(e->val.unaryE);
         case combineK:
-            fprintf(out, "runtime.tuple_combine(");
+            fprintf(out, "wigismo.tuple_combine(");
             codeEXP(e->val.binaryE.left);
             fprintf(out, ", ");
             codeEXP(e->val.binaryE.right);
             fprintf(out, ")");
             break;
         case keepK:
-            fprintf(out, "runtime.tuple_keep(");
+            fprintf(out, "wigismo.tuple_keep(");
             codeEXP(e->val.keepE.left);
             fprintf(out, ", ");
             codeID(e->val.keepE.ids);
             fprintf(out, ")");
             break;
         case discardK:
-            fprintf(out, "runtime.tuple_discard(");
+            fprintf(out, "wigismo.tuple_discard(");
             codeEXP(e->val.discardE.left);
             fprintf(out, ", ");
             codeID(e->val.discardE.ids);
@@ -572,10 +624,10 @@ void codeSESSION(SESSION *s)
         return;
     codeSESSION(s->next);
 
-    /* FIXME this is just temporary */
-    fprintf(out, "def session_%s_%d(sessionid):\n", s->name, _id++);
+    fprintf(out, "def session_%s(sessionid):\n", s->name);
     indent();
     session = s->name;
+    resSTATEMENT(s->statements);
     codeSTATEMENT(s->statements);
     dedent();
 }
