@@ -409,7 +409,7 @@ void codeSTATEMENT(STATEMENT *s)
             print_indent();
             fprintf(out, "state = wigismo.Store(sessionid)\n");
             print_indent();
-            fprintf(out, "state.set('locals', locals)\n");
+            fprintf(out, "state.set('locals', l)\n");
             print_indent();
             int id = _id++;
             fprintf(out, "state.set('start', 'session_%s_show_%d')\n", session, id);
@@ -488,8 +488,38 @@ void codeSTATEMENT(STATEMENT *s)
                 indent();
                 codeSTATEMENT(s->val.whileS.body);
                 dedent();
-                break;
             }
+            else
+            {
+                int id = s->val.whileS.whileid;
+                int afterid = s->val.whileS.afterwhileid;
+                fprintf(out, "session_%s_%d(sessionid)\n\n", session, id);
+                _indent = 0;
+                fprintf(out, "def session_%s_%d(sessionid):\n", session, id);
+                indent(); print_indent();
+                fprintf(out, "if not (");
+                codeEXP(s->val.whileS.condition);
+                fprintf(out, "):\n");
+                indent(); print_indent();
+                fprintf(out, "session_%s_%d(sessionid)\n", session, afterid);
+                dedent();
+                codeSTATEMENT(s->val.whileS.body);
+                print_indent();
+                fprintf(out, "if ");
+                codeEXP(s->val.whileS.condition);
+                fprintf(out, ":\n");
+                indent(); print_indent();
+                fprintf(out, "session_%s_%d(sessionid)\n", session, id);
+                dedent();
+                print_indent();
+                fprintf(out, "else:\n");
+                indent(); print_indent();
+                fprintf(out, "session_%s_%d(sessionid)\n\n", session, afterid);
+                _indent = 0;
+                fprintf(out, "def session_%s_%d(sessionid):\n", session, afterid);
+                indent();  
+            }
+            break;
         case expK:
             codeEXP(s->val.expS);
             fprintf(out, "\n");
