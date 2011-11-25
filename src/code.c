@@ -284,7 +284,7 @@ void codePLUG(PLUG *p)
 
 int has_show(STATEMENT *s)
 {
-    if (s == NULL);
+    if (s == NULL)
         return 0;
 
     switch (s->kind)
@@ -293,10 +293,14 @@ int has_show(STATEMENT *s)
         case exitK:
         case returnK:
         case expK:
-        case ifK:
-        case ifelseK:
-        case whileK:
             return 0;
+        case ifK:
+            return has_show(s->val.ifS.body);
+        case ifelseK:
+            return has_show(s->val.ifelseS.thenpart) ||
+                   has_show(s->val.ifelseS.elsepart);
+        case whileK:
+            return has_show(s->val.whileS.body);
         case blockK:
             return has_show(s->val.blockS.body);
         case sequenceK:
@@ -319,13 +323,14 @@ void find_shows(STATEMENT *s)
         case exitK:
         case expK:
         case returnK:
+            break;
         case sequenceK:
             find_shows(s->val.sequenceS.first);
             find_shows(s->val.sequenceS.second);
             break;
         case blockK:
             find_shows(s->val.blockS.body);
-            return;
+            break;
         case ifK:
             s->val.ifS.has_show = has_show(s->val.ifS.body);
             find_shows(s->val.ifS.body);
@@ -397,13 +402,14 @@ void codeSTATEMENT(STATEMENT *s)
             codeSTATEMENT(s->val.blockS.body);
             break;
         case ifK:
-            if (s->val.ifS.has_show)
+            if (s->val.ifS.has_show == 0)
             {
                 fprintf(out, "if ");
                 codeEXP(s->val.ifS.condition);
                 fprintf(out, ":\n");
                 indent();
                 codeSTATEMENT(s->val.ifS.body);
+                dedent();
             }
             else
             {
@@ -627,7 +633,8 @@ void codeSESSION(SESSION *s)
     fprintf(out, "def session_%s(sessionid):\n", s->name);
     indent();
     session = s->name;
-    resSTATEMENT(s->statements);
+    resSESSION(s);
+    find_shows(s->statements);
     codeSTATEMENT(s->statements);
     dedent();
 }
