@@ -13,8 +13,9 @@ static char *session = NULL;
 
 static char* _ops[30];
 static char* _defaults[10];
+static char* _types[10];
 
-void init_ops_and_defaults(void)
+void init_strings(void)
 {
     _ops[orK] = "or";
     _ops[andK] = "and";
@@ -33,6 +34,9 @@ void init_ops_and_defaults(void)
     _defaults[boolK] = "False";
     _defaults[stringK] = "''";
     _defaults[tupleK] = "{}";
+    _types[intK] = "int";
+    _types[boolK] = "bool";
+    _types[stringK] = "str";
 }
 
 void indent()
@@ -70,7 +74,7 @@ void codeSESSION(SESSION*);
 void codeSERVICE(SERVICE *service, FILE *_out)
 {
       out = _out;
-      init_ops_and_defaults();
+      init_strings();
       print_header(service->name);
       codeHTML(service->htmls);
       codeFUNCTION(service->functions);
@@ -309,7 +313,7 @@ int has_show(STATEMENT *s)
         case showK:
             return 1;
     }
-
+    return 0;
 }
 
 void find_shows(STATEMENT *s)
@@ -348,6 +352,37 @@ void find_shows(STATEMENT *s)
     }
 }
 
+void codeINPUT(INPUT *i)
+{
+    if (i == NULL)
+        return;
+    codeINPUT(i->next);
+    print_indent();
+    SYMBOL *s = i->leftsym;
+    if (s->kind == variableSym)
+    {
+        VARIABLE *v = s->val.variableS;
+        if (v->global)
+            fprintf(out, "g.set('%s_%d', %s(wigismo.get_field('%s')))\n",
+                         i->lhs, v->id, _types[v->type->kind], i->rhs);
+        else
+            fprintf(out, "l['%s_%d'] = %s(wigismo.get_field('%s'))\n",
+                         i->lhs, v->id,  _types[v->type->kind], i->rhs);
+    }
+    else
+        fprintf(out, "%s = %s(wigismo.get_field('%s'))\n",
+                     i->lhs, _types[s->val.argumentS->type->kind], i->rhs);
+}
+
+void codeRECEIVE(RECEIVE *r)
+{
+    if (r == NULL)
+        return;
+
+    codeRECEIVE(r->next);
+    codeINPUT(r->inputs);
+}
+
 void codeSTATEMENT(STATEMENT *s)
 {
     if (s == NULL)
@@ -374,15 +409,16 @@ void codeSTATEMENT(STATEMENT *s)
             print_indent();
             fprintf(out, "state = wigismo.Store(sessionid)\n");
             print_indent();
-            fprintf(out, "l.set('locals', locals)\n");
+            fprintf(out, "state.set('locals', locals)\n");
             print_indent();
             int id = _id++;
-            fprintf(out, "l.set('start', 'session_%s_show_%d')\n", session, id);
+            fprintf(out, "state.set('start', 'session_%s_show_%d')\n", session, id);
             print_indent();
             fprintf(out, "sys.exit(0)\n\n");
             _indent = 0;
             fprintf(out, "def session_%s_show_%d(sessionid):\n", session, id);
             indent();
+            codeRECEIVE(s->val.showS.receives);
             break;
         case exitK:
             fprintf(out, "wigismo.output(sessionid, lambda: output_%s(",
