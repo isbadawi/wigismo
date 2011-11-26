@@ -17,7 +17,7 @@ void symSTATEMENT(STATEMENT *s, SymbolTable *table);
 void symDOCUMENT(DOCUMENT *d, SymbolTable *table);
 void symPLUG(PLUG *p, HTML *html, SymbolTable *table);
 void symRECEIVE(RECEIVE *r, DOCUMENT *d, SymbolTable *table);
-void symTUPLE(EXP *e, SymbolTable *table);
+SYMBOL* symTUPLE(EXP *e, SymbolTable *table);
 void symINPUT(INPUT *i, HTML *h, SymbolTable *table);
 void symEXP(EXP *e, SymbolTable *table);
 void symID(ID *id, SymbolTable *table);
@@ -306,7 +306,7 @@ void symINPUT(INPUT *i, HTML *h, SymbolTable *table)
         return;
     symINPUT(i->next, h, table);
     if (strchr(i->lhs, '.') != NULL)
-        symTUPLE(makeEXPlvalue(i->lhs), table);
+        i->leftsym = symTUPLE(makeEXPlvalue(i->lhs), table);
     else
     {
         SYMBOL *var = get_symbol(table, i->lhs);
@@ -327,9 +327,10 @@ int schema_has_var(SCHEMA *s, char *field)
     return 0;
 }
 
-void symTUPLE(EXP *e, SymbolTable *table)
+SYMBOL* symTUPLE(EXP *e, SymbolTable *table)
 {
     SYMBOL *s;
+    SYMBOL *schemaSymbol;
     s = get_symbol(table, e->val.idtupleE.name);
     if (s == NULL || (s->kind != variableSym && s->kind != argumentSym))
         reportStrError("identifier %s not declared", e->val.idtupleE.name, e->lineno);
@@ -356,6 +357,7 @@ void symTUPLE(EXP *e, SymbolTable *table)
         e->val.idtupleE.schema = schema;
     }         
     e->val.idtupleE.idsym = s;
+    return s;
 }
 
 void symEXP(EXP *e, SymbolTable *table)

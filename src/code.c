@@ -1,6 +1,7 @@
 #include "code.h"
 #include "tree.h"
 #include "type.h"
+#include "symbol.h"
 #include "resource.h"
 #include <stdio.h>
 #include<string.h>
@@ -365,19 +366,45 @@ void codeINPUT(INPUT *i)
     codeINPUT(i->next);
     print_indent();
     SYMBOL *s = i->leftsym;
-    if (s->kind == variableSym)
+    char *field = strchr(i->lhs, '.');
+    if (field != NULL)
     {
-        VARIABLE *v = s->val.variableS;
-        if (v->global)
-            fprintf(out, "g.set('%s_%d', wigismo.get_field('%s', %s))\n",
-                         i->lhs, v->id, i->rhs, _types[v->type->kind]);
-        else
-            fprintf(out, "l['%s_%d'] = wigismo.get_field('%s', %s)\n",
-                         i->lhs, v->id, i->rhs,  _types[v->type->kind]);
+        if (s->kind == variableSym)
+        {
+            VARIABLE *v = s->val.variableS;
+            SCHEMA *schema = get_symbol_as(mst, v->type->name, schemaSym)->val.schemaS;
+            if (v->global)
+                fprintf(out, "g.set_key('%s_%d', '%s', wigismo.get_field('%s', %s))\n",
+                             v->name, v->id, field + 1, i->rhs, _types[typeSchemaVar(schema, field + 1)->kind]);
+            else
+                fprintf(out, "l['%s_%d']['%s'] = wigismo.get_field('%s', %s)\n",
+                             v->name, v->id, field + 1, i->rhs, _types[typeSchemaVar(schema, field + 1)->kind]);
+        }
+        else if (s->kind == argumentSym)
+        {
+            ARGUMENT *a = s->val.argumentS;
+            SCHEMA *schema = get_symbol_as(mst, a->type->name, schemaSym)->val.schemaS;
+            fprintf(out, "%s['%s'] = wigismo.get_field('%s', %s))\n",
+                         a->name, field + 1, i->rhs, _types[typeSchemaVar(schema, field + 1)->kind]);
+        }
     }
     else
-        fprintf(out, "%s = wigismo.get_field('%s', %s))\n",
-                     i->lhs, i->rhs,  _types[s->val.argumentS->type->kind]);
+    {
+        if (s->kind == variableSym)
+        {
+            VARIABLE *v = s->val.variableS;
+            if (v->global)
+                fprintf(out, "g.set('%s_%d', wigismo.get_field('%s', %s))\n",
+                             i->lhs, v->id, i->rhs, _types[v->type->kind]);
+            else
+                fprintf(out, "l['%s_%d'] = wigismo.get_field('%s', %s)\n",
+                             i->lhs, v->id, i->rhs,  _types[v->type->kind]);
+        }
+        else if (s->kind == argumentSym)
+            fprintf(out, "%s = wigismo.get_field('%s', %s))\n",
+                         i->lhs, i->rhs,  _types[s->val.argumentS->type->kind]);
+    }
+
 }
 
 void codeRECEIVE(RECEIVE *r)

@@ -393,7 +393,8 @@ EXP *makeEXPlvalue(char *lvalue)
     e->lineno = lineno;
     if (strchr(lvalue, '.') != NULL)
     {
-        char *left = strtok(lvalue, ".");
+        char *temp = strdup(lvalue);
+        char *left = strtok(temp, ".");
         char *right = strtok(NULL, ".");
         e->kind = idtupleK;
         e->val.idtupleE.name = left;

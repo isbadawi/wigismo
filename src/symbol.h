@@ -13,6 +13,7 @@ SymbolTable *new_symbol_table(void);
 SymbolTable *enter_new_scope(SymbolTable *table);
 SYMBOL *put_symbol(SymbolTable *t, char *name, SymbolKind kind);
 SYMBOL *get_symbol(SymbolTable *t, char *name);
+SYMBOL *get_symbol_as(SymbolTable *t, char *name, SymbolKind kind);
 int symbol_exists(SymbolTable *t, char *name);
 
 SymbolTable *mst;

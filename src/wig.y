@@ -433,7 +433,7 @@ neexps : exp
 ;
 lvalue : tIDENTIFIER 
        | tIDENTIFIER '.' tIDENTIFIER
-         { $$ = (char*)malloc(strlen($1) * 2 + 2);
+         { $$ = (char*)malloc(strlen($1) + strlen($3) + 2);
            strcpy($$, $1);
            strcat($$, ".");
            strcat($$, $3);

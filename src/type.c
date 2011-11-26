@@ -113,6 +113,8 @@ void typeINPUT(INPUT *i)
     if (i == NULL)
         return;
     typeINPUT(i->next);
+    if (strchr(i->lhs, '.') != NULL)
+        return;
     if (typeVar(i->leftsym)->kind == tupleK)
         reportError("tuples cannot be received", i->lineno);
 }
