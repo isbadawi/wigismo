@@ -326,6 +326,12 @@ stmnoshortif : ';'
       { $$ = makeSTATEMENTwhile($3, $5); }
     | tUNTIL '(' exp ')' stmnoshortif
       { $$ = makeSTATEMENTwhile(makeEXPnot($3), $5); }
+    | tFOR '(' optionalexp ';' optionalexp ';' optionalexp ')' stmnoshortif
+      { EXP* condition = $5 != NULL ? $5 : makeEXPboolconst(1);
+        STATEMENT *body = $7 != NULL ? makeSTATEMENTsequence($9, makeSTATEMENTexp($7)) : $9;
+        STATEMENT *loop = makeSTATEMENTwhile(condition, body);
+        $$ = $3 != NULL ? makeSTATEMENTsequence(makeSTATEMENTexp($3), loop) : loop;
+      } 
     | compoundstm
       { $$ = $1; }
     | exp ';'
