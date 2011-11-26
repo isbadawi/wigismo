@@ -38,7 +38,8 @@ extern SERVICE *theservice;
        tSCHEMA tTUPLE tIF tELSE tWHILE tRETURN tINPUT tSELECT
        tPLUG tRECEIVE tEQ tLEQ tGEQ tNEQ tAND tOR tKEEP tDISCARD tCOMBINE 
        tUMINUS tNAME tTYPE tHTMLOPEN tHTMLCLOSE tOPENINGTAG tCLOSINGTAG
-       tOPENINGGAP tCLOSINGGAP tERROR
+       tOPENINGGAP tCLOSINGGAP tERROR tINC tDEC tPLUSEQ tMINEQ tMULTEQ tDIVEQ 
+       tMODEQ tANDEQ tOREQ tUNTIL
 
 %token <intconst> tINTCONST
 %token <boolconst> tBOOLCONST
@@ -64,7 +65,7 @@ extern SERVICE *theservice;
 %type <input> input neinputs inputs
 %type <stringconst> lvalue attr inputtype
 
-%right '='               
+%right '=' tPLUSEQ tMINEQ tMULTEQ tDIVEQ tMODEQ tANDEQ tOREQ
 %left tOR
 %left tAND 
 %nonassoc tEQ tLEQ tGEQ tNEQ '<' '>'
@@ -295,6 +296,8 @@ stm : ';'
       { $$ = makeSTATEMENTifelse($3, $5, $7); }
     | tWHILE '(' exp ')' stm
       { $$ = makeSTATEMENTwhile($3, $5); }
+    | tUNTIL '(' exp ')' stm
+      { $$ = makeSTATEMENTwhile(makeEXPnot($3), $5); }
     | compoundstm
       { $$ = $1; }
     | exp ';'
@@ -315,6 +318,8 @@ stmnoshortif : ';'
       { $$ = makeSTATEMENTifelse($3, $5, $7); }
     | tWHILE '(' exp ')' stmnoshortif
       { $$ = makeSTATEMENTwhile($3, $5); }
+    | tUNTIL '(' exp ')' stmnoshortif
+      { $$ = makeSTATEMENTwhile(makeEXPnot($3), $5); }
     | compoundstm
       { $$ = $1; }
     | exp ';'
@@ -368,6 +373,20 @@ exp : lvalue
      { $$ = makeEXPlvalue($1); }
     | lvalue '=' exp
      { $$ = makeEXPassign($1, $3); }
+    | lvalue tPLUSEQ exp
+     { $$ = makeEXPassign($1, makeEXPplus(makeEXPlvalue($1), $3)); }
+    | lvalue tMINEQ exp
+     { $$ = makeEXPassign($1, makeEXPminus(makeEXPlvalue($1), $3)); }
+    | lvalue tMULTEQ exp
+     { $$ = makeEXPassign($1, makeEXPtimes(makeEXPlvalue($1), $3)); }
+    | lvalue tDIVEQ exp
+     { $$ = makeEXPassign($1, makeEXPdiv(makeEXPlvalue($1), $3)); }
+    | lvalue tMODEQ exp
+     { $$ = makeEXPassign($1, makeEXPmod(makeEXPlvalue($1), $3)); }
+    | lvalue tANDEQ exp
+     { $$ = makeEXPassign($1, makeEXPand(makeEXPlvalue($1), $3)); }
+    | lvalue tOREQ exp
+     { $$ = makeEXPassign($1, makeEXPor(makeEXPlvalue($1), $3)); }
     | exp tEQ exp
      { $$ = makeEXPeq($1, $3); }
     | exp tNEQ exp
