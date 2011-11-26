@@ -155,6 +155,8 @@ int weedFUNCTION(FUNCTION *f)
     if (f == NULL)
         return 1;
 
+    if (!weedFUNCTION_SHOW_EXIT(f->statements))
+        return 0;
     if (!weedFUNCTION_RETURN_TYPE(f))
         return 0;
     if (!weedFUNCTION_ARGUMENTS(f))
@@ -162,6 +164,37 @@ int weedFUNCTION(FUNCTION *f)
     if (!weedVARIABLE_TYPE(f->statements->val.blockS.variables))
         return 0;
     return 1;
+}
+
+int weedFUNCTION_SHOW_EXIT(STATEMENT *s)
+{
+    if (s == NULL)
+        return 1;
+    switch(s->kind)
+    {
+        case skipK:
+            return 1;
+        case sequenceK:
+            return weedFUNCTION_SHOW_EXIT(s->val.sequenceS.first) || 
+                   weedFUNCTION_SHOW_EXIT(s->val.sequenceS.second);         
+        case showK:
+        case exitK:
+            fprintf(stderr, "%s:%d show and exit statements not allowed in functions.\n", infile, s->lineno);
+            return 0;
+        case returnK:
+            return 1;
+        case blockK:
+            return weedFUNCTION_SHOW_EXIT(s->val.blockS.body);
+        case ifK:
+            return weedFUNCTION_SHOW_EXIT(s->val.ifS.body);            
+        case ifelseK:
+            return weedFUNCTION_SHOW_EXIT(s->val.ifelseS.thenpart) ||
+                   weedFUNCTION_SHOW_EXIT(s->val.ifelseS.elsepart);         
+        case whileK:
+            return weedFUNCTION_SHOW_EXIT(s->val.whileS.body);
+        case expK:
+            return 1;
+    }
 }
 
 int weedVARIABLE_TYPE(VARIABLE *v)
