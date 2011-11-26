@@ -29,7 +29,7 @@ extern SERVICE *theservice;
     struct STATEMENT *statement;
     struct EXP *exp;
     struct FIELDVALUE *fieldvalue;
-    int intconst;
+    long intconst;
     int boolconst;
     char *stringconst;
 };

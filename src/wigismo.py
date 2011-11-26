@@ -72,6 +72,8 @@ class Store(object):
        try:
             f = open(self.service, 'r')
             d = pickle.Unpickler(f).load()
+            if name not in d:
+                d['name'] = {}
             d[name][key] = value
             f.close()
             f = open(self.service, 'w')
@@ -104,5 +106,7 @@ def set(d, key, val):
     return val
 
 def set_key(d, name, key, val):
+    if name not in d:
+        d[name] = {}
     d[name][key] = val
     return val

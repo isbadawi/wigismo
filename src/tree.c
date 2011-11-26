@@ -566,7 +566,7 @@ EXP *makeEXPcall(char *name, EXP *exps)
     return e;
 }
 
-EXP *makeEXPintconst(int i)
+EXP *makeEXPintconst(long i)
 {
     EXP *e = NEW(EXP);
     e->lineno = lineno;

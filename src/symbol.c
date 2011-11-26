@@ -330,7 +330,6 @@ int schema_has_var(SCHEMA *s, char *field)
 SYMBOL* symTUPLE(EXP *e, SymbolTable *table)
 {
     SYMBOL *s;
-    SYMBOL *schemaSymbol;
     s = get_symbol(table, e->val.idtupleE.name);
     if (s == NULL || (s->kind != variableSym && s->kind != argumentSym))
         reportStrError("identifier %s not declared", e->val.idtupleE.name, e->lineno);

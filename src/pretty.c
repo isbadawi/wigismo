@@ -461,7 +461,7 @@ void prettyEXP(EXP *e)
             printf(")");
             break;
         case intconstK:
-            printf("%d", e->val.intconstE);
+            printf("%li", e->val.intconstE);
             break;
         case boolconstK:
             printf((e->val.boolconstE) ? "true" : "false");

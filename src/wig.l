@@ -132,7 +132,7 @@ int i;
 "]"                      return ']';
 ","                      return ',';
 "."                      return '.';
-0|([1-9][0-9]*)        { yylval.intconst = atoi(yytext);
+0|([1-9][0-9]*)        { yylval.intconst = atol(yytext);
                          return tINTCONST; }
 true                   { yylval.boolconst = 1;
                          return tBOOLCONST; }

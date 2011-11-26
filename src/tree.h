@@ -212,7 +212,7 @@ typedef struct EXP
         struct EXP *unaryE;
         struct {char *name;
                 struct EXP *args; } callE;
-        int intconstE;
+        long intconstE;
         int boolconstE;
         char *stringconstE;
         struct {struct FIELDVALUE* fieldvalues;} tupleE;
@@ -293,7 +293,7 @@ EXP *makeEXPcombine(EXP *left, EXP *right);
 EXP *makeEXPkeep(EXP *left, ID *ids);
 EXP *makeEXPdiscard(EXP *left, ID *ids);
 EXP *makeEXPcall(char *name, EXP *exps);
-EXP *makeEXPintconst(int i);
+EXP *makeEXPintconst(long i);
 EXP *makeEXPboolconst(int b);
 EXP *makeEXPstringconst(char *string);
 EXP *makeEXPtuple(FIELDVALUE *fieldvalues);

@@ -712,7 +712,7 @@ void codeEXP(EXP *e)
             fprintf(out, ")");
             break;
         case intconstK:
-            fprintf(out, "%d", e->val.intconstE);
+            fprintf(out, "%li", e->val.intconstE);
             break;
         case boolconstK:
             fprintf(out, "%s", e->val.boolconstE ? "True" : "False");
