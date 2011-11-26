@@ -427,9 +427,13 @@ void prettyEXP(EXP *e)
         case divK:
         case modK:
         case combineK:
+            if (!print_types)
+                printf("(");
             prettyEXP(e->val.binaryE.left);
             printf(" %s ", operators[e->kind]);
             prettyEXP(e->val.binaryE.right);
+            if (!print_types)
+                printf(")");
             break;
         case notK:
             printf("!");
@@ -471,7 +475,6 @@ void prettyEXP(EXP *e)
             printf("}");
             break;
     }
-
 
     if (print_types)
     {

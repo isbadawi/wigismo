@@ -643,15 +643,17 @@ void codeEXP(EXP *e)
         case timesK:
         case divK:
         case modK:
+            fprintf(out, "(");
             codeEXP(e->val.binaryE.left);
             fprintf(out, " %s ", _ops[e->kind]);
             codeEXP(e->val.binaryE.right);
+            fprintf(out, ")");
             break;
         case notK:
             fprintf(out, "not ");
             codeEXP(e->val.unaryE);
             break;
-        case uminusK:
+        case uminusK:            
             fprintf(out, "-");
             codeEXP(e->val.unaryE);
         case combineK:
