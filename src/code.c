@@ -369,15 +369,15 @@ void codeINPUT(INPUT *i)
     {
         VARIABLE *v = s->val.variableS;
         if (v->global)
-            fprintf(out, "g.set('%s_%d', %s(wigismo.get_field('%s')))\n",
-                         i->lhs, v->id, _types[v->type->kind], i->rhs);
+            fprintf(out, "g.set('%s_%d', wigismo.get_field('%s', %s))\n",
+                         i->lhs, v->id, i->rhs, _types[v->type->kind]);
         else
-            fprintf(out, "l['%s_%d'] = %s(wigismo.get_field('%s'))\n",
-                         i->lhs, v->id,  _types[v->type->kind], i->rhs);
+            fprintf(out, "l['%s_%d'] = wigismo.get_field('%s', %s)\n",
+                         i->lhs, v->id, i->rhs,  _types[v->type->kind]);
     }
     else
-        fprintf(out, "%s = %s(wigismo.get_field('%s'))\n",
-                     i->lhs, _types[s->val.argumentS->type->kind], i->rhs);
+        fprintf(out, "%s = wigismo.get_field('%s', %s))\n",
+                     i->lhs, i->rhs,  _types[s->val.argumentS->type->kind]);
 }
 
 void codeRECEIVE(RECEIVE *r)

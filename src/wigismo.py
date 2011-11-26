@@ -12,9 +12,12 @@ def random_string(length):
     'Generates a random string of length lowercase characters.'
     return ''.join([random.choice(string.lowercase) for i in range(length)])
 
-def get_field(name):
-    'Returns the form input with the given name, or the the empty string.'
-    return fields.getvalue(name, '')
+def get_field(name, type):
+    'Returns the form input with the given name, or a suitable default.'
+    try:
+        return type(fields.getvalue(name, ''))
+    except ValueError:
+        return type()
 
 def output(session, out, exit=False):
     """
