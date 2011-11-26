@@ -275,6 +275,7 @@ void codeARGUMENT(ARGUMENT *a)
 {
     if (a == NULL)
         return;
+    codeARGUMENT(a->next);
     if (a->next != NULL)
         fprintf(out, ", ");
     fprintf(out, "%s", a->name);
@@ -683,6 +684,7 @@ void codeEXP(EXP *e)
         case uminusK:            
             fprintf(out, "-");
             codeEXP(e->val.unaryE);
+            break;
         case combineK:
             fprintf(out, "wigismo.tuple_combine(");
             codeEXP(e->val.binaryE.left);
