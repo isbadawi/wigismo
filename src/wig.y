@@ -73,7 +73,7 @@ extern SERVICE *theservice;
 %left '*' '/' '%'
 %left tKEEP tDISCARD
 %right tCOMBINE
-%right '!' tUMINUS
+%right '!' tUMINUS tINC tDEC
 
 %% /* productions */
 
@@ -387,6 +387,10 @@ exp : lvalue
      { $$ = makeEXPassign($1, makeEXPand(makeEXPlvalue($1), $3)); }
     | lvalue tOREQ exp
      { $$ = makeEXPassign($1, makeEXPor(makeEXPlvalue($1), $3)); }
+    | tINC lvalue
+     { $$ = makeEXPassign($2, makeEXPplus(makeEXPlvalue($2), makeEXPintconst(1))); }
+    | tDEC lvalue
+     { $$ = makeEXPassign($2, makeEXPminus(makeEXPlvalue($2), makeEXPintconst(1))); }
     | exp tEQ exp
      { $$ = makeEXPeq($1, $3); }
     | exp tNEQ exp
