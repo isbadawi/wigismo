@@ -472,7 +472,9 @@ void codeSTATEMENT(STATEMENT *s)
                 fprintf(out, ":\n");
                 indent();
                 codeSTATEMENT(s->val.ifelseS.thenpart);
+                dedent(); print_indent();
                 fprintf(out, "else:\n");
+                indent();
                 codeSTATEMENT(s->val.ifelseS.elsepart);
                 dedent();
             }
@@ -512,16 +514,16 @@ void codeSTATEMENT(STATEMENT *s)
             {
                 int id = s->val.whileS.whileid;
                 int afterid = s->val.whileS.afterwhileid;
-                fprintf(out, "session_%s_%d(sessionid)\n\n", session, id);
+                fprintf(out, "if ");
+                codeEXP(s->val.whileS.condition);
+                fprintf(out, ":\n");
+                indent(); print_indent();
+                fprintf(out, "session_%s_%d(sessionid)\n", session, id);
+                dedent(); print_indent();
+                fprintf(out, "session_%s_%d(sessionid)\n\n", session, afterid);
                 _indent = 0;
                 fprintf(out, "def session_%s_%d(sessionid):\n", session, id);
-                indent(); print_indent();
-                fprintf(out, "if not (");
-                codeEXP(s->val.whileS.condition);
-                fprintf(out, "):\n");
-                indent(); print_indent();
-                fprintf(out, "session_%s_%d(sessionid)\n", session, afterid);
-                dedent();
+                indent();
                 codeSTATEMENT(s->val.whileS.body);
                 print_indent();
                 fprintf(out, "if ");
