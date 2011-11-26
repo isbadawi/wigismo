@@ -39,7 +39,7 @@ extern SERVICE *theservice;
        tPLUG tRECEIVE tEQ tLEQ tGEQ tNEQ tAND tOR tKEEP tDISCARD tCOMBINE 
        tUMINUS tNAME tTYPE tHTMLOPEN tHTMLCLOSE tOPENINGTAG tCLOSINGTAG
        tOPENINGGAP tCLOSINGGAP tERROR tINC tDEC tPLUSEQ tMINEQ tMULTEQ tDIVEQ 
-       tMODEQ tANDEQ tOREQ tUNTIL
+       tMODEQ tANDEQ tOREQ tUNTIL tFOR
 
 %token <intconst> tINTCONST
 %token <boolconst> tBOOLCONST
@@ -59,7 +59,7 @@ extern SERVICE *theservice;
 %type <statement> stm stms nestms compoundstm stmnoshortif
 %type <receive> receive
 %type <document> document
-%type <exp> exp exps neexps
+%type <exp> exp exps neexps optionalexp
 %type <fieldvalue> fieldvalue fieldvalues nefieldvalues
 %type <plug> plug plugs
 %type <input> input neinputs inputs
@@ -298,6 +298,12 @@ stm : ';'
       { $$ = makeSTATEMENTwhile($3, $5); }
     | tUNTIL '(' exp ')' stm
       { $$ = makeSTATEMENTwhile(makeEXPnot($3), $5); }
+    | tFOR '(' optionalexp ';' optionalexp ';' optionalexp ')' stm
+      { EXP* condition = $5 != NULL ? $5 : makeEXPboolconst(1);
+        STATEMENT *body = $7 != NULL ? makeSTATEMENTsequence($9, makeSTATEMENTexp($7)) : $9;
+        STATEMENT *loop = makeSTATEMENTwhile(condition, body);
+        $$ = $3 != NULL ? makeSTATEMENTsequence(makeSTATEMENTexp($3), loop) : loop;
+      }
     | compoundstm
       { $$ = $1; }
     | exp ';'
@@ -444,6 +450,13 @@ exp : lvalue
     | '(' exp ')'                  /* NEW */
      { $$ = $2; }
 ;
+
+optionalexp : /* empty */
+              { $$ = NULL; }
+            | exp
+              { $$ = $1; }
+;
+
 exps : /* empty */ 
        { $$ = NULL; }
      | neexps

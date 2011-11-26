@@ -62,6 +62,7 @@ int i;
 <WIG>void                return tVOID;
 <WIG>while               return tWHILE;
 <WIG>until				 return tUNTIL;
+<WIG>for				 return tFOR;
 <WIG>\<html\>			 BEGIN HTML; return tHTMLOPEN;
 <HTML>\<\/html\> 		 BEGIN WIG;  return tHTMLCLOSE;
 <HTML>\<				 BEGIN HTMLTAG; return '<';
