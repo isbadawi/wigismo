@@ -173,8 +173,6 @@ void codeHTMLBODY(HTMLBODY *htmlbody)
             int i;
             for (i = 0; i < len; ++i)
             {
-                if (i == len - 1 && htmlbody->val.whateverH[i] == ' ')
-                    break;
                 if (htmlbody->val.whateverH[i] == '\n')
                     fprintf(out, "%s", "\\n");
                 else if (htmlbody->val.whateverH[i] == '\\')
@@ -477,6 +475,27 @@ void codeSTATEMENT(STATEMENT *s)
                 fprintf(out, "else:\n");
                 codeSTATEMENT(s->val.ifelseS.elsepart);
                 dedent();
+            }
+            else
+            {
+                fprintf(out, "if not (");
+                codeEXP(s->val.ifelseS.condition);
+                fprintf(out, "):\n");
+                indent(); print_indent();
+                fprintf(out, "session_%s_%d(sessionid)\n", session, s->val.ifelseS.elseid);
+                dedent();
+                codeSTATEMENT(s->val.ifelseS.thenpart);
+                print_indent();
+                fprintf(out, "session_%s_%d(sessionid)\n\n", session, s->val.ifelseS.afterelseid);
+                _indent = 0;
+                fprintf(out, "def session_%s_%d(sessionid):\n", session, s->val.ifelseS.elseid);
+                indent();
+                codeSTATEMENT(s->val.ifelseS.elsepart);
+                print_indent();
+                fprintf(out, "session_%s_%d(sessionid)\n\n", session, s->val.ifelseS.afterelseid);
+                _indent = 0;
+                fprintf(out, "def session_%s_%d(sessionid):\n", session, s->val.ifelseS.afterelseid);
+                indent();
             }
             break;
         case whileK:
