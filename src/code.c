@@ -82,34 +82,42 @@ void codeSERVICE(SERVICE *service, FILE *_out)
       print_footer(service->sessions);
 }
 
+void print_session_list(SESSION *s)
+{
+    if (s== NULL)
+        return;
+    print_session_list(s->next);
+    if (s->next != NULL)
+        fprintf(out, ", ");
+    fprintf(out, "'%s'", s->name);
+}
+
 void print_footer(SESSION *s)
 {
-    SESSION* t = s;
     fprintf(out, "def wigismo_restart():\n");
     fprintf(out, "    state = wigismo.Store(wigismo.sessionid)\n");
     fprintf(out, "    l.update(state.get('locals'))\n");
     fprintf(out, "    globals()[state.get('start')](wigismo.sessionid)\n\n");
 
-    while (t != NULL)
-    {
-        fprintf(out, "if wigismo.sessionid == '%s':\n", s->name);
-        fprintf(out, "    session_%s('%s$' + wigismo.random_string(20))\n", s->name, s->name);
-        fprintf(out, "    sys.exit(0)\n");
-        fprintf(out, "if wigismo.sessionid.startswith('%s$'):\n", s->name);
-        fprintf(out, "    wigismo_restart();\n");
-        fprintf(out, "    sys.exit(0)\n");
-        t = t->next;
-    }
+    fprintf(out, "sessions = [");
+    print_session_list(s);
+    fprintf(out, "]\n");
+    fprintf(out, "for session in sessions:\n");
+    fprintf(out, "    if wigismo.sessionid == session:\n");
+    fprintf(out, "        globals()['session_%%s' %% session]('%%s$%%s' %% (session, wigismo.random_string(20)))\n");
+    fprintf(out, "        sys.exit(0)\n");
+    fprintf(out, "    elif wigismo.sessionid.startswith('%%s$' %% session):\n"); 
+    fprintf(out, "        wigismo_restart();\n");
+    fprintf(out, "        sys.exit(0)\n\n");
+
     fprintf(out, "print 'Content-type: text/html'\n");
     fprintf(out, "print\n");
     fprintf(out, "print '<title>Illegal request</title>'\n");
+    fprintf(out, "print '<p>You entered an invalid session name.</p>'\n");
     fprintf(out, "print '<p>Try one of these:</p>'\n");
     fprintf(out, "print '<ul>'\n");
-    while (s != NULL)
-    {
-        fprintf(out, "print '<li><a href=\"?%s\">%s</a></li>'\n", s->name, s->name);
-        s = s->next;
-    }
+    fprintf(out, "for session in sessions:\n");
+    fprintf(out, "    print '<li><a href=\"?%%s\">%%s</a></li>' %% (session, session)\n");
     fprintf(out, "print '</ul>'\n");
     fprintf(out, "sys.exit(0)\n");
 }
