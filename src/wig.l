@@ -91,7 +91,7 @@ int i;
 						 yylval.stringconst = (char*)malloc(yyleng+1);
                          sprintf(yylval.stringconst,"%s",yytext); 
                          return tIDENTIFIER; }   
-<HTMLRHS>\"([^\"])*\"    { BEGIN HTMLTAG; 
+<HTMLRHS>\"(\\.|[^\\"])*\"    { BEGIN HTMLTAG; 
                          yylval.stringconst = (char*)malloc(yyleng-1);
                          yytext[yyleng-1] = '\0';
                          sprintf(yylval.stringconst,"%s",yytext+1);
@@ -102,7 +102,7 @@ int i;
 						 yylval.stringconst = (char*)malloc(yyleng+1);
                          sprintf(yylval.stringconst,"%s",yytext); 
                          return tIDENTIFIER; }   
-<INPUTRHS>\"([^\"])*\"    { BEGIN HTMLINPUT; 
+<INPUTRHS>\"(\\.|[^\\"])*\"    { BEGIN HTMLINPUT; 
                          yylval.stringconst = (char*)malloc(yyleng-1);
                          yytext[yyleng-1] = '\0';
                          sprintf(yylval.stringconst,"%s",yytext+1);
@@ -150,7 +150,7 @@ true                   { yylval.boolconst = 1;
                          return tBOOLCONST; }
 false                  { yylval.boolconst = 0;
                          return tBOOLCONST; }
-\"([^\"])*\"           { yylval.stringconst = (char*)malloc(yyleng-1);
+\"(\\.|[^\\"])*\"      { yylval.stringconst = (char*)malloc(yyleng-1);
                          yytext[yyleng-1] = '\0';
                          sprintf(yylval.stringconst,"%s",yytext+1);
                          return tSTRINGCONST; }
