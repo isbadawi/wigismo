@@ -10,6 +10,7 @@
 FILE *out;
 static int _indent = 0;
 static int _id = 0;
+static int _elseif = 0;
 static char *session = NULL;
 
 
@@ -409,8 +410,9 @@ void codeSTATEMENT(STATEMENT *s)
     if (s == NULL)
         return;
 
-    if (s->kind != sequenceK && s->kind != blockK)
+    if (s->kind != sequenceK && s->kind != blockK && !_elseif)
         print_indent();
+    _elseif = 0;
 
     switch (s->kind)
     {
@@ -500,10 +502,20 @@ void codeSTATEMENT(STATEMENT *s)
                 indent();
                 codeSTATEMENT(s->val.ifelseS.thenpart);
                 dedent(); print_indent();
-                fprintf(out, "else:\n");
-                indent();
-                codeSTATEMENT(s->val.ifelseS.elsepart);
-                dedent();
+                if (s->val.ifelseS.elsepart->kind == ifK ||
+                    s->val.ifelseS.elsepart->kind == ifelseK)
+                {
+                    _elseif = 1;
+                    fprintf(out, "el");
+                    codeSTATEMENT(s->val.ifelseS.elsepart);
+                }
+                else
+                {
+                    fprintf(out, "else:\n");
+                    indent();
+                    codeSTATEMENT(s->val.ifelseS.elsepart);
+                    dedent();
+                }
             }
             else
             {
