@@ -206,6 +206,7 @@ void codeHTMLBODY(HTMLBODY *htmlbody)
             print_attributes(htmlbody->val.selectH.attributes);
             fprintf(out, ">')\n");
             codeHTMLBODY(htmlbody->val.selectH.htmlbodies);
+            print_indent();
             fprintf(out, "sys.stdout.write('</select>')\n");
             break;
     }
