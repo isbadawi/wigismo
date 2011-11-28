@@ -366,7 +366,7 @@ void codeINPUT(INPUT *i)
                 fprintf(out, "g.set_key('%s_%d', '%s', wigismo.get_field('%s', %s))\n",
                              v->name, v->id, field + 1, i->rhs, _types[typeSchemaVar(schema, field + 1)->kind]);
             else
-                fprintf(out, "l['%s_%d']['%s'] = wigismo.get_field('%s', %s)\n",
+                fprintf(out, "wigismo.set_key(l, '%s_%d', '%s', wigismo.get_field('%s', %s))\n",
                              v->name, v->id, field + 1, i->rhs, _types[typeSchemaVar(schema, field + 1)->kind]);
         }
         else if (s->kind == argumentSym)
