@@ -95,32 +95,30 @@ void print_session_list(SESSION *s)
 
 void print_footer(SESSION *s)
 {
-    fprintf(out, "def wigismo_restart():\n");
-    fprintf(out, "    state = wigismo.Store(wigismo.sessionid)\n");
-    fprintf(out, "    l.update(state.get('locals'))\n");
-    fprintf(out, "    globals()[state.get('start')](wigismo.sessionid)\n\n");
-
+    fprintf(out, "def wigismo_restart():\n"
+                 "    state = wigismo.Store(wigismo.sessionid)\n"
+                 "    l.update(state.get('locals'))\n"
+                 "    globals()[state.get('start')](wigismo.sessionid)\n\n");
     fprintf(out, "sessions = [");
     print_session_list(s);
     fprintf(out, "]\n");
-    fprintf(out, "for session in sessions:\n");
-    fprintf(out, "    if wigismo.sessionid == session:\n");
-    fprintf(out, "        globals()['session_%%s' %% session]('%%s$%%s' %% (session, wigismo.random_string(20)))\n");
-    fprintf(out, "        sys.exit(0)\n");
-    fprintf(out, "    elif wigismo.sessionid.startswith('%%s$' %% session):\n"); 
-    fprintf(out, "        wigismo_restart();\n");
-    fprintf(out, "        sys.exit(0)\n\n");
-
-    fprintf(out, "print 'Content-type: text/html'\n");
-    fprintf(out, "print\n");
-    fprintf(out, "print '<title>Illegal request</title>'\n");
-    fprintf(out, "print '<p>You entered an invalid session name.</p>'\n");
-    fprintf(out, "print '<p>Try one of these:</p>'\n");
-    fprintf(out, "print '<ul>'\n");
-    fprintf(out, "for session in sessions:\n");
-    fprintf(out, "    print '<li><a href=\"?%%s\">%%s</a></li>' %% (session, session)\n");
-    fprintf(out, "print '</ul>'\n");
-    fprintf(out, "sys.exit(0)\n");
+    fprintf(out, "for session in sessions:\n"
+                 "    if wigismo.sessionid == session:\n"
+                 "        globals()['session_%%s' %% session]('%%s$%%s' %% (session, wigismo.random_string(20)))\n"
+                 "        sys.exit(0)\n"
+                 "    elif wigismo.sessionid.startswith('%%s$' %% session):\n"
+                 "        wigismo_restart();\n"
+                 "        sys.exit(0)\n\n"
+              
+                 "print 'Content-type: text/html'\n"
+                 "print\n"
+                 "print '<title>Illegal request</title>'\n"
+                 "print '<p>You entered an invalid session name.</p>'\n"
+                 "print '<p>Try one of these:</p>'\n"
+                 "print '<ul>'\n"
+                 "for session in sessions:\n"
+                 "    print '<li><a href=\"?%%s\">%%s</a></li>' %% (session, session)\n"
+                 "print '</ul>'\n");
 }
 
 void print_header(char *service)
