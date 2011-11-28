@@ -200,7 +200,7 @@ void codeHTMLBODY(HTMLBODY *htmlbody)
     {
         fprintf(out, "'");
         if (htmlbody->kind == gapK)
-            fprintf(out, " %% %s", htmlbody->val.gapH);
+            fprintf(out, " %% %s_", htmlbody->val.gapH);
         fprintf(out, ")\n");
     }
 }
@@ -239,7 +239,7 @@ void print_gaps(ID *id)
     print_gaps(id->next);
     if (id->next != NULL)
         fprintf(out, ", ");
-    fprintf(out, "%s=''", id->name);
+    fprintf(out, "%s_=''", id->name);
 }
 
 void codeFUNCTION(FUNCTION *f)
@@ -264,7 +264,7 @@ void codeARGUMENT(ARGUMENT *a)
     codeARGUMENT(a->next);
     if (a->next != NULL)
         fprintf(out, ", ");
-    fprintf(out, "%s", a->name);
+    fprintf(out, "%s_", a->name);
 }
 
 void codePLUG(PLUG *p)
@@ -276,7 +276,7 @@ void codePLUG(PLUG *p)
     if (p->next != NULL)
         fprintf(out, ", ");
 
-    fprintf(out, "%s=", p->name);
+    fprintf(out, "%s_=", p->name);
     codeEXP(p->exp);
 }
 
@@ -373,7 +373,7 @@ void codeINPUT(INPUT *i)
         {
             ARGUMENT *a = s->val.argumentS;
             SCHEMA *schema = get_symbol_as(mst, a->type->name, schemaSym)->val.schemaS;
-            fprintf(out, "%s['%s'] = wigismo.get_field('%s', %s))\n",
+            fprintf(out, "%s_['%s'] = wigismo.get_field('%s', %s))\n",
                          a->name, field + 1, i->rhs, _types[typeSchemaVar(schema, field + 1)->kind]);
         }
     }
@@ -390,7 +390,7 @@ void codeINPUT(INPUT *i)
                              i->lhs, v->id, i->rhs,  _types[v->type->kind]);
         }
         else if (s->kind == argumentSym)
-            fprintf(out, "%s = wigismo.get_field('%s', %s))\n",
+            fprintf(out, "%s_ = wigismo.get_field('%s', %s))\n",
                          i->lhs, i->rhs,  _types[s->val.argumentS->type->kind]);
     }
 
@@ -607,7 +607,7 @@ void codeEXP(EXP *e)
                              v->name, v->id, _defaults[v->type->kind]);
             }
             else
-                fprintf(out, "%s", e->val.idE.idsym->val.argumentS->name);
+                fprintf(out, "%s_", e->val.idE.idsym->val.argumentS->name);
             break;
         case idtupleK:
             if (e->val.idtupleE.idsym->kind == variableSym)
@@ -620,7 +620,7 @@ void codeEXP(EXP *e)
                              _defaults[typeSchemaVar(e->val.idtupleE.schema, e->val.idtupleE.field)->kind]);  
             }
             else
-                fprintf(out, "%s.get('%s', %s)", 
+                fprintf(out, "%s_.get('%s', %s)", 
                              e->val.idtupleE.idsym->val.argumentS->name, 
                              e->val.idtupleE.field,
                             _defaults[typeSchemaVar(e->val.idtupleE.schema, e->val.idtupleE.field)->kind]);
@@ -638,7 +638,7 @@ void codeEXP(EXP *e)
             }
             else
             {
-                fprintf(out, "%s = ", e->val.assignE.leftsym->val.argumentS->name);
+                fprintf(out, "%s_ = ", e->val.assignE.leftsym->val.argumentS->name);
                 codeEXP(e->val.assignE.right);
             }
             break;
@@ -657,7 +657,7 @@ void codeEXP(EXP *e)
             }
             else
             {
-                fprintf(out, "%s['%s'] = ", e->val.assigntupleE.name, e->val.assigntupleE.field);
+                fprintf(out, "%s_['%s'] = ", e->val.assigntupleE.name, e->val.assigntupleE.field);
                 codeEXP(e->val.assigntupleE.right);
             }
             break;
