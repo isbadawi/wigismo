@@ -3,7 +3,8 @@
 #include "type.h"
 #include "symbol.h"
 #include "resource.h"
-#include <stdio.h>
+#include "util.h"
+#include<stdio.h>
 #include<string.h>
 
 FILE *out;
@@ -175,24 +176,10 @@ void codeHTMLBODY(HTMLBODY *htmlbody)
             fprintf(out, "%%s");                    
             break;
         case whateverK:
-        {
-            int len = strlen(htmlbody->val.whateverH);
-            int i;
-            for (i = 0; i < len; ++i)
-            {
-                if (htmlbody->val.whateverH[i] == '\n')
-                    fprintf(out, "%s", "\\n");
-                else if (htmlbody->val.whateverH[i] == '\\')
-                    fprintf(out, "%s", "\\\\");
-                else if (htmlbody->val.whateverH[i] == '\'')
-                    fprintf(out, "%s", "\\\'");
-                else
-                    fprintf(out, "%c", htmlbody->val.whateverH[i]);
-            }
+            fprintf(out, "%s", escape_string(htmlbody->val.whateverH));
             break;
-        }
         case metaK:
-            fprintf(out, "<!--%s-->", htmlbody->val.metaH);
+            fprintf(out, "<!--%s-->", escape_string(htmlbody->val.metaH));
             break;
         case inputK:
             fprintf(out, "<input ");
@@ -227,9 +214,8 @@ void print_attributes(ATTRIBUTE *a)
     if (a->value == NULL)
         fprintf(out, "%s ", a->name);
     else
-        fprintf(out, "%s=\"%s\" ", a->name, a->value);
+        fprintf(out, "%s=\"%s\" ", a->name, escape_string(a->value));
 }
-
 
 ID *gaps_in(HTMLBODY *body)
 {

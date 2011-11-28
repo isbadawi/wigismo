@@ -3,5 +3,6 @@
 
 char *replace_extension(char *filename, char *ext);
 char *strip_extension(char *filename);
+char *escape_string(char *string);
 
 #endif

@@ -26,4 +26,33 @@ char *strip_extension(char *filename)
     strncpy(newname, filename, i); 
     return newname;
 }
- 
+
+char *escape_string(char *string)
+{
+    /* Worst case, every char is escaped. */
+    char *result = (char*)malloc(2*strlen(string) + 1);
+    char *p = result;
+    char s;
+    while ((s = *string++))
+    {
+        if (s == '\n')
+        {
+            *p++ = '\\';
+            *p++ = 'n';
+        }
+        else if (s == '\'')
+        {
+            *p++ = '\\';
+            *p++ = '\'';
+        }
+        else if (s == '\\')
+        {
+            *p++ = '\\';
+            *p++ = '\\';
+        }
+        else
+            *p++ = s;
+    }
+    *p = '\0';
+    return result;
+}
