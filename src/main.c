@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
-#include<unistd.h> /* for basename */
+#include<libgen.h> /* for basename */
 #include"tree.h"
 #include"pretty.h"
 #include"weed.h"

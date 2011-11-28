@@ -13,15 +13,16 @@ char* replace_extension(char *filename, char *ext)
 
 char *strip_extension(char *filename)
 {
+    int len;
+    int i;
+    char *newname;
     if (strchr(filename, '.') == NULL)
         return filename;
-    int len = strlen(filename);
-    int i;
+    len = strlen(filename);
     for (i = len - 1; i >= 0; i--)
         if (filename[i] == '.')
             break;
-
-    char *newname = (char*)malloc(i+1);
+    newname = (char*)malloc(i+1);
     strncpy(newname, filename, i); 
     return newname;
 }

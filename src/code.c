@@ -362,12 +362,14 @@ void find_shows(STATEMENT *s)
 
 void codeINPUT(INPUT *i)
 {
+    SYMBOL *s;
+    char *field;
     if (i == NULL)
         return;
     codeINPUT(i->next);
     print_indent();
-    SYMBOL *s = i->leftsym;
-    char *field = strchr(i->lhs, '.');
+    s = i->leftsym;
+    field = strchr(i->lhs, '.');
     if (field != NULL)
     {
         if (s->kind == variableSym)
@@ -436,6 +438,8 @@ void codeSTATEMENT(STATEMENT *s)
             codeSTATEMENT(s->val.sequenceS.second);
             break;
         case showK:
+        {
+            int id = _id++;
             fprintf(out, "wigismo.output(sessionid, lambda: output_%s(",
                          s->val.exitS.document->name);
             codePLUG(s->val.exitS.document->plugs);
@@ -445,7 +449,6 @@ void codeSTATEMENT(STATEMENT *s)
             print_indent();
             fprintf(out, "state.set('locals', l)\n");
             print_indent();
-            int id = _id++;
             fprintf(out, "state.set('start', 'session_%s_show_%d')\n", session, id);
             print_indent();
             fprintf(out, "sys.exit(0)\n\n");
@@ -454,6 +457,7 @@ void codeSTATEMENT(STATEMENT *s)
             indent();
             codeRECEIVE(s->val.showS.receives);
             break;
+        }
         case exitK:
             fprintf(out, "wigismo.output(sessionid, lambda: output_%s(",
                          s->val.exitS.document->name);

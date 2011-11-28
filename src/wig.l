@@ -11,6 +11,7 @@ int init = 0;
 int i;
 %}
 
+%option nounput
 %s WIG HTMLINPUT HTMLTAG GAP
 %x TYPERHS HTMLRHS INPUTRHS HTML
 

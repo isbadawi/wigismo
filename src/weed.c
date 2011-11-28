@@ -12,6 +12,7 @@ int weedFUNCTION(FUNCTION *);
 int weedSCHEMA(SCHEMA *);
 int weedHTML(HTML *);
 int weedHTMLBODY(HTMLBODY *);
+int weedFUNCTION_SHOW_EXIT(STATEMENT *);
 int weedFUNCTION_ARGUMENTS(FUNCTION *);
 int weedARGUMENT_TYPE(ARGUMENT *);
 int weedSESSION_END(SESSION *);
@@ -195,6 +196,7 @@ int weedFUNCTION_SHOW_EXIT(STATEMENT *s)
         case expK:
             return 1;
     }
+    return 1;
 }
 
 int weedVARIABLE_TYPE(VARIABLE *v)

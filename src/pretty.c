@@ -367,6 +367,7 @@ void prettyPLUG(PLUG *p)
 
 void prettyEXP(EXP *e)
 {
+    extern int print_types;
     char* operators[25];
 
     operators[orK] = "||";
@@ -392,7 +393,6 @@ void prettyEXP(EXP *e)
 
     prettyEXP(e->next);
 
-    extern int print_types;
     if (print_types)
         printf("(");
 

@@ -2,9 +2,11 @@
 
 #include<stdlib.h>
 #include<string.h>
+#include"error.h"
 #include"tree.h"
 
 extern SERVICE *theservice;
+int yylex(void);
 
 %}
 
@@ -197,8 +199,9 @@ field : simpletype tIDENTIFIER ';'
 nevariables : variable 
                { $$ = $1; }
             | nevariables variable 
-               { $$ = $2; 
-                 VARIABLE *v = $$;
+               { VARIABLE *v;
+                 $$ = $2; 
+                 v = $$;
                  while (v->next != NULL)
                      v = v->next;
                  v->next = $1; }

@@ -275,12 +275,12 @@ SCHEMA *make_discard_result(EXP *e)
     SCHEMA *schema = get_symbol(mst, e->val.discardE.left->type->name)->val.schemaS;
     ID *ids = e->val.discardE.ids;
     VARIABLE *rootV = copyVARIABLES(schema->variables);
+    VARIABLE *prev = rootV;
+    VARIABLE *v;
     while (rootV != NULL && id_in(rootV->name, ids))
         rootV = rootV->next;
     if (rootV == NULL)
         return makeSCHEMA(generate_schema_name(), rootV);
-    VARIABLE *prev = rootV;
-    VARIABLE *v;
     for (v = rootV->next; v != NULL; v = v->next)
     {
         if (id_in(v->name, ids))

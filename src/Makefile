@@ -2,7 +2,7 @@ CC = gcc
 
 BISON = bison -y -d
 
-CFLAGS = -Wall -pedantic -g
+CFLAGS = -Wall -Wno-overlength-strings -pedantic -g
 
 all:
 	make code

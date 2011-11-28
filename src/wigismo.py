@@ -42,13 +42,6 @@ class Store(object):
             pickle.Pickler(f).dump({})
             f.close()
 
-    def get_all(self):
-        try:
-            f = open(self.service, 'r')
-            return pickle.Unpickler(f).load()
-        finally:
-            f.close()
-
     def get(self, name, default=None):
         try:
             f = open(self.service, 'r')
