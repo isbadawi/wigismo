@@ -5,7 +5,7 @@ service {
     </body></html>;
 
     const html OK = <html><body>
-        <p>Alright; Random Number Generator seeded. Now go <a href="hangman.pl?Play">play</a>. </p>
+        <p>Alright; Random Number Generator seeded. Now go <a href="?Play">play</a>. </p>
     </body></html>;
 
     const html Guess = <html><head><link href="../style.css" rel="stylesheet" type="text/css"></head>
