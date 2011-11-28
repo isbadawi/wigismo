@@ -475,6 +475,8 @@ void codeSTATEMENT(STATEMENT *s)
             break;
         case blockK:
             codeSTATEMENT(s->val.blockS.body);
+            print_indent();
+            fprintf(out, "pass\n");
             break;
         case ifK:
             if (s->val.ifS.has_show == 0)
@@ -768,6 +770,6 @@ void codeSESSION(SESSION *s)
     find_shows(s->statements);
     codeSTATEMENT(s->statements);
     print_indent();
-    fprintf(out, "pass\n\n");
+    fprintf(out, "\n");
     dedent();
 }
