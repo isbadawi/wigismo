@@ -721,7 +721,7 @@ void codeEXP(EXP *e)
             fprintf(out, "%s", e->val.boolconstE ? "True" : "False");
             break;
         case stringconstK:
-            fprintf(out, "\"%s\"", e->val.stringconstE);
+            fprintf(out, "\"\"\"%s\"\"\"", e->val.stringconstE);
             break;
         case tupleconstK:
             fprintf(out, "{");

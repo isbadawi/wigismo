@@ -66,7 +66,7 @@ class Store(object):
             f = open(self.service, 'r')
             d = pickle.Unpickler(f).load()
             if name not in d:
-                d['name'] = {}
+                d[name] = {}
             d[name][key] = value
             f.close()
             f = open(self.service, 'w')
