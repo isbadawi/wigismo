@@ -2,7 +2,7 @@ CC = gcc
 
 BISON = bison -y -d
 
-CFLAGS = -Wall -Wno-overlength-strings -pedantic -g
+CFLAGS = -Wall -pedantic -g
 
 all:
 	make code
@@ -10,6 +10,9 @@ all:
 
 code: y.tab.o lex.yy.o main.o tree.h tree.o memory.h memory.o error.h error.o pretty.o pretty.h weed.o weed.h symbol.o symbol.h type.o type.h code.h code.o util.h util.o resource.h resource.o chash/chash.o
 	$(CC) lex.yy.o y.tab.o tree.o memory.o error.o pretty.o weed.o symbol.o type.o code.o util.o resource.o chash/chash.o main.o -o wigismo -lfl
+
+main.o: main.c
+	gcc -Wall -Wno-overlength-strings -pedantic -g -c -o main.o main.c
 
 chash/chash.o:
 	cd chash; make
