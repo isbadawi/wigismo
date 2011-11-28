@@ -466,7 +466,7 @@ void codeSTATEMENT(STATEMENT *s)
             fprintf(out, "), exit=True)\n");
             print_indent();
             fprintf(out, "sys.exit(0)");
-            fprintf(out, "\n\n");
+            fprintf(out, "\n");
             break;
         case returnK:
             fprintf(out, "return ");
@@ -767,5 +767,7 @@ void codeSESSION(SESSION *s)
     resSESSION(s);
     find_shows(s->statements);
     codeSTATEMENT(s->statements);
+    print_indent();
+    fprintf(out, "pass\n\n");
     dedent();
 }
