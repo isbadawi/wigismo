@@ -1,0 +1,1262 @@
+\documentclass{WigReport}
+\usepackage{epsfig} % so you can include .eps figures
+\usepackage{alltt}  % so you can include program text 
+\title{Wig Compiler Report}
+\ReportNumber{2011-d} % replace  yyyy with a year and xx with your group #
+\author{Ismail Badawi \\  % put your names here
+        Carla Morawicz}
+\begin{document}
+
+\MakeTitlePage
+\tableofcontents
+%\listoffigures % comment out if you have no figures
+%\listoftables  % comment out if you have no tables
+\clearpage
+
+% Replace each subsection below with the appropriate contents.
+% Feel free to add more (sub)sections if you want. Write clearly
+% and concisely. Assume that your readers know all about WIG and
+% the COMP-520 course; don't quote the project description.
+%
+\section{Introduction}
+\subsection{Clarifications}
+Several aspects of the WIG language are unclear or ambiguous, many of them
+of minor importance. The big issues mainly concern the type-correctness of
+various language constructs. Chief amongst these issues is the behavior of
+tuples and schemas; when are two tuples equivalent, do tuples necessarily
+need to adhere to a declared schema, what exactly are the semantics of the 
+three tuple operations, and so on. 
+
+The {\tt show}, {\tt exit}, {\tt plug} and {\tt receive} constructs can 
+also be treated with varying levels of strictness (and the provided
+compilers do implement them in different ways). What types is a hole 
+allowed to be plugged with (only strings, or can the other types be coerced
+to strings)? What types can be received from {\tt show} or {\tt exit} 
+statement? Must all holes be plugged? What happens if a hole is plugged
+twice? Or if we try to plug a missing hole?
+
+Our general approach has been very permissive. For tuples, we consider
+structural equivalence; two tuples are type-equivalent (and can be assigned
+to each other) if every field that appears in one appears in the other, and
+with the same type. In particular, schema names, along with the order in
+which the fields are given, are ignored.
+
+When it comes to templating, we usually opt for silent failures. Holes can
+be plugged twice; we use the rightmost value. Gaps can be omitted, empty
+strings are used instead. A hole can be plugged by any type, including
+tuples -- we provide a suitable string representation. Tuples cannot be
+received, however -- parsing tuples from an HTML input would not be out of
+the question, but doesn't seem useful from the end user's perspective.
+We don't allow plugging missing holes; there doesn't appear to be any 
+situation in which this is useful.
+
+\subsection{Restrictions}
+Our version of WIG has one restriction; {\tt show} and {\tt exit}
+statements are not allowed inside functions. In practice, this probably
+would not have terribly difficult to implement, considering we're able to
+do it for sessions (there are just a couple of big picture complications,
+chiefly relating to how function arguments are handled), but we didn't
+plan for it from the beginning, and once we got down to it it didn't seem
+all that important, considering exactly zero of the past benchmarks make
+use of this feature.
+
+\subsection{Extensions}
+Aside from minor syntactic sugar like standard increments and {\tt for}
+loops, we haven't made any extensions to our version of WIG.
+
+\subsection{Implementation Status}
+Our WIG implementation is feature-complete; it is able to generate working
+WIG services for nearly all of the past benchmarks. Notably, it is able
+to compile our benchmark ({\tt hangman.wig}), which previously only
+{\tt lkwig} could compile.
+
+\clearpage
+
+\section{Parsing and Abstract Syntax Trees}
+\subsection{The Grammar}
+
+Our {\tt bison} grammar follows.
+
+\makebox[\textwidth]{\hrulefill}
+\begin{verbatim}
+
+%right '=' tPLUSEQ tMINEQ tMULTEQ tDIVEQ tMODEQ tANDEQ tOREQ
+%left tOR
+%left tAND 
+%nonassoc tEQ tLEQ tGEQ tNEQ '<' '>'
+%left '+' '-'
+%left '*' '/' '%'
+%left tKEEP tDISCARD
+%right tCOMBINE
+%right '!' tUMINUS tINC tDEC
+
+%%
+
+service : tSERVICE '{' htmls schemas nevariables functions sessions '}'
+        | tSERVICE '{' htmls schemas functions sessions '}'          
+;
+
+htmls : html 
+        | htmls html
+;
+
+html : tCONST tHTML tIDENTIFIER '=' tHTMLOPEN nehtmlbodies tHTMLCLOSE ';'
+     | tCONST tHTML tIDENTIFIER '=' tHTMLOPEN tHTMLCLOSE ';'             
+;
+
+nehtmlbodies : htmlbody 
+             | nehtmlbodies htmlbody
+;
+
+htmlbody : '<' tIDENTIFIER attributes '>'
+         | '<' tIDENTIFIER attributes tCLOSINGTAG
+         | tOPENINGTAG tIDENTIFIER '>'
+         | tOPENINGGAP tIDENTIFIER tCLOSINGGAP
+         | tWHATEVER
+         | tMETA
+         | '<' tINPUT inputattrs '>'
+         | '<' tSELECT inputattrs '>' nehtmlbodies tOPENINGTAG tSELECT '>'
+         | '<' tSELECT inputattrs '>' tOPENINGTAG tSELECT '>'        
+;
+
+inputattrs : inputattr 
+           | inputattrs inputattr
+;
+
+inputattr : tNAME '=' attr
+          | tTYPE '=' inputtype
+          | attribute
+;
+
+inputtype : tTEXT 
+          | tRADIO
+
+attributes : /* empty */ 
+           | neattributes
+;
+
+neattributes : attribute 
+             | neattributes attribute
+;
+
+attribute : attr 
+          | attr '=' attr
+;
+
+attr : tIDENTIFIER 
+     | tSTRINGCONST
+;
+
+schemas : /* empty */ 
+        | neschemas
+;
+
+neschemas : schema 
+          | neschemas schema
+;
+
+schema : tSCHEMA tIDENTIFIER '{' fields '}'
+;
+
+fields : /* empty */ 
+       | nefields
+;
+
+nefields : field 
+         | nefields field
+;
+
+field : simpletype tIDENTIFIER ';'
+;
+
+nevariables : variable 
+            | nevariables variable 
+;
+
+variable : type identifiers ';'
+;
+
+identifiers : tIDENTIFIER 
+            | identifiers ',' tIDENTIFIER
+;
+
+simpletype : tINT 
+            | tBOOL 
+            | tSTRING 
+            | tVOID
+;
+
+type : simpletype 
+     | tTUPLE tIDENTIFIER
+;
+
+functions : /* empty */ 
+          | nefunctions
+;
+
+nefunctions : function 
+            | nefunctions function
+;
+
+function : type tIDENTIFIER '(' arguments ')' compoundstm
+;
+
+arguments : /* empty */ 
+          | nearguments
+;
+nearguments : argument 
+            | nearguments ',' argument
+;
+
+argument : type tIDENTIFIER
+;
+
+sessions : session 
+         | sessions session
+;
+
+session : tSESSION tIDENTIFIER '(' ')' compoundstm
+;
+
+stms : /* empty */ 
+     | nestms
+;
+nestms : stm 
+       | nestms stm
+;
+stm : ';'
+    | tSHOW document receive ';'
+    | tEXIT document ';'
+    | tRETURN ';'
+    | tRETURN exp ';'
+    | tIF '(' exp ')' stm
+    | tIF '(' exp ')' stmnoshortif tELSE stm
+    | tWHILE '(' exp ')' stm
+    | tFOR '(' optionalexp ';' optionalexp ';' optionalexp ')' stm
+      { EXP* condition = $5 != NULL ? $5 : makeEXPboolconst(1);
+        STATEMENT *body = $7 != NULL ? makeSTATEMENTsequence($9, makeSTATEMENTexp($7)) : $9;
+        STATEMENT *loop = makeSTATEMENTwhile(condition, body);
+        $$ = $3 != NULL ? makeSTATEMENTsequence(makeSTATEMENTexp($3), loop) : loop;
+      } 
+    | tUNTIL '(' exp ')' stm
+    | compoundstm
+    | exp ';'
+;
+
+stmnoshortif : ';'
+    | tSHOW document receive ';'
+    | tEXIT document ';'
+    | tRETURN ';'
+    | tRETURN exp ';'
+    | tIF '(' exp ')' stmnoshortif tELSE stmnoshortif
+    | tWHILE '(' exp ')' stmnoshortif
+    | tUNTIL '(' exp ')' stmnoshortif
+    | tFOR '(' optionalexp ';' optionalexp ';' optionalexp ')' stmnoshortif
+      { EXP* condition = $5 != NULL ? $5 : makeEXPboolconst(1);
+        STATEMENT *body = $7 != NULL ? makeSTATEMENTsequence($9, makeSTATEMENTexp($7)) : $9;
+        STATEMENT *loop = makeSTATEMENTwhile(condition, body);
+        $$ = $3 != NULL ? makeSTATEMENTsequence(makeSTATEMENTexp($3), loop) : loop;
+      } 
+    | compoundstm
+    | exp ';'
+;
+
+document : tIDENTIFIER 
+         | tPLUG tIDENTIFIER '[' plugs ']'
+;
+receive : /* empty */
+        | tRECEIVE '[' inputs ']'
+;
+
+compoundstm : '{' nevariables stms '}' 
+            | '{' stms '}'            
+;
+
+plugs : plug 
+      | plugs ',' plug
+;
+
+plug : tIDENTIFIER '=' exp
+;
+
+inputs : /* empty */ 
+       | neinputs
+;
+
+neinputs : input 
+         | neinputs ',' input
+;
+
+input : lvalue '=' tIDENTIFIER
+;
+
+exp : lvalue
+    | lvalue '=' exp
+    | lvalue tPLUSEQ exp
+    | lvalue tMINEQ exp
+    | lvalue tMULTEQ exp
+    | lvalue tDIVEQ exp
+    | lvalue tMODEQ exp
+    | lvalue tANDEQ exp
+    | lvalue tOREQ exp
+    | tINC lvalue
+    | tDEC lvalue
+    | exp tEQ exp
+    | exp tNEQ exp
+    | exp '<' exp
+    | exp '>' exp
+    | exp tLEQ exp
+    | exp tGEQ exp
+    | '!' exp
+    | '-' exp %prec tUMINUS
+    | exp '+' exp
+    | exp '-' exp
+    | exp '*' exp
+    | exp '/' exp
+    | exp '%' exp
+    | exp tAND exp
+    | exp tOR exp
+    | exp tCOMBINE exp
+    | exp tKEEP tIDENTIFIER
+    | exp tKEEP '(' identifiers ')' 
+    | exp tDISCARD tIDENTIFIER        
+    | exp tDISCARD '(' identifiers ')'
+    | tIDENTIFIER '(' exps ')'
+    | tINTCONST
+    | tBOOLCONST
+    | tSTRINGCONST
+    | tTUPLE '{' fieldvalues '}'
+    | '(' exp ')'                 
+;
+
+optionalexp : /* empty */
+            | exp
+
+exps : /* empty */ 
+     | neexps
+;
+
+neexps : exp 
+       | neexps ',' exp
+;
+
+lvalue : tIDENTIFIER 
+       | tIDENTIFIER '.' tIDENTIFIER
+;
+
+fieldvalues : /* empty */ 
+            | nefieldvalues
+;
+
+nefieldvalues : fieldvalue 
+              | fieldvalues ',' fieldvalue
+;
+
+fieldvalue : tIDENTIFIER '=' exp
+;
+
+\end{verbatim}
+\makebox[\textwidth]{\hrulefill}
+
+\subsection{Using the {\tt flex} or {\tt SableCC} Tool}
+
+Our scanner includes the following start conditions:
+
+\begin{itemize}
+
+\item WIG -- The initial state, where all WIG keywords are reserved.
+
+\item HTML -- Entered after {\tt <html>} is scanned and left when 
+              {\tt </html>} is scanned. We handle meta tags properly so 
+              long as they do not end with a -; that is, 
+              {\tt <!-- is fine -->}, but {\tt <!-- isn't --->}, for 
+              simplicity; correctly recognizing the second would require a 
+              more complicated action in the same vein as the one for block
+              comments, but we also want in this case to store the content
+              of the tag, and that makes things less straightforward.
+
+\item HTMLTAG -- Entered from HTML when a {\tt <} or {\tt </} is scanned, 
+                 and left when {\tt >} or {\tt />} is scanned. Here 
+                 {\tt input} and {\tt select} are reserved words.
+
+\item HTMLINPUT -- Entered from HTMLTAG if the tag's name is {\tt input}.
+
+\item TYPERHS -- Entered from HTMLINPUT when {\tt type=} is scanned. In
+                 this state only {\tt "text"}, {\tt text}, {\tt "radio"} 
+                 and {\tt radio} can be scanned. This sequence of states 
+                 (HTMLTAG, HTMLINPUT, TYPERHS) is needed because other tags
+                 (notably, {\tt <link>}) may have a {\tt type} attribute 
+                 that takes other values.
+
+\item HTMLRHS -- Entered from HTMLTAG when a {\tt =} is scanned, and left 
+                 after either a string constant is scanned, or an 
+                 identifier.  "Identifiers" here can start with a number, 
+                 so that e.g.  {\tt size=20} is valid.
+
+\item INPUTRHS -- same as HTMLRHS, but knows to return to HTMLINPUT instead
+                  of HTMLTAG.
+
+\item GAP -- Entered from HTML when {\tt <{[}} is scanned and left when 
+       {\tt {]}>} is scanned.  (We played around with the provided 
+       compilers and found that gaps are usually not recognized within 
+       tags.) Here nothing is reserved.  
+
+\end{itemize}
+
+Some fairly subtle bugs were found to have been caused by our initially
+naive use of start conditions. For example, we had a case where
+
+{\tt <input name="test" type="text">}
+
+would parse properly, but
+
+{\tt <input type="text" name="test">}
+
+would cause a syntax error. Our flex scanner contains a fair amount of
+code duplication as a result, as some rules appear several times in
+different states, the only difference being what state they begin in their 
+associated action. There doubtless exist nicer ways of dealing with this 
+sort of thing.
+
+\subsection{Using the {\tt bison} or {\tt SableCC} Tool}
+The provided start grammar included 273 shift/reduce conflicts. Most of
+them (that is, all but one) were resolved by specifying operator
+precedences using {\tt \%left}, {\tt \%right} and {\tt \%nonassoc} 
+directives.  One was caused by the "dangling else" problem discussed in the
+readings; taking a cue from the JOOS compiler, we introduced a 
+{\tt stmnoshortif} production for the {\tt then} part of an 
+{\tt if ...  else} statement.
+
+\subsection{Abstract Syntax Trees}
+Our abstract syntax trees are composed of 18 node types, namely
+{\tt SERVICE}, {\tt SESSION}, {\tt HTML}, {\tt HTMLBODY}, {\tt ATTRIBUTE}, 
+{\tt PLUG}, {\tt RECEIVE}, {\tt INPUT}, {\tt SCHEMA}, {\tt ID}, 
+{\tt VARIABLE}, {\tt FUNCTION}, {\tt TYPE}, {\tt STATEMENT}, 
+{\tt DOCUMENT}, {\tt EXP}, {\tt ARGUMENT}, and {\tt FIELDVALUE}, all mapping
+straightforwardly to elements of the WIG language.
+
+\subsection{Desugaring}
+We provide the following constructs, implemented as syntactic sugar:
+
+\begin{itemize}
+\item {\tt for} and {\tt until} loops, which are transformed into 
+equivalent while loops
+\item The compound assignment operators {\tt +=}, {\tt -=}, {\tt *=},
+{\tt /=}, {\tt \%=}, {\tt \&\&=} and {\tt ||=}, which are transformed into
+equivalent assignments
+\item Standard prefix increment and decrement operators, which are 
+transformed into equivalent assignments (we don't provide the postfix
+versions; typically those change the value and return the old one, and
+there isn't really a way to do that in WIG, so implementing them as
+syntactic sugar would be difficult, to say the least).
+\end{itemize}
+
+Each of these corresponds to an extra token recognized by the scanner,
+and one or two extra productions in the parser. For instance, {\tt until}
+loops are implemented as simply as:
+
+\begin{verbatim}
+stm : ...
+    | tUNTIL '(' exp ')' stm
+      { $$ = makeSTATEMENTwhile(makeEXPnot($3), $5); }
+      ...
+\end{verbatim}
+
+\subsection{Weeding}
+The following cases are weeded out (straightforwardly, by traversing the
+AST):
+
+\begin{itemize}
+\item variables of type {\tt void}, in any context (i.e. as arguments to
+functions, as global variables, as local variables in sessions or
+functions, and inside schemas.)
+\item sessions that don't always {\tt exit}
+\item {\tt void} functions where something is returned
+\item non {\tt void} functions where nothing is returned
+\item {\tt <input>} tags without {\tt name} or {\tt type} attributes
+\item {\tt <select>} tags without a {\tt name} attribute
+\item {\tt return} statements in sessions
+\item {\tt exit} and {\tt show} statements in functions
+\end{itemize}
+
+There are a few cases that we considered weeding but ultimately decided not
+to (in keeping with our general permissive approach):
+
+\begin{itemize}
+\item empty schema declarations, e.g. {\tt schema S \{\}}. This is never
+useful, but we don't really the harm in it.
+\item {\tt <input>} tags with more than one name, or more than one type.
+This doesn't really cause trouble because the order in which we traverse
+the AST is always the same, so even though there's more than one name or
+type, it's actually well defined which one we'll use.
+\item {\tt <select>} tags with more than one name, similarly
+\end{itemize}
+
+\subsection{Testing}
+The validity of the scanning and parsing phase is verified by checking
+whether {\tt pretty(parse(x)) == pretty(parse(pretty(parse(x))))} holds
+for every WIG service x. This is obviously undecidable, so in practice we
+just tried for many many WIG services. A representative sample is included
+in the {\tt group-d/wig/tests} directory, and this property is checked for
+these during the build process.
+
+\clearpage
+
+\section{Symbol Tables}
+\subsection{Scope Rules}
+There is one global scope; in particular, functions, HTMLs, schemas,
+global variables and sessions all reside in the same namespace, so their
+names may not clash ({\tt wigismo}'s error messages might be slightly
+misleading in this respect). New scopes are introduced by blocks, which
+can occur anywhere, bringing with them variable declarations. Variable
+names in nested scopes shadow those in outer scopes. A variable name may
+not be reused inside a single scope.
+
+\subsection{Symbol Data}
+Each {\tt SYMBOL} just keeps a pointer to the relevant AST node. From there
+we can get at any information we deem relevant, such as the line number on
+which the symbol appears, its type if it's a variable or an argument, its
+return type if it's a function, and so on.
+
+\subsection{Algorithm}
+We implement the cactus stack structure for our symbol tables as seen in 
+class. There is a global symbol table for the whole service ({\tt mst}, 
+declared in {\tt symbol.h}); in addition, whenever a block statement is 
+encountered (that is, whenever a new scope is entered, because blocks are 
+the only way to introduce new scopes in WIG), the node for that statement 
+keeps a pointer to its local symbol table, which keeps a pointer to the
+symbol table of the next outer scope. First, we insert all html literals,
+schemas, global variables, functions and sessions into the {\tt mst}. Then
+we traverse the AST, keeping track of which scope we're in. When a new
+scope is entered, all of its local variable declarations are inserted into
+the table for that statement ({\tt blockS.table}), and in so doing are
+checked for uniqueness. Whenever an identifier is used, we check the
+current scope and work our way up to the {\tt mst} looking for a match,
+reporting an error if there isn't one.
+
+\subsection{Testing}
+The symbol table phase was tested by constructing a minimal WIG service
+for each possible sort of error, and running wigismo on each of them,
+checking that an appropriate error message is printed, and compilation is
+terminated. These test cases all live in {\tt group-d/wig/tests/symbol},
+and cover the following situations:
+
+\begin{itemize}
+\item Calling undeclared functions
+\item Using the same name for different arguments to a function
+\item Using the same name for local variables in the same scope
+\item Using the same name for two global entities
+\item Plugging an undeclared hole
+\item Showing or exiting with an undeclared HTML
+\item Receiving an undeclared input
+\item Receiving an input into an undeclared variable or undeclared field 
+of a tuple
+\item Declaring a tuple with an undeclared schema
+\item Assigning to an undeclared variable, or undeclared field of a tuple
+\item Using undeclared variables or undeclared fields of tuples in
+expressions
+\end{itemize}
+
+Further, wigismo's pretty printer can be instructed to dump the contents
+of the symbol table whenever a new scope is entered. Each new scope is
+marked by an extra level of indentation. This allows us to compare the
+results of the symbol table phase against a manual construction. For
+instance, the following (rather contrived) service:
+
+\begin{verbatim}
+service {
+    const html Test = <html>Test</html>;
+    schema S {
+        int x;
+    }
+    int x;
+    int test(bool x) {
+        int y;
+        y = 10;
+        while (y > 0) {
+            string x;
+            y = y - 1;
+        }
+        return 0;
+    }
+    session Main() {
+        tuple S x;
+        x.x = test(true);
+        exit Test;
+    }
+}
+\end{verbatim}
+
+produces the following pretty-printer output:
+
+\begin{verbatim}
+service
+{
+    =================================================
+    =============|Symbols in this Scope|=============
+    =================================================
+     S: schema
+     x: int variable
+     test: function returning int
+     Test: html
+     Main: session
+    =================================================
+
+    const html Test = <html>Test</html>;
+
+    schema S {
+        int x;
+    }
+
+    int x;
+    int test(bool x)
+    {
+        =================================================
+        =============|Symbols in this Scope|=============
+        =================================================
+         S: schema
+         x: int variable
+         test: function returning int
+         Test: html
+         Main: session
+             x: bool argument
+             y: int variable
+        =================================================
+
+        int y;
+        y = 10;
+        while (y > 0)
+        {
+            =================================================
+            =============|Symbols in this Scope|=============
+            =================================================
+             S: schema
+             x: int variable
+             test: function returning int
+             Test: html
+             Main: session
+                 x: bool argument
+                 y: int variable
+                     x: string variable
+            =================================================
+
+            string x;
+            y = (y - 1);
+        }
+        return 0;
+    }
+
+    session Main()
+    {
+        =================================================
+        =============|Symbols in this Scope|=============
+        =================================================
+         S: schema
+         x: int variable
+         test: function returning int
+         Test: html
+         Main: session
+             x: tuple S variable
+        =================================================
+
+        tuple S x;
+        x.x = test(true);
+        exit Test;
+    }
+}
+\end{verbatim}
+
+\clearpage
+
+\section{Type Checking}
+\subsection{Types}
+The WIG language has support for three primitive types, namely {\tt int},
+{\tt bool}, and {\tt string}. It also has tuples, which are collections
+of key-value pairs adhering to a {\tt schema}.
+
+\subsection{Type Rules}
+\begin{itemize}
+\item A {\tt service} is type correct if the sessions and functions within
+      are type correct.
+\item A session or function is type correct if its body is type correct.
+\item The skip statement ({\tt ;}) is always type correct.
+\item A sequence {\tt s1, s2} of statements is type correct if {\tt s1} and 
+{\tt s2} are both type correct.  
+\item The expressions plugged into a {\tt show} statement must type check; 
+the variables received from a {\tt show} must not be of a tuple type.
+\item The expressions plugged into an {\tt exit} statement must type check. 
+\item A {\tt return} statement is type correct if the type of the 
+      expression returned is compatible with the return type of the 
+      function. (Return statements in sessions do not pass the weeder.)
+\item Block statements are type correct if their body is type correct.
+\item An {\tt if} statement is type correct if the condition expression is
+      of type {\tt bool} and the body is type correct.
+\item An {\tt if ... else} statement is type correct if the condition 
+      expression is of type {\tt bool} and both the then part and the else 
+      part of the statement are type correct.
+\item A {\tt while} statement is type correct if the condition expression 
+      is of type {\tt bool} and the body is type correct.
+\item An expression statement is type correct if the expression is type 
+      correct.
+\item The left and right operands of the arithmetic opreators {\tt -},
+      {\tt *}, {\tt /}, and {\tt \%} must be of type {\tt int}; the result 
+      is of type {\tt int}.
+\item For addition, the two operands must be of type {\tt string} or 
+      {\tt int}. If either or both are {\tt string}s, the result is a 
+      {\tt string}, otherwise it's an {\tt int}.
+\item The type of the expression on the right hand side of a {\tt =} must 
+      either be of the same type or a compatible type as the identifier on 
+      the left hand side; the result is the type that is evaluated from the
+      right-hand side expression.
+\item The left and right operatands of the boolean operators {\tt \&\&} and
+      {\tt ||} must be of type {\tt bool}; the result is of type {\tt bool}.
+\item The left and right operands of the relation operators {\tt <}, 
+      {\tt >}, {\tt <=}, {\tt >=} must be of type {\tt int}; the result is
+      of type {\tt int}.
+\item For the equality operators {\tt ==} and {\tt !=}, the types of the
+      left and right operands must be the same or compatible, where
+      compatibility in the case of tuples refers to structural equivalence 
+      -- that is, every variable that appears in one of the schemas also 
+      appears in the other schema with the same type -- the result is of
+      type {\tt bool}.
+\item For the unary minus operator, the expression being negated must have
+      type {\tt int}; the result is of type {\tt int}.
+\item For the negation operator {\tt !}, the expression being negated must
+      type {\tt bool}; the result is of type {\tt bool}.
+\item The types of the arguments of a function call must correspond to the
+      types declared in the function's signature; the type of the 
+      expression is the return type of the function.
+\item Any integer constant (matching the pattern
+      {\tt 0|{[}1-9{]}{[}0-9{]}*}) has type {\tt int}.
+\item The literals {\tt true} and {\tt false} are of type {\tt bool}. 
+\item Any double quoted string is of type {\tt string}.  
+\item Tuple literals have a tuple type -- their schema is defined 
+      implicitly by the types of their field values, assuming they type 
+      check.
+\item For the keep and discard operators ({\tt \textbackslash +} and 
+      {\tt \textbackslash -}), the left operand must be of type tuple; each 
+      identifier appearing on the right hand side must appear in its 
+      schema; the result is tuple type with a new schema generated 
+      automatically. 
+\item For the combine operator ({\tt <<}), the left and right operands must
+      be of type tuple, the common variables in their schemas must have the
+      same type, and the result is a tuple whose schema is composed of the
+      union of their variables.
+\end{itemize}
+
+\subsection{Algorithm}
+Type checking is done by traversing the AST and storing the computed type 
+of each expression in the {\tt TYPE} field of the corresponding {\tt EXP}
+AST node. This process is largely straightforward; to constants and
+literals we can immediately associate a type, for identifiers we simply
+read the information gathered during the symbol table phase, and from 
+there the type of each expression can be obtained in accordance with the
+type rules. Once each expression has been annotated with its type, we have
+enough information to enforce the type rules for statements, functions,
+sessions, and finally the entire service.
+
+\subsection{Testing}
+As in the symbol table phase, a suite of minimal WIG services that provoke
+every possible error message is provided. These live in
+{\tt group-d/wig/tests/type}, and cover the following situations:
+
+\begin{itemize}
+\item Combining incompatible tuples
+\item Discarding or keeping a missing field from a tuple
+\item Using anything but a boolean variable in the condition of an
+      {\tt if} or {\tt while} statement
+\item Comparing non-comparable types
+\item Assigning to a variable the result of an expression whose type it is
+      not assignable from
+\item Receiving tuples
+\item Returning from a function an expression whose type is not compatible
+      with the function's return type
+\item Using the arithmetic operators (except {\tt +}) with anything but
+      integers
+\item Using the relational operators with anything but booleans
+\item Calling functions with incompatible argument types
+\end{itemize}
+
+Also as in the symbol phase, wigismo's pretty-printer was enhanced to
+annotate every expression with its type. Anonymous tuples are given unique
+generated schema names. The service above produces the following output:
+
+\begin{verbatim}
+
+service
+{
+    const html Test = <html>Test</html>;
+
+    schema S {
+        int x;
+    }
+
+    int x;
+    int test(bool x)
+    {
+        int y;
+        (y = (10 : int) : int);
+        while (((y : int) > (0 : int) : bool))
+        {
+            string x;
+            (y = ((y : int) - (1 : int) : int) : int);
+        }
+        return (0 : int);
+    }
+
+    session Main()
+    {
+        tuple S x;
+        (x.x = (test((true : bool)) : int) : int);
+        exit Test;
+    }
+}
+\end{verbatim}
+
+\clearpage
+
+\section{Resource Computation}
+\subsection{Resources}
+We assign unique integer identifiers to every {\tt if}, {\tt if ... else},
+and {\tt while} statement; these are used to generate appropriate function
+names (as described in the code generation section) and are analogous to
+labels for {\tt goto} statements in jasmin.
+
+We also assign unique integer ids to every variable. There isn't a clean
+way to introduce arbitrary blocks in python, so scoping can be awkward.
+Even if we opt for an ugly solution (e.g. use {\tt if True:} to introduce
+blocks), we still have to deal with the odd control flow induced by
+{\tt show} statements. Making every variable unique in this way makes
+saving local state very easy -- we can just have a big dictionary of local
+variables, since every key is unique (in fact, we could dispense with the
+variable names in the generated code entirely, but we keep them to make it
+easier to read.)
+
+\subsection{Algorithm}
+We maintain a global counter, and traverse the AST. Whenever an {\tt if},
+{\tt if ... else}, or {\tt while} statement is encountered, we increment
+the counter and assign it to the statement.
+
+Assigning ids to variables is done during the parsing phase; an
+incrementing id is assigned whenever a {\tt VARIABLE} node is created.
+
+\subsection{Testing}
+There isn't very much to test here. This phase is necessary for the code
+generation phase; verifying that this latter phase works is sufficient.
+
+\clearpage
+
+\section{Code Generation}
+\subsection{Strategy}
+{\tt wigismo} generates python code. All of the WIG language constructs, 
+with the notable exception of {\tt show} and {\tt exit}, have equivalents
+in python. A {\tt while} loop is a {\tt while} loop, a {\tt ||} operator is
+an {\tt or} operator, and so on, but the semantics of {\tt show} makes for
+less than straightforward control flow. The big picture is as follows:
+
+\begin{itemize}
+\item Every service defines two variables: {\tt g}, an instance of
+{\tt wigismo.Store}, which stores global variables, and {\tt l}, a
+dictionary which stores local variables. Variables are all given unique
+integer ids, so this one dictionary is sufficient (that is, scoping is not
+an issue). No initialization happens; every access to a variable, local
+or global, is wrapped in a call to {\tt get}, with a suitable default
+value based on type.
+\item HTMLs become functions which print the contents of the HTML. Holes
+are the arguments to the function, and are inserted into the output using
+string interpolation. {\tt show} and {\tt exit} statements partly 
+correspond to just calling these functions, passing any values plugged as 
+arguments. (python supports both default arguments and keyword arguments;
+holes are all given a default value of {\tt ''}, and the HTML functions
+are always called with every argument named, so in this way holes can be
+omitted easily.)
+\item Schemas don't appear in the generated code at all.
+\item Functions map to ordinary python functions. Since we don't allow
+{\tt show} or {\tt exit} statements in functions, this is straightforward.
+\item Sessions become sets of functions. Since python doesn't support the
+{\tt goto} statement, every session is split into several functions, one
+for every possible entry or jump point (the start of a loop, after a loop,
+after an {\tt if}, the start of an {\tt else}, after an {\tt else}, and
+after a {\tt show}). This is necessary because regular control flow is
+often impossible to apply (e.g. what if we have a {\tt show} statement
+inside a loop?)
+\item When a {\tt show} statement is encountered, the locals dictionary
+is written to a file, along with the name of the function to call when
+this session is resumed (this function is called using reflection). If
+any values are to be received, this happens at the beginning of that
+function.
+\item In some cases we have to be careful about generating valid code;
+for instance, python contains many reserved keywords which aren't reserved
+in WIG (a common one is {\tt pass}), so we append underscores to function
+argument names and hole names to avoid conflicts. HTML literals end up in
+python strings, so some characters (backslashes, single quotes, newlines)
+have to be escaped.
+\end{itemize}
+
+\subsection{Code Templates}
+Python has significant whitespace; blocks are marked by levels of
+indentation. This makes certain ideas in the template difficult to show
+(as some templates reset the indentation level). In what follows, take
+leading whitespace to mean "some unspecified but nonzero level of
+indentation".
+
+\noindent
+The {\tt exit} statement
+
+{\tt exit plug D {[}g1=x1, ..., gn=xn{]}}
+
+\noindent
+has template:
+
+\begin{verbatim}
+    wigismo.output(sessionid, lambda: output_D(g1=x1, ..., gn=xn), exit=True)
+    sys.exit(0)
+\end{verbatim}
+
+\noindent
+The {\tt show} statement (with precomputed destination {\tt NEXT}):
+
+{\tt show plug D [g1=x1, ..., gn=xn] receive [y1=i1, ..., yn=in]}
+
+\noindent
+has template:
+
+\begin{verbatim}
+    wigismo.output(sessionid, lambda: output_D(g1=x1, ..., gn=xn))
+    state = wigismo.Store(sessionid)
+    state.set('locals', l)
+    state.set('start', NEXT)
+    sys.exit(0)
+
+# reset indentation
+
+def NEXT(sessionid):
+    y1 = wigismo.get_field('i1', type(y1))
+    ...
+    yn = wigismo.get_field('in', type(yn))
+\end{verbatim}
+
+\noindent
+The skip statement:
+
+    {\tt ;}
+
+\noindent
+has template
+
+    {\tt pass}
+
+\noindent
+The {\tt return} statement:
+
+    {\tt return E;}
+
+\noindent
+has template:
+
+    {\tt return E}
+
+\subsection{Algorithm}
+Describe your algorithm for generating code.
+
+\subsection{Runtime System}
+Since {\tt wigismo} generates python code, we have access to a very large
+standard library. The functionality we need has been encapsulated into the
+{\tt wigismo.py} module, which provides the following facilities:
+
+\begin{itemize}
+\item the {\tt random\_string} function generates random strings, for use
+in generating session identifiers (using python's {\tt random} module) 
+\item the {\tt get\_field} function handles parsing and retrieving CGI 
+fields, and coercing them to appropriate types (using python's {\tt cgi}
+module)
+\item the {\tt output} function wraps the output HTML in a form if
+necessary (a neat use of higher order functions)
+\item the {\tt Store} class provides thread-safe storage of key-value pairs
+to a file, for use in maintaining global state, and dumping local state
+following a {\tt show} statement
+\item the {\tt tuple\_keep}, {\tt tuple\_discard} and {\tt tuple\_combine}
+functions implement the three tuple operations
+\item While assignments in python can be chained (e.g. {\tt x = y = 4}), a
+statement like {\tt x = (y = 2) + 3} raises a {\tt SyntaxError}; that is,
+assignments aren't really expressions in python. To get around this, the
+{\tt set} function performs the assignment and returns the value assigned.
+\end{itemize}
+
+\subsection{Sample Code}
+\begin{verbatim}
+#!/usr/bin/python
+import sys
+import wigismo
+import cgitb
+cgitb.enable()
+
+g = wigismo.Store('tiny_globals.pck')
+l = {}
+
+def output_Welcome():
+    sys.stdout.write(' ')
+    sys.stdout.write('<body >')
+    sys.stdout.write('\n    Welcome!\n  ')
+    sys.stdout.write('</body>')
+    sys.stdout.write(' ')
+
+def output_Pledge():
+    sys.stdout.write(' ')
+    sys.stdout.write('<body >')
+    sys.stdout.write('\n    How much do you want to contribute?\n    ')
+    sys.stdout.write('<input name="contribution" type="text" size="4" >')
+    sys.stdout.write('\n  ')
+    sys.stdout.write('</body>')
+    sys.stdout.write(' ')
+
+def output_Total(total_=''):
+    sys.stdout.write(' ')
+    sys.stdout.write('<body >')
+    sys.stdout.write('\n    The total is now ')
+    sys.stdout.write('%s' % total_)
+    sys.stdout.write('.\n  ')
+    sys.stdout.write('</body>')
+    sys.stdout.write(' ')
+
+def session_Contribute(sessionid):
+    wigismo.set(l, 'i_2', 87)
+    wigismo.output(sessionid, lambda: output_Welcome())
+    state = wigismo.Store(sessionid)
+    state.set('locals', l)
+    state.set('start', 'session_Contribute_show_0')
+    sys.exit(0)
+
+def session_Contribute_show_0(sessionid):
+    wigismo.output(sessionid, lambda: output_Pledge())
+    state = wigismo.Store(sessionid)
+    state.set('locals', l)
+    state.set('start', 'session_Contribute_show_1')
+    sys.exit(0)
+    pass
+
+def session_Contribute_show_1(sessionid):
+    l['i_2'] = wigismo.get_field('contribution', int)
+    g.set('amount_1', (g.get('amount_1', 0) + l.get('i_2', 0)))
+    wigismo.output(sessionid, lambda: output_Total(total=g.get('amount_1', 0)), exit=True)
+    sys.exit(0)
+    pass
+
+def wigismo_restart():
+    state = wigismo.Store(wigismo.sessionid)
+    l.update(state.get('locals'))
+    globals()[state.get('start')](wigismo.sessionid)
+
+sessions = ['Contribute']
+for session in sessions:
+    if wigismo.sessionid == session:
+        globals()['session_%s' % session]('%s$%s' % (session, wigismo.random_string(20)))
+        sys.exit(0)
+    elif wigismo.sessionid.startswith('%s$' % session):
+        wigismo_restart();
+        sys.exit(0)
+
+print 'Content-type: text/html'
+print
+print '<title>Illegal request</title>'
+print '<p>You entered an invalid session name.</p>'
+print '<p>Try one of these:</p>'
+print '<ul>'
+for session in sessions:
+    print '<li><a href="?%s">%s</a></li>' % (session, session)
+print '</ul>'
+sys.exit(0)
+\end{verbatim}
+
+\subsection{Testing}
+The code generation phase was tested by trying to compile and run several
+services (past benchmarks, and services in the 
+{\tt public\_html/wig/examples} directory). Notably, {\tt wigismo} was 
+able to successfully compile our benchmark {\tt hangman.wig} service. We 
+also compared its output to our manual construction of the {\tt 08rps.wig}
+service during the CGI vs WIG milestone. Many somewhat interesting issues
+surfaced while trying out various benchmarks:
+
+\begin{itemize}
+\item In python, blocks are marked by levels of indentation. A common 
+pattern in WIG services (more so than in other languages, because WIG 
+doesn't have arrays) is to have large if-else-if structures, like so:
+
+\begin{verbatim}
+if (c1) {
+    ...
+}
+else if (c2) {
+    ...
+}
+else if (c3) {
+    ...
+}
+\end{verbatim}
+
+There's nothing special about {\tt else if}; in the AST, we just have an
+{\tt if ... else} statement whose {\tt else} part happens to be another
+{\tt if} or {\tt if ... else} statement. As such, we were generating code
+like this:
+
+\begin{verbatim}
+if c1:
+    ...
+else:
+    if c2:
+        ...
+    else:
+        if c3:
+            ...
+\end{verbatim}
+
+The indentation level kept climbing. This might not seem like such a big
+deal, except that, as it turns out, python has a limit to the number of
+indented blocks one can have; this limit is hardcoded somewhere to be 100.
+Some services (notably, {\tt 2008/wig/group-4/phish.wig}) broke this
+limit, causing the generated code to raise an {\tt IndentationError: 
+too many indentation levels.}.
+
+The somewhat ugly fix to this was to explicitly check, when generating
+code for an {\tt if ... else} statement, whether the else part was itself
+an {\tt if} or {\tt if ... else} statement, and if so writing {\tt el}
+instead of {\tt else:\textbackslash n}, and setting a special flag so that
+the {\tt else} part knows not to indent itself, resulting in code like:
+
+\begin{verbatim}
+if c1:
+    ...
+elif c2:
+    ...
+elif c3:
+    ...
+\end{verbatim}
+\item Blocks in python must contain at least one statement, otherwise an
+{\tt IndentationError} error is raised. A snippet like this:
+
+\begin{verbatim}
+if (some_condition) {}
+nextStatement();
+\end{verbatim}
+
+generated code like this:
+
+\begin{verbatim}
+if some_condition:
+nextStatement()
+\end{verbatim}
+
+Less contrived examples involve reaching the end of a block after coming
+back from a {\tt show} statement; this resulted in empty functions being
+generated. The (again, somewhat ugly) fix to this was to explicitly end 
+every block with a {\tt pass} statement, resulting for the above in code
+like this:
+
+\begin{verbatim}
+if some_condition:
+    pass
+nextStatement()
+\end{verbatim}
+\end{itemize}
+
+\clearpage
+
+\section{Availability and Group Dynamics}
+\subsection{Manual}
+Running {\tt wigismo} on the input WIG service ({\tt example.wig}, say)
+generates a python file ({\tt example.py}). This file has to be moved to
+whatever directory CGI scripts are served from, and its permissions have
+to be changed to {\tt 755}. The generated file depends on a python module 
+we wrote called {\tt wigismo}; there could be trouble when it tries to
+import it, depending on the environment. The simplest way to make it work
+is to copy the {\tt wigismo.py} file into the {\tt cgi-bin} directory, or
+into some directory on the python search path. Note that setting the
+{\tt \$PYTHONPATH} environment variable is not reliable; CGI scripts
+typically don't run under the same environment as the user. An ad-hoc
+solution would be to alter the search path (in the python file, after
+compiling), by adding this line just below {\tt import sys}:
+
+{\tt sys.path.insert(0, '/absolute/path/to/wigismo.py')}
+
+\subsection{Demo Site}
+Demo services available at 
+{\tt http://www.cs.mcgill.ca/\textasciitilde ibadaw/wigismo/}.
+
+\subsection{Division of Group Duties}
+The majority of the work was done through pair programming; that is,
+both team members sitting on one computer, alternately typing. There are
+several advantages to this. For one thing, both members of the team work
+on every part of the compiler; this helps reduce any discrepancy in the
+experience gained, and it also makes oversights and such less common, since
+every piece of code has two pairs of eyes looking at it. Moreover, since
+we have "joint ownership" of the code, there is no blame to be assigned
+when something breaks. Having your partner next to you also makes you less
+likely to procrastinate. 
+
+Of course, this approach is not necessarily perfect. For instance, it
+requires that everything be worked on together -- if one member is overly
+busy, no progress can be made. It's also hard to quantify -- svn commits,
+for instance, may not accurately reflect who actually committed what (and
+there is no concept of a "joint commit" or anything like that). It can also
+take longer -- in some cases, if the problem is well understood and it's
+just a matter of tedious typing, it would definitely be faster to have
+two programmers working independently.
+
+\clearpage
+
+\section{Conclusions and Future Work}
+\subsection{Conclusions}
+First, provide a brief summary of the report.  Next, describe the main
+things that you learned in the course of this work, and attempt to
+draw new conclusions, even if they are just ``soft'' experience-based
+ones.  Detail the things you learned that you did not expect to learn.
+
+\subsection{Future Work}
+The WIG language is very restrictive; it is practically impossible to 
+write something worthwhile in it. In particular, WIG needs:
+
+\begin{itemize}
+\item Support for arrays, or indeed any useful data structure. A majority
+of the benchmarks end up using some large number of variables (or 
+generating a whole bunch of code) to emulate this anyway. Depending on the
+target language, this might not even be so difficult to implement; one
+could think of transforming arrays in WIG into lists in python, for
+instance.
+\item Some way to access operating system facilities. Reading and writing
+files would be useful, for instance, or accessing databases, or making
+HTTP requests. Most general purpose languages provide some way to do this;
+it would just be a matter of generating the appropriate code.
+\item Better string manipulation. As it stands strings in WIG can't even
+be indexed; the only supported operation is concatenation. Strong support
+for string manipulation goes a long way towards making a language usable,
+and again, it would simply be a matter of delegating to the target
+language.
+\end{itemize}
+
+\subsection{Course Improvements}
+On the whole, COMP 520 is a very fun and well structured course. The
+workload is nontrivial, but the project is split up into clear, 
+well-defined milestones, and making the source for the JOOS compiler
+available provides ample guidance -- learning by example really is quite
+effective. The only downside is the WIG language itself; it might have 
+been an interesting concept back in the late 90s, but as it stands, it's 
+awfully dated and obsolete. Writing anything of value with it is 
+difficult. Modern web frameworks are both easier to use and more powerful.
+As such, completing the project is less satisfying than it could be, since
+it's likely {\tt wigismo} will never be used again. Of course, the same
+could be said of any sort of coursework; these projects are undertaken
+mainly for their instructive value, and little else. With this concept,
+though -- building a compiler for a DSL -- there is such potential for
+building something useful, and it seems silly to have students write
+4500-line CGI script generators instead!
+
+(One simple idea would be to flip the course around; provide the source for
+a WIG compiler, and have students write a JOOS compiler. Generating code
+that can actually run on a JVM is certainly more interesting than CGI!)
+
+\subsection{Goodbye}
+Ismail thinks compilers are fun and interesting and is taking COMP 621 
+next semester, and applying for a Master's degree in this area. Carla's 
+passions lie elsewhere.:w
+
+\end{document}
