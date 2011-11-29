@@ -669,7 +669,6 @@ void codeEXP(EXP *e)
         case leqK:
         case geqK:
         case neqK:
-        case plusK:
         case minusK:
         case timesK:
         case divK:
@@ -680,6 +679,40 @@ void codeEXP(EXP *e)
             codeEXP(e->val.binaryE.right);
             fprintf(out, ")");
             break;
+        case plusK:
+        {
+            EXP *left = e->val.binaryE.left;
+            EXP *right = e->val.binaryE.right;
+            fprintf(out, "(");
+            if (left->type->kind == right->type->kind)
+            {
+                codeEXP(left);
+                fprintf(out, " %s ", _ops[e->kind]);
+                codeEXP(right);
+            }
+            else
+            {
+                if (left->type->kind != stringK)
+                {
+                    fprintf(out, "str(");
+                    codeEXP(left);
+                    fprintf(out, ")");
+                }
+                else
+                    codeEXP(left);
+                fprintf(out, " %s ", _ops[e->kind]);
+                if (right->type->kind != stringK)
+                {
+                    fprintf(out, "str(");
+                    codeEXP(right);
+                    fprintf(out, ")");
+                }
+                else
+                    codeEXP(right);
+            }
+            fprintf(out, ")");
+        }
+        break;
         case notK:
             fprintf(out, "not ");
             codeEXP(e->val.unaryE);
