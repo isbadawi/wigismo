@@ -898,64 +898,204 @@ Python has significant whitespace; blocks are marked by levels of
 indentation. This makes certain ideas in the template difficult to show
 (as some templates reset the indentation level). In what follows, take
 leading whitespace to mean "some unspecified but nonzero level of
-indentation".
+indentation". Also, assume every snippet resides in a session {\tt S},
+and {\tt N1} and {\tt N2} stand for the unique ids computed during the
+resource computation phase, and {\tt N} is an integer id, incremented
+whenever code for a {\tt show} statement is generated. {\tt D} is a type
+appropriate default value -- {\tt 0} for {\tt int}, {\tt False} for
+{\tt bool}, {\tt ''} for tuples. {\tt l} and {\tt g} refer to the locals
+dictionary and {\tt wigismo.Store} object mentioned above.
 
 \noindent
-The {\tt exit} statement
-
-{\tt exit plug D {[}g1=x1, ..., gn=xn{]}}
-
-\noindent
-has template:
-
-\begin{verbatim}
-    wigismo.output(sessionid, lambda: output_D(g1=x1, ..., gn=xn), exit=True)
+\begin{tabular}{| p{20em} | p{30em} |}
+    \hline
+    Construct & Template \\ \hline
+    {\tt x}
+    &
+    {\tt g.get('x\_N', D)} \newline
+    if {\tt x} is a global variable \newline
+    {\tt l.get('x\_N', D)} \newline
+    if {\tt x} is a local variable \newline
+    {\tt x} \newline
+    if {\tt x} is a function argument
+    \\ \hline
+    {\tt x = E}
+    & 
+    {\tt g.set('x\_N', E)} \newline
+    if {\tt x} is a global variable \newline
+    {\tt wigsmo.set(l, 'x\_N', E)} \newline
+    if {\tt x} is a local variable \newline
+    {\tt x = E} \newline
+    if {\tt x} is a function argument  
+    \\ \hline
+    \begin{verbatim} 
+    exit plug H [g1=x1,...,gn=xn];
+    \end{verbatim}
+    & 
+    \begin{verbatim}
+    wigismo.output(sessionid, 
+        lambda: output_H(g1_=x1, ..., gn_=xn, exit=True))
     sys.exit(0)
-\end{verbatim}
+    \end{verbatim}
+    \\ \hline       
+    \begin{verbatim} 
+    show plug H [g1=x1,...,gn=xn]
+        receive [r1=i1,...,rn=xn]
+    \end{verbatim}
+    & 
+    \begin{verbatim}
+        wigismo.output(sessionid,
+            lambda: output_H(g1_=x1, ..., gn_=xn))
+        state = wigismo.Store(sessionid)
+        state.set('locals', l)
+        state.set('start', 'session_S_show_N')
+        sys.exit(0)
 
-\noindent
-The {\tt show} statement (with precomputed destination {\tt NEXT}):
+    def session_S_show_N(sessionid):
+        # assign wigismo.get_field('i1', t1) to r1
+        # where t1 is the type of r1
+        # using the appropriate assignment template
+    \end{verbatim}
+    \\ \hline       
+    \begin{verbatim} 
+    if (C)
+        B
+    \end{verbatim}
+    & 
+    if {\tt B} has no {\tt show} statement:
+    \begin{verbatim}
+    if C:
+        B
+    \end{verbatim}
+    otherwise
+    \begin{verbatim}
+        if not (C):
+            session_S_N1(sessionid)
+        B
+        session_S_N1(sessionid)
 
-{\tt show plug D [g1=x1, ..., gn=xn] receive [y1=i1, ..., yn=in]}
+    def session_S_N1(sessionid):
+        # set indent
+    \end{verbatim}
+    \\ \hline       
+    \end{tabular}
+    \begin{tabular}{| p{20em} | p{30em} |}
+    \hline
+    \begin{verbatim} 
+    if (C)
+        B1
+    else
+        B2
+    \end{verbatim}
+    & 
+    if {\tt B1} and {\tt B2} have no {\tt show} statements \newline
+    \begin{verbatim}
+    if C:
+        B1
+    else:
+        B2
+    \end{verbatim}
+    otherwise
+    \begin{verbatim}
+        if not (C):
+            session_S_N1(sessionid)
+        B1
+        session_S_N2(sessionid)
 
-\noindent
-has template:
+    def session_S_N1(sessionid):
+        B2
+        session_S_N2(sessionid)
+    
+    def session_S_N2(sessionid):
+        # set indent
+    \end{verbatim}
+    \\ \hline       
+    \begin{verbatim}
+    while (C)
+        B
+    \end{verbatim}
+    &
+    if {\tt B} has no {\tt show} statements
+    \begin{verbatim}
+    while C:
+        B
+    \end{verbatim}
+    otherwise
+    \begin{verbatim}
+        if C:
+            session_S_N1(sessionid)
+        session_S_N2(sessionid)
 
-\begin{verbatim}
-    wigismo.output(sessionid, lambda: output_D(g1=x1, ..., gn=xn))
-    state = wigismo.Store(sessionid)
-    state.set('locals', l)
-    state.set('start', NEXT)
-    sys.exit(0)
+    def session_S_N1(sessionid):
+        B
+        if C:
+            session_S_N1(sessionid)
+        else:
+            session_S_N2(sessionid)
 
-# reset indentation
+    def session_S_N2(sessionid):
+        # set indent
+    \end{verbatim}
+    \\ \hline
+\end{tabular}
 
-def NEXT(sessionid):
-    y1 = wigismo.get_field('i1', type(y1))
-    ...
-    yn = wigismo.get_field('in', type(yn))
-\end{verbatim}
-
-\noindent
-The skip statement:
-
-    {\tt ;}
-
-\noindent
-has template
-
-    {\tt pass}
-
-\noindent
-The {\tt return} statement:
-
-    {\tt return E;}
-
-\noindent
-has template:
-
-    {\tt return E}
-
+%
+%\noindent
+%The {\tt exit} statement
+%
+%{\tt exit plug D {[}g1=x1, ..., gn=xn{]}}
+%
+%\noindent
+%has template:
+%
+%\begin{verbatim}
+%    wigismo.output(sessionid, lambda: output_D(g1=x1, ..., gn=xn), exit=True)
+%    sys.exit(0)
+%\end{verbatim}
+%
+%\noindent
+%The {\tt show} statement (with precomputed destination {\tt NEXT}):
+%
+%{\tt show plug D [g1=x1, ..., gn=xn] receive [y1=i1, ..., yn=in]}
+%
+%\noindent
+%has template:
+%
+%\begin{verbatim}
+%    wigismo.output(sessionid, lambda: output_D(g1=x1, ..., gn=xn))
+%    state = wigismo.Store(sessionid)
+%    state.set('locals', l)
+%    state.set('start', NEXT)
+%    sys.exit(0)
+%
+%# reset indentation
+%
+%def NEXT(sessionid):
+%    y1 = wigismo.get_field('i1', type(y1))
+%    ...
+%    yn = wigismo.get_field('in', type(yn))
+%\end{verbatim}
+%
+%\noindent
+%The skip statement:
+%
+%    {\tt ;}
+%
+%\noindent
+%has template
+%
+%    {\tt pass}
+%
+%\noindent
+%The {\tt return} statement:
+%
+%    {\tt return E;}
+%
+%\noindent
+%has template:
+%
+%    {\tt return E}
+%
 \subsection{Algorithm}
 Describe your algorithm for generating code.
 

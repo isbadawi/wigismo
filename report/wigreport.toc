@@ -28,16 +28,16 @@
 \contentsline {section}{\numberline {6}Code Generation}{19}
 \contentsline {subsection}{\numberline {6.1}Strategy}{19}
 \contentsline {subsection}{\numberline {6.2}Code Templates}{19}
-\contentsline {subsection}{\numberline {6.3}Algorithm}{20}
-\contentsline {subsection}{\numberline {6.4}Runtime System}{20}
-\contentsline {subsection}{\numberline {6.5}Sample Code}{20}
-\contentsline {subsection}{\numberline {6.6}Testing}{22}
-\contentsline {section}{\numberline {7}Availability and Group Dynamics}{24}
-\contentsline {subsection}{\numberline {7.1}Manual}{24}
-\contentsline {subsection}{\numberline {7.2}Demo Site}{24}
-\contentsline {subsection}{\numberline {7.3}Division of Group Duties}{24}
-\contentsline {section}{\numberline {8}Conclusions and Future Work}{25}
-\contentsline {subsection}{\numberline {8.1}Conclusions}{25}
-\contentsline {subsection}{\numberline {8.2}Future Work}{25}
-\contentsline {subsection}{\numberline {8.3}Course Improvements}{25}
-\contentsline {subsection}{\numberline {8.4}Goodbye}{25}
+\contentsline {subsection}{\numberline {6.3}Algorithm}{21}
+\contentsline {subsection}{\numberline {6.4}Runtime System}{22}
+\contentsline {subsection}{\numberline {6.5}Sample Code}{22}
+\contentsline {subsection}{\numberline {6.6}Testing}{24}
+\contentsline {section}{\numberline {7}Availability and Group Dynamics}{26}
+\contentsline {subsection}{\numberline {7.1}Manual}{26}
+\contentsline {subsection}{\numberline {7.2}Demo Site}{26}
+\contentsline {subsection}{\numberline {7.3}Division of Group Duties}{26}
+\contentsline {section}{\numberline {8}Conclusions and Future Work}{27}
+\contentsline {subsection}{\numberline {8.1}Conclusions}{27}
+\contentsline {subsection}{\numberline {8.2}Future Work}{27}
+\contentsline {subsection}{\numberline {8.3}Course Improvements}{27}
+\contentsline {subsection}{\numberline {8.4}Goodbye}{27}
