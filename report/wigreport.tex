@@ -906,28 +906,87 @@ appropriate default value -- {\tt 0} for {\tt int}, {\tt False} for
 {\tt bool}, {\tt ''} for tuples. {\tt l} and {\tt g} refer to the locals
 dictionary and {\tt wigismo.Store} object mentioned above.
 
+We omit trivial templates (e.g. {\tt E1 - E2} -> {\tt E1 - E2}).
+
 \noindent
 \begin{tabular}{| p{20em} | p{30em} |}
     \hline
     Construct & Template \\ \hline
-    {\tt x}
+    \begin{verbatim}
+    x
+    \end{verbatim}
     &
-    {\tt g.get('x\_N', D)} \newline
-    if {\tt x} is a global variable \newline
-    {\tt l.get('x\_N', D)} \newline
-    if {\tt x} is a local variable \newline
-    {\tt x} \newline
+    if {\tt x} is a global variable
+    \begin{verbatim}
+    g.get('x_N', D)
+    \end{verbatim}
+    if {\tt x} is a local variable 
+    \begin{verbatim}
+    l.get('x_N', D)
+    \end{verbatim}
     if {\tt x} is a function argument
+    \begin{verbatim}
+    x 
+    \end{verbatim}
     \\ \hline
-    {\tt x = E}
+    \begin{verbatim}
+    x = E
+    \end{verbatim}
     & 
-    {\tt g.set('x\_N', E)} \newline
-    if {\tt x} is a global variable \newline
-    {\tt wigsmo.set(l, 'x\_N', E)} \newline
-    if {\tt x} is a local variable \newline
-    {\tt x = E} \newline
+    if {\tt x} is a global variable 
+    \begin{verbatim}
+    g.set('x\_N', E)
+    \end{verbatim}
+    if {\tt x} is a local variable
+    \begin{verbatim}
+    wigsmo.set(l, 'x\_N', E)
+    \end{verbatim}
     if {\tt x} is a function argument  
+    \begin{verbatim}
+    x = E
+    \end{verbatim}
     \\ \hline
+    \begin{verbatim}
+    E1 + E2
+    \end{verbatim}
+    &
+    if {\tt E1} and {\tt E2} have the same type
+    \begin{verbatim}
+    E1 + E2
+    \end{verbatim}
+    otherwise
+    \begin{verbatim}
+    str(E1) + str(E2)
+    \end{verbatim}
+    \\ \hline
+    \begin{verbatim}
+    E1 \+ (f1, ..., fn) 
+    \end{verbatim}
+    &
+    \begin{verbatim}
+    wigismo.tuple_keep(E1, f1, ..., fn)
+    \end{verbatim}
+    \\ \hline
+    \begin{verbatim}
+    E1 \- (f1, ..., fn) 
+    \end{verbatim}
+    &
+    \begin{verbatim}
+    wigismo.tuple_discard(E1, f1, ..., fn)
+    \end{verbatim}
+    \\ \hline
+    \begin{verbatim}
+    E1 << E2
+    \end{verbatim}
+    &
+    \begin{verbatim}
+    wigismo.tuple_combine(E1, E2)
+    \end{verbatim}
+    \\ \hline
+\end{tabular}
+\begin{tabular}{| p{20em} | p{30em} |}
+    \hline
+    Construct & Template \\ \hline
     \begin{verbatim} 
     exit plug H [g1=x1,...,gn=xn];
     \end{verbatim}
@@ -1039,65 +1098,15 @@ dictionary and {\tt wigismo.Store} object mentioned above.
     \\ \hline
 \end{tabular}
 
-%
-%\noindent
-%The {\tt exit} statement
-%
-%{\tt exit plug D {[}g1=x1, ..., gn=xn{]}}
-%
-%\noindent
-%has template:
-%
-%\begin{verbatim}
-%    wigismo.output(sessionid, lambda: output_D(g1=x1, ..., gn=xn), exit=True)
-%    sys.exit(0)
-%\end{verbatim}
-%
-%\noindent
-%The {\tt show} statement (with precomputed destination {\tt NEXT}):
-%
-%{\tt show plug D [g1=x1, ..., gn=xn] receive [y1=i1, ..., yn=in]}
-%
-%\noindent
-%has template:
-%
-%\begin{verbatim}
-%    wigismo.output(sessionid, lambda: output_D(g1=x1, ..., gn=xn))
-%    state = wigismo.Store(sessionid)
-%    state.set('locals', l)
-%    state.set('start', NEXT)
-%    sys.exit(0)
-%
-%# reset indentation
-%
-%def NEXT(sessionid):
-%    y1 = wigismo.get_field('i1', type(y1))
-%    ...
-%    yn = wigismo.get_field('in', type(yn))
-%\end{verbatim}
-%
-%\noindent
-%The skip statement:
-%
-%    {\tt ;}
-%
-%\noindent
-%has template
-%
-%    {\tt pass}
-%
-%\noindent
-%The {\tt return} statement:
-%
-%    {\tt return E;}
-%
-%\noindent
-%has template:
-%
-%    {\tt return E}
-%
 \subsection{Algorithm}
-Describe your algorithm for generating code.
+The algorithm for generating code is again a largely straightforward
+traversal of the AST. A global variable keeps track of the current
+indentation level, and we also have tables of strings that map, for
+instance, WIG operators and types to their python equivalents (so that
+{\tt string} becomes {\tt str}, {\tt ||} becomes {\tt or}, and so on),
+as well WIG types to suitable default values (so that {\tt int} maps to
+{\tt 0}, for example). Then we go through and simply print out the
+appropriate template for every statement, expression, function, and so on.
 
 \subsection{Runtime System}
 Since {\tt wigismo} generates python code, we have access to a very large
