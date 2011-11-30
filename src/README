@@ -1,0 +1,17 @@
+wigismo
+Ismail Badawi
+Carla Morawicz
+
+The main restriction wigismo has is that it doesn't handle show and exit
+statements in functions (these are weeded out).
+
+From the 2009 benchmarks, wigismo accepts and compiles everything except
+wigg.wig (because of a self closing input tag) and battle.wig (because of
+an input tag with content, i.e. <input>something</input>).
+
+Compile a service example.wig with
+
+wigismo example.wig
+this generates an example.py file (use the -o switch to change this). 
+Copy this to the directory you'd like to serve from, chmod it to 755, and
+also put the wigismo.py module in the same directory.
