@@ -233,11 +233,6 @@ stm : ';'
     | tIF '(' exp ')' stmnoshortif tELSE stm
     | tWHILE '(' exp ')' stm
     | tFOR '(' optionalexp ';' optionalexp ';' optionalexp ')' stm
-      { EXP* condition = $5 != NULL ? $5 : makeEXPboolconst(1);
-        STATEMENT *body = $7 != NULL ? makeSTATEMENTsequence($9, makeSTATEMENTexp($7)) : $9;
-        STATEMENT *loop = makeSTATEMENTwhile(condition, body);
-        $$ = $3 != NULL ? makeSTATEMENTsequence(makeSTATEMENTexp($3), loop) : loop;
-      } 
     | tUNTIL '(' exp ')' stm
     | compoundstm
     | exp ';'
@@ -252,11 +247,6 @@ stmnoshortif : ';'
     | tWHILE '(' exp ')' stmnoshortif
     | tUNTIL '(' exp ')' stmnoshortif
     | tFOR '(' optionalexp ';' optionalexp ';' optionalexp ')' stmnoshortif
-      { EXP* condition = $5 != NULL ? $5 : makeEXPboolconst(1);
-        STATEMENT *body = $7 != NULL ? makeSTATEMENTsequence($9, makeSTATEMENTexp($7)) : $9;
-        STATEMENT *loop = makeSTATEMENTwhile(condition, body);
-        $$ = $3 != NULL ? makeSTATEMENTsequence(makeSTATEMENTexp($3), loop) : loop;
-      } 
     | compoundstm
     | exp ';'
 ;

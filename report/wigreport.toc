@@ -6,7 +6,7 @@
 \contentsline {section}{\numberline {2}Parsing and Abstract Syntax Trees}{4}
 \contentsline {subsection}{\numberline {2.1}The Grammar}{4}
 \contentsline {subsection}{\numberline {2.2}Using the {\tt flex} or {\tt SableCC} Tool}{9}
-\contentsline {subsection}{\numberline {2.3}Using the {\tt bison} or {\tt SableCC} Tool}{10}
+\contentsline {subsection}{\numberline {2.3}Using the {\tt bison} or {\tt SableCC} Tool}{9}
 \contentsline {subsection}{\numberline {2.4}Abstract Syntax Trees}{10}
 \contentsline {subsection}{\numberline {2.5}Desugaring}{10}
 \contentsline {subsection}{\numberline {2.6}Weeding}{10}
