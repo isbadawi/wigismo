@@ -248,7 +248,7 @@ void codeFUNCTION(FUNCTION *f)
         return;
     codeFUNCTION(f->next);
 
-    fprintf(out, "def %s(", f->name);
+    fprintf(out, "def %s_(", f->name);
     codeARGUMENT(f->arguments);
     fprintf(out, "):\n");
     indent();
