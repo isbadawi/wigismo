@@ -896,7 +896,7 @@ appropriate default value -- {\tt 0} for {\tt int}, {\tt False} for
 {\tt bool}, {\tt ''} for tuples. {\tt l} and {\tt g} refer to the locals
 dictionary and {\tt wigismo.Store} object mentioned above.
 
-We omit trivial templates (e.g. {\tt E1 - E2} -> {\tt E1 - E2}).
+We omit trivial templates (e.g. {\tt E1 - E2} $\rightarrow$ {\tt E1 - E2}).
 
 \noindent
 \begin{tabular}{| p{20em} | p{30em} |}
@@ -925,11 +925,11 @@ We omit trivial templates (e.g. {\tt E1 - E2} -> {\tt E1 - E2}).
     & 
     if {\tt x} is a global variable 
     \begin{verbatim}
-    g.set('x\_N', E)
+    g.set('x_N', E)
     \end{verbatim}
     if {\tt x} is a local variable
     \begin{verbatim}
-    wigsmo.set(l, 'x\_N', E)
+    wigismo.set(l, 'x_N', E)
     \end{verbatim}
     if {\tt x} is a function argument  
     \begin{verbatim}

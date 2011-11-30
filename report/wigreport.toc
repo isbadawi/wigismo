@@ -1,43 +1,43 @@
-\contentsline {section}{\numberline {1}Introduction}{3}
-\contentsline {subsection}{\numberline {1.1}Clarifications}{3}
-\contentsline {subsection}{\numberline {1.2}Restrictions}{3}
-\contentsline {subsection}{\numberline {1.3}Extensions}{3}
-\contentsline {subsection}{\numberline {1.4}Implementation Status}{3}
-\contentsline {section}{\numberline {2}Parsing and Abstract Syntax Trees}{4}
-\contentsline {subsection}{\numberline {2.1}The Grammar}{4}
-\contentsline {subsection}{\numberline {2.2}Using the {\tt flex} or {\tt SableCC} Tool}{9}
-\contentsline {subsection}{\numberline {2.3}Using the {\tt bison} or {\tt SableCC} Tool}{9}
-\contentsline {subsection}{\numberline {2.4}Abstract Syntax Trees}{10}
-\contentsline {subsection}{\numberline {2.5}Desugaring}{10}
-\contentsline {subsection}{\numberline {2.6}Weeding}{10}
-\contentsline {subsection}{\numberline {2.7}Testing}{11}
-\contentsline {section}{\numberline {3}Symbol Tables}{12}
-\contentsline {subsection}{\numberline {3.1}Scope Rules}{12}
-\contentsline {subsection}{\numberline {3.2}Symbol Data}{12}
-\contentsline {subsection}{\numberline {3.3}Algorithm}{12}
-\contentsline {subsection}{\numberline {3.4}Testing}{12}
-\contentsline {section}{\numberline {4}Type Checking}{15}
-\contentsline {subsection}{\numberline {4.1}Types}{15}
-\contentsline {subsection}{\numberline {4.2}Type Rules}{15}
-\contentsline {subsection}{\numberline {4.3}Algorithm}{16}
-\contentsline {subsection}{\numberline {4.4}Testing}{16}
-\contentsline {section}{\numberline {5}Resource Computation}{18}
-\contentsline {subsection}{\numberline {5.1}Resources}{18}
-\contentsline {subsection}{\numberline {5.2}Algorithm}{18}
-\contentsline {subsection}{\numberline {5.3}Testing}{18}
-\contentsline {section}{\numberline {6}Code Generation}{19}
-\contentsline {subsection}{\numberline {6.1}Strategy}{19}
-\contentsline {subsection}{\numberline {6.2}Code Templates}{19}
-\contentsline {subsection}{\numberline {6.3}Algorithm}{22}
-\contentsline {subsection}{\numberline {6.4}Runtime System}{23}
-\contentsline {subsection}{\numberline {6.5}Sample Code}{23}
-\contentsline {subsection}{\numberline {6.6}Testing}{25}
-\contentsline {section}{\numberline {7}Availability and Group Dynamics}{27}
-\contentsline {subsection}{\numberline {7.1}Manual}{27}
-\contentsline {subsection}{\numberline {7.2}Demo Site}{27}
-\contentsline {subsection}{\numberline {7.3}Division of Group Duties}{27}
-\contentsline {section}{\numberline {8}Conclusions and Future Work}{28}
-\contentsline {subsection}{\numberline {8.1}Conclusions}{28}
-\contentsline {subsection}{\numberline {8.2}Future Work}{28}
-\contentsline {subsection}{\numberline {8.3}Course Improvements}{28}
-\contentsline {subsection}{\numberline {8.4}Goodbye}{28}
+\contentsline {section}{\numberline {1}Introduction}{2}
+\contentsline {subsection}{\numberline {1.1}Clarifications}{2}
+\contentsline {subsection}{\numberline {1.2}Restrictions}{2}
+\contentsline {subsection}{\numberline {1.3}Extensions}{2}
+\contentsline {subsection}{\numberline {1.4}Implementation Status}{2}
+\contentsline {section}{\numberline {2}Parsing and Abstract Syntax Trees}{3}
+\contentsline {subsection}{\numberline {2.1}The Grammar}{3}
+\contentsline {subsection}{\numberline {2.2}Using the {\tt flex} or {\tt SableCC} Tool}{8}
+\contentsline {subsection}{\numberline {2.3}Using the {\tt bison} or {\tt SableCC} Tool}{8}
+\contentsline {subsection}{\numberline {2.4}Abstract Syntax Trees}{9}
+\contentsline {subsection}{\numberline {2.5}Desugaring}{9}
+\contentsline {subsection}{\numberline {2.6}Weeding}{9}
+\contentsline {subsection}{\numberline {2.7}Testing}{10}
+\contentsline {section}{\numberline {3}Symbol Tables}{11}
+\contentsline {subsection}{\numberline {3.1}Scope Rules}{11}
+\contentsline {subsection}{\numberline {3.2}Symbol Data}{11}
+\contentsline {subsection}{\numberline {3.3}Algorithm}{11}
+\contentsline {subsection}{\numberline {3.4}Testing}{11}
+\contentsline {section}{\numberline {4}Type Checking}{14}
+\contentsline {subsection}{\numberline {4.1}Types}{14}
+\contentsline {subsection}{\numberline {4.2}Type Rules}{14}
+\contentsline {subsection}{\numberline {4.3}Algorithm}{15}
+\contentsline {subsection}{\numberline {4.4}Testing}{15}
+\contentsline {section}{\numberline {5}Resource Computation}{17}
+\contentsline {subsection}{\numberline {5.1}Resources}{17}
+\contentsline {subsection}{\numberline {5.2}Algorithm}{17}
+\contentsline {subsection}{\numberline {5.3}Testing}{17}
+\contentsline {section}{\numberline {6}Code Generation}{18}
+\contentsline {subsection}{\numberline {6.1}Strategy}{18}
+\contentsline {subsection}{\numberline {6.2}Code Templates}{18}
+\contentsline {subsection}{\numberline {6.3}Algorithm}{21}
+\contentsline {subsection}{\numberline {6.4}Runtime System}{22}
+\contentsline {subsection}{\numberline {6.5}Sample Code}{22}
+\contentsline {subsection}{\numberline {6.6}Testing}{24}
+\contentsline {section}{\numberline {7}Availability and Group Dynamics}{26}
+\contentsline {subsection}{\numberline {7.1}Manual}{26}
+\contentsline {subsection}{\numberline {7.2}Demo Site}{26}
+\contentsline {subsection}{\numberline {7.3}Division of Group Duties}{26}
+\contentsline {section}{\numberline {8}Conclusions and Future Work}{27}
+\contentsline {subsection}{\numberline {8.1}Conclusions}{27}
+\contentsline {subsection}{\numberline {8.2}Future Work}{27}
+\contentsline {subsection}{\numberline {8.3}Course Improvements}{27}
+\contentsline {subsection}{\numberline {8.4}Goodbye}{27}
